@@ -1,12 +1,12 @@
 # **Logshot — Implementation Roadmap**
 
-### **Phase 1: The Foundation (Data & Backend) \[FINISHED\]**
+### **Phase 1: The Foundation (Data & Backend)
 
-1. **Project Setup:** Create the base Avalonia UI cross-platform project (targeting Windows and Android), configuring version numbers appropriately across all manifests.  
-2. **C\# Entity Models:** Write the C\# classes (Project, Day, Take) exactly mirroring the schema.  
-3. **Local SQLite Initialization:** Set up the local database engine so the app automatically creates the logshot.db file and tables on first launch.  
-4. **Data Repository Layer:** Write the basic CRUD commands to save new Takes and Days to the local database in under 2 milliseconds.  
-5. **Supabase Connection:** Install the Supabase C\# SDK and set up the basic authentication and cloud connection endpoints.  
+1. **Project Setup:** Create the base Avalonia UI cross-platform project (targeting Windows and Android), configuring version numbers appropriately across all manifests.  ✅ **COMPLETED**
+2. **C\# Entity Models:** Write the C\# classes (Project, Day, Take) exactly mirroring the schema.  ✅ **COMPLETED**
+3. **Local SQLite Initialization:** Set up the local database engine so the app automatically creates the logshot.db file and tables on first launch.  ✅ **COMPLETED**
+4. **Data Repository Layer:** Write the basic CRUD commands to save new Takes and Days to the local database in under 2 milliseconds.  ✅ **COMPLETED**
+5. **Supabase Connection:** Install the Supabase C\# SDK and set up the basic authentication and cloud connection endpoints.  **INCOMPLETE**
    
 
 ### **Phase 2: Core Business Logic (The Engine)**
@@ -14,7 +14,7 @@
 1. **The ViewModels (MVVM Setup):** Create the logic bridges between the database and the future UI.  ✅ **COMPLETED**
 2. **Dynamic Camera Logic:** Write the code that manages adding/removing camera columns and storing them in the JSON camera\_data field.  ✅ **COMPLETED**
 3. **Cross-Day Continuity Engine:** Write the query that runs when an Episode/Scene is entered to check historical data, find the max Shot number, and pre-fill camera setups.  ✅ **COMPLETED**
-4. **Hierarchical Grouping Logic:** Write the algorithm that groups raw Take rows into Episode-Scene chunks for the mobile view.  
+4. **Hierarchical Grouping Logic:** Write the algorithm that groups raw Take rows into Episode-Scene chunks for the mobile view.  ✅ **COMPLETED**
    
 
 ### **Phase 3: The Desktop UI (The A4 Grid)**
