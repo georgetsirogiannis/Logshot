@@ -9,6 +9,13 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <AvaloniaXaml Remove=".vscode\**" />
+    <Compile Remove=".vscode\**" />
+    <EmbeddedResource Remove=".vscode\**" />
+    <None Remove=".vscode\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" />

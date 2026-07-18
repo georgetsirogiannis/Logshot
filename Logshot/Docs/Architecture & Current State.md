@@ -1,8 +1,9 @@
 # Logshot Architecture & Current State
 
-**Last Updated:** Phase 2, Steps 1-3 Complete  
+**Last Updated:** Phase 2 Complete (All Core Business Logic)  
 **Project Target:** .NET 10  
-**UI Framework:** Avalonia (cross-platform desktop, Android, iOS, browser)
+**UI Framework:** Avalonia (cross-platform desktop, Android, iOS, browser)  
+**Current Status:** Transitioning to Phase 3 (Desktop UI Development)
 
 ---
 
@@ -759,7 +760,7 @@ LastReferenceTake = xyz5
 
 ## Summary
 
-Logshot is a **MVVM-based film production assistant** managing Takes, Days, and Projects:
+Logshot is a **MVVM-based film production assistant** for script supervisors, enabling them to completely digitize their daily shot reports, managing Takes, Days, and Projects:
 
 - **Models** define the database schema
 - **DatabaseService** provides async query/persist operations

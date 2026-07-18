@@ -3,17 +3,123 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Logshot.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="Logshot.Views.MainView"
              x:DataType="vm:MainViewModel">
+
   <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
-         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-    <TextBlock Text="{Binding AppViewModel.AppTitle}" TextAlignment="Center" FontSize="18"/>
-    <ProgressBar IsIndeterminate="{Binding AppViewModel.IsLoading}" Height="4" />
-  </StackPanel>
+  <Grid>
+    <!-- Top-level loading bar -->
+    <ProgressBar IsIndeterminate="{Binding AppViewModel.IsLoading}" 
+                 VerticalAlignment="Top" HorizontalAlignment="Stretch" 
+                 Height="4" ZIndex="100" 
+                 IsVisible="{Binding AppViewModel.IsLoading}"
+                 Foreground="{StaticResource ActionAccent}"/>
+
+    <!-- Main Split Layout -->
+    <Grid ColumnDefinitions="280, *" IsVisible="{Binding IsInitialized}">
+
+      <!-- ========================================== -->
+      <!-- LEFT SIDEBAR: Project & Day Browser          -->
+      <!-- ========================================== -->
+      <Border Grid.Column="0" 
+              Background="{StaticResource HeaderBackground}" 
+              BorderBrush="{StaticResource BorderColor}" 
+              BorderThickness="0,0,1,0" 
+              Padding="20">
+        <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
+          
+          <!-- App Brand -->
+          <TextBlock Grid.Row="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold" 
+                     Foreground="{StaticResource ActionAccent}" Margin="0,0,0,25"/>
+
+          <!-- Project Selector -->
+          <TextBlock Grid.Row="1" Text="ACTIVE PROJECT" FontSize="12" 
+                     Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+          <ComboBox Grid.Row="2" 
+                    ItemsSource="{Binding AppViewModel.Projects}" 
+                    SelectedItem="{Binding AppViewModel.CurrentProject}"
+                    HorizontalAlignment="Stretch"
+                    DisplayMemberBinding="{Binding Name}"
+                    PlaceholderText="Select a Project"
+                    Margin="0,0,0,25"/>
+
+          <!-- Shoot Days List -->
+          <TextBlock Grid.Row="3" Text="SHOOT DAYS" FontSize="12" 
+                     Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5" 
+                     VerticalAlignment="Top"/>
+          
+          <ListBox Grid.Row="3" 
+                   ItemsSource="{Binding AppViewModel.CurrentProject.Days}" 
+                   SelectedItem="{Binding AppViewModel.CurrentDay}"
+                   Background="Transparent"
+                   Margin="0,25,0,0"
+                   CornerRadius="4">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="Auto, *">
+                  <TextBlock Grid.Column="0" Text="{Binding ShootDayNumber, StringFormat='Day {0}'}" 
+                             FontWeight="Bold" Margin="0,0,10,0"/>
+                  <TextBlock Grid.Column="1" Text="{Binding CalendarDate, StringFormat='{}{0:MMM dd, yyyy}'}" 
+                             Foreground="{StaticResource TextSecondary}"/>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <!-- Action Buttons -->
+          <StackPanel Grid.Row="4" Spacing="10" Margin="0,15,0,0">
+            <!-- CommandParameter passes a default string to your ViewModel -->
+            <Button Content="+ NEW PROJECT" 
+                    Command="{Binding AppViewModel.CreateProjectCommand}" 
+                    CommandParameter="Untitled Project" 
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+            
+            <Button Content="+ NEW DAY" 
+                    Command="{Binding AppViewModel.CreateDayCommand}" 
+                    CommandParameter="1" 
+                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}" 
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- ========================================== -->
+      <!-- RIGHT SIDE: Main Workspace                   -->
+      <!-- ========================================== -->
+      <Grid Grid.Column="1" Background="{StaticResource WorkspaceBackground}">
+        
+        <!-- State 1: No Day Selected -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" 
+                    IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNull}}">
+          <TextBlock Text="Select a shoot day or create a new one to begin." 
+                     Foreground="{StaticResource TextSecondary}" FontSize="18" 
+                     HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- State 2: Day Selected (The future A4 Workspace) -->
+        <Grid RowDefinitions="Auto, *" Margin="30"
+              IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNotNull}}">
+          
+          <!-- Header Metadata Placeholder -->
+          <TextBlock Grid.Row="0" Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
+                     FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
+                     Margin="0,0,0,20"/>
+
+          <!-- Phase 3, Step 3 Placeholder: The A4 Grid Box -->
+          <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
+                  CornerRadius="4" Background="{StaticResource CardBackground}">
+            <TextBlock Text="[ 14/48 Grid Architecture goes here in Step 3 ]" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                       Foreground="{StaticResource TextSecondary}" FontSize="16"/>
+          </Border>
+          
+        </Grid>
+      </Grid>
+      
+    </Grid>
+  </Grid>
 </UserControl>

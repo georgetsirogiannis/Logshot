@@ -2,14 +2,57 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:Logshot"
              x:Class="Logshot.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             RequestedThemeVariant="Dark">
+    <!-- Forced to "Dark" ThemeVariant to match the Dark-Mode-First project vision -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <!-- 1. Global Typography -->
+        <!-- This points exactly to the folder you just created -->
+        <FontFamily x:Key="RobotoCondensed">avares://Logshot/Assets/Fonts#Roboto Condensed</FontFamily>
+
+        <!-- 2. Dark Mode Color Palette -->
+        <!-- Backgrounds -->
+        <SolidColorBrush x:Key="WorkspaceBackground">#121212</SolidColorBrush>
+        <SolidColorBrush x:Key="CardBackground">#1E1E1E</SolidColorBrush>
+        <SolidColorBrush x:Key="HeaderBackground">#252526</SolidColorBrush>
+
+        <!-- Text Colors -->
+        <SolidColorBrush x:Key="TextPrimary">#F5F5F5</SolidColorBrush>
+        <SolidColorBrush x:Key="TextSecondary">#A0A0A0</SolidColorBrush>
+
+        <!-- Grid & Borders -->
+        <SolidColorBrush x:Key="GridLineColor">#333333</SolidColorBrush>
+        <SolidColorBrush x:Key="BorderColor">#3F3F46</SolidColorBrush>
+
+        <!-- Semantic Colors (Prepared for Phase 5 gestures & shorthands) -->
+        <SolidColorBrush x:Key="FailRed">#F44336</SolidColorBrush>
+        <SolidColorBrush x:Key="BlooperOrange">#FF9800</SolidColorBrush>
+        <SolidColorBrush x:Key="ActionAccent">#4FC3F7</SolidColorBrush>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
+
+        <!-- 3. Apply Global Styles to the App Window -->
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+            <Setter Property="Background" Value="{StaticResource WorkspaceBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+        </Style>
+
+        <!-- Ensure all core text elements inherit Roboto Condensed automatically -->
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+        </Style>
     </Application.Styles>
 </Application>
