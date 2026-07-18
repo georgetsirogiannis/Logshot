@@ -61,5 +61,13 @@ namespace Logshot.ViewModels
             // Instruct the parent DayViewModel to duplicate the shot number and increment the take
             _parentDay.CreateSubsequentTake(Episode, Scene, lastTake.Shot, lastTake.TakeNumber);
         }
+            // -------------------------------------------------------------------------
+            // 3. [ Collapse / Expand ] Subheader Toggle
+            // -------------------------------------------------------------------------
+            [RelayCommand]
+            private void ToggleCollapsed()
+            {
+                IsCollapsed = !IsCollapsed;
+            }
+        }
     }
-}

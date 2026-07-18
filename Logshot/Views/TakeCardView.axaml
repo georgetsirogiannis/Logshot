@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:Logshot.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="140"
+			 x:Class="Logshot.Views.TakeCardView"
+			 x:DataType="vm:TakeViewModel">
+  <Grid ClipToBounds="True">
+	<StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="{StaticResource HeaderBackground}" Spacing="0">
+	  <Button Name="FsButton" Content="FS" Width="60" HorizontalContentAlignment="Center" Command="{Binding IncrementFalseStartsCommand}"/>
+	  <Button Name="LsButton" Content="LS" Width="60" HorizontalContentAlignment="Center" Command="{Binding ToggleLongStartCommand}"/>
+	  <Button Name="VoidButton" Content="AKYRO" Width="70" HorizontalContentAlignment="Center" Background="{StaticResource FailRed}" Command="{Binding ToggleVoidPrimaryCameraCommand}"/>
+	</StackPanel>
+	<Border Name="CardSurface" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,0,1" Padding="12,8" PointerPressed="Card_PointerPressed" PointerMoved="Card_PointerMoved" PointerReleased="Card_PointerReleased">
+	  <Border.RenderTransform>
+		<TranslateTransform/>
+	  </Border.RenderTransform>
+	  <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+		<StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
+		  <TextBlock Text="{Binding Shot, StringFormat=SHOT {0}}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextPrimary}"/>
+		  <TextBlock Text="{Binding TakeNumber, StringFormat=TAKE {0}}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource ActionAccent}"/>
+		  <TextBlock Text="&#9679;" FontSize="14" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCircled}"/>
+		  <TextBlock Text="X" FontSize="14" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsFailed}"/>
+		</StackPanel>
+		<StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="16" Margin="0,6,0,0">
+		  <StackPanel Orientation="Horizontal" Spacing="4">
+			<TextBlock Text="CAM A:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+			<TextBlock Text="{Binding CamARoll}" FontSize="12" Foreground="{StaticResource TextPrimary}"/>
+		  </StackPanel>
+		  <StackPanel Orientation="Horizontal" Spacing="4">
+			<TextBlock Text="CAM B:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+			<TextBlock Text="{Binding CamBRoll}" FontSize="12" Foreground="{StaticResource TextPrimary}"/>
+		  </StackPanel>
+		  <StackPanel Orientation="Horizontal" Spacing="4">
+			<TextBlock Text="SOUND:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+			<TextBlock Text="{Binding SoundNotes}" FontSize="12" Foreground="{StaticResource TextPrimary}"/>
+		  </StackPanel>
+		</StackPanel>
+		<TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding TakeNotes}" Watermark="Notes..." AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Margin="0,6,0,0"/>
+	  </Grid>
+	</Border>
+  </Grid>
+</UserControl>

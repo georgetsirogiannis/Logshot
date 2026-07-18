@@ -41,9 +41,7 @@ public partial class AppViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            // Stub for Phase 2 implementation
-            // TODO: Load all projects from database
-            // TODO: Populate Projects collection
+            await LoadAllProjectsCommand.ExecuteAsync(null);
         }
         finally
         {
@@ -60,10 +58,16 @@ public partial class AppViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            // Stub for Phase 2 implementation
-            // TODO: Query database for all projects
-            // TODO: Convert each Project model to ProjectViewModel
-            // TODO: Load days for each project
+            var projects = await _databaseService.GetAllProjectsAsync();
+
+            Projects.Clear();
+            foreach (var project in projects)
+            {
+                var projectVM = new ProjectViewModel(_databaseService);
+                projectVM.LoadFromModel(project);
+                await projectVM.LoadDaysCommand.ExecuteAsync(null);
+                Projects.Add(projectVM);
+            }
         }
         finally
         {
@@ -92,9 +96,12 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task DeleteProject(ProjectViewModel project)
     {
-        // Stub for Phase 2 implementation
-        // TODO: Remove from Projects collection
-        // TODO: Delete from database
+        if (Projects.Contains(project))
+        {
+            Projects.Remove(project);
+            await _databaseService.DeleteProjectAsync(project.ToModel());
+        }
+
         if (CurrentProject?.Id == project.Id)
         {
             CurrentProject = null;
@@ -137,10 +144,10 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task DeleteDay(DayViewModel day)
     {
-        // Stub for Phase 2 implementation
         if (CurrentProject?.Days.Contains(day) == true)
         {
             CurrentProject.Days.Remove(day);
+            await _databaseService.DeleteDayAsync(day.ToModel());
             if (CurrentDay?.Id == day.Id)
             {
                 CurrentDay = null;

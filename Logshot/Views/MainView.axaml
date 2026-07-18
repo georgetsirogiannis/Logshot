@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Logshot.ViewModels"
+             xmlns:views="using:Logshot.Views"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="Logshot.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -104,19 +105,40 @@
         <Grid RowDefinitions="Auto, *" Margin="30"
               IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNotNull}}">
           
-          <!-- Header Metadata Placeholder -->
-          <TextBlock Grid.Row="0" Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
-                     FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" 
-                     Margin="0,0,0,20"/>
+          <!-- Header Metadata -->
+          <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+            <TextBlock Grid.Column="0" Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
+                       FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
 
-          <!-- Phase 3, Step 3 Placeholder: The A4 Grid Box -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+              <Button Content="+ ADD TAKE"
+                      Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}"
+                      IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+
+              <Button Content="FINALIZE DAY"
+                      Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
+                      IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+
+              <Button Content="REOPEN DAY"
+                      Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
+                      IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
+            </StackPanel>
+          </Grid>
+
+          <!-- The 14/48 Grid Architecture (Desktop) -->
           <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
-                  CornerRadius="4" Background="{StaticResource CardBackground}">
-            <TextBlock Text="[ 14/48 Grid Architecture goes here in Step 3 ]" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center" 
-                       Foreground="{StaticResource TextSecondary}" FontSize="16"/>
+                  CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True"
+                  IsVisible="{Binding IsMobileLayout, Converter={x:Static BoolConverters.Not}}">
+            <views:TakeGridView DataContext="{Binding AppViewModel.CurrentDay}"/>
           </Border>
-          
+
+          <!-- The Adaptive Card Layout (Mobile, Phase 4) -->
+          <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                  CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True"
+                  IsVisible="{Binding IsMobileLayout}">
+            <views:MobileTakeListView DataContext="{Binding AppViewModel.CurrentDay}"/>
+          </Border>
+
         </Grid>
       </Grid>
       

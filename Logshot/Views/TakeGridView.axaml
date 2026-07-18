@@ -1,0 +1,136 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:Logshot.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="500"
+			 x:Class="Logshot.Views.TakeGridView"
+			 x:DataType="vm:DayViewModel">
+
+  <UserControl.Resources>
+	<x:String x:Key="GridColumns">Auto,14*,14*,6*,Auto,4*,4*,5*,5*,48*</x:String>
+  </UserControl.Resources>
+
+  <Grid RowDefinitions="Auto,*">
+
+	<Border Grid.Row="0" Background="{StaticResource HeaderBackground}"
+			BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1">
+	  <Grid ColumnDefinitions="Auto,14*,14*,6*,Auto,4*,4*,5*,5*,48*" MinHeight="34">
+		<Border Grid.Column="0" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Width="60"/>
+
+		<TextBlock Grid.Column="1" Text="CAM A ROLL" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}"/>
+		<TextBlock Grid.Column="2" Text="CAM B ROLL" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}"/>
+		<TextBlock Grid.Column="3" Text="SOUND ROLL" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}"/>
+
+		<StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6">
+		  <ItemsControl ItemsSource="{Binding ActiveCameras}">
+			<ItemsControl.ItemsPanel>
+			  <ItemsPanelTemplate>
+				<StackPanel Orientation="Horizontal"/>
+			  </ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
+			  <DataTemplate>
+				<TextBlock Text="{Binding}" FontWeight="Bold" FontSize="12" Width="90"
+						   HorizontalAlignment="Center" VerticalAlignment="Center"
+						   Foreground="{StaticResource TextPrimary}"/>
+			  </DataTemplate>
+			</ItemsControl.ItemTemplate>
+		  </ItemsControl>
+
+		  <TextBox Name="NewCameraLabelBox" Watermark="e.g. CAM C" Width="80" FontSize="11" VerticalAlignment="Center"/>
+		  <Button Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddCamera_Click"/>
+		</StackPanel>
+
+		<TextBlock Grid.Column="5" Text="ΕΠ" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}"/>
+		<TextBlock Grid.Column="6" Text="ΣΚ" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}"/>
+		<TextBlock Grid.Column="7" Text="ΠΛΑΝΟ" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}"/>
+		<TextBlock Grid.Column="8" Text="ΛΗΨΗ" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}"/>
+		<TextBlock Grid.Column="9" Text="ΠΑΡΑΤΗΡΗΣΕΙΣ" FontWeight="Bold" FontSize="12"
+				   HorizontalAlignment="Center" VerticalAlignment="Center"
+				   Foreground="{StaticResource TextPrimary}" Margin="10,0,0,0"/>
+	  </Grid>
+	</Border>
+
+	<ScrollViewer Grid.Row="1">
+	  <ItemsControl ItemsSource="{Binding Takes}">
+		<ItemsControl.ItemTemplate>
+		  <DataTemplate x:DataType="vm:TakeViewModel">
+			<Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,0,1"
+					Background="{StaticResource CardBackground}"
+					Tag="{Binding}"
+					PointerPressed="Row_PointerPressed"
+					PointerMoved="Row_PointerMoved"
+					PointerReleased="Row_PointerReleased">
+			  <Grid ColumnDefinitions="Auto,14*,14*,6*,Auto,4*,4*,5*,5*,48*" MinHeight="30">
+
+				<StackPanel Grid.Column="0" Orientation="Horizontal" Width="60"
+							HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+				  <TextBlock Text="⋮⋮" Cursor="Hand" VerticalAlignment="Center"
+							 Foreground="{StaticResource TextSecondary}"
+							 Name="DragHandle"/>
+				  <Button Content="✕" Padding="4,0" FontSize="10"
+						  Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).DeleteTakeCommand}"
+						  CommandParameter="{Binding}"/>
+				</StackPanel>
+
+				<TextBox Grid.Column="1" Text="{Binding CamARoll}" VerticalContentAlignment="Center"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"/>
+
+				<TextBox Grid.Column="2" Text="{Binding CamBRoll}" VerticalContentAlignment="Center"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"/>
+
+				<TextBox Grid.Column="3" Text="{Binding SoundNotes}" VerticalContentAlignment="Center"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"/>
+
+				<ItemsControl Grid.Column="4" ItemsSource="{Binding ExtraCameraRolls}">
+				  <ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+					  <StackPanel Orientation="Horizontal"/>
+					</ItemsPanelTemplate>
+				  </ItemsControl.ItemsPanel>
+				  <ItemsControl.ItemTemplate>
+					<DataTemplate x:DataType="vm:CameraRollCell">
+					  <TextBox Text="{Binding Roll}" Width="90" VerticalContentAlignment="Center"
+							   BorderThickness="0" Background="Transparent"/>
+					</DataTemplate>
+				  </ItemsControl.ItemTemplate>
+				</ItemsControl>
+
+				<TextBox Grid.Column="5" Text="{Binding Episode}" VerticalContentAlignment="Center"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"/>
+
+				<TextBox Grid.Column="6" Text="{Binding Scene}" VerticalContentAlignment="Center"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"/>
+
+				<TextBox Grid.Column="7" Text="{Binding Shot}" VerticalContentAlignment="Center"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"/>
+
+				<TextBox Grid.Column="8" Text="{Binding TakeNumber}" VerticalContentAlignment="Center"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"/>
+
+				<TextBox Grid.Column="9" Text="{Binding TakeNotes}" VerticalContentAlignment="Center"
+						 AcceptsReturn="True" TextWrapping="Wrap"
+						 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent" Margin="10,0,0,0"/>
+			  </Grid>
+			</Border>
+		  </DataTemplate>
+		</ItemsControl.ItemTemplate>
+	  </ItemsControl>
+	</ScrollViewer>
+  </Grid>
+</UserControl>

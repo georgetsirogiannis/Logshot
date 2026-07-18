@@ -139,4 +139,43 @@ public class DatabaseService
                        .OrderByDescending(d => d.CalendarDate)
                        .ToListAsync();
     }
+
+    /// <summary>
+    /// Get all projects
+    /// </summary>
+    public async Task<List<Project>> GetAllProjectsAsync()
+    {
+        await InitAsync();
+        return await _db.Table<Project>()
+                       .OrderBy(p => p.Name)
+                       .ToListAsync();
+    }
+
+    /// <summary>
+    /// Delete a day (and its takes) from the database
+    /// </summary>
+    public async Task<int> DeleteDayAsync(Day day)
+    {
+        await InitAsync();
+        var takes = await GetTakesForDayAsync(day.Id);
+        foreach (var take in takes)
+        {
+            await _db.DeleteAsync(take);
+        }
+        return await _db.DeleteAsync(day);
+    }
+
+    /// <summary>
+    /// Delete a project (and its days/takes) from the database
+    /// </summary>
+    public async Task<int> DeleteProjectAsync(Project project)
+    {
+        await InitAsync();
+        var days = await GetDaysForProjectAsync(project.Id);
+        foreach (var day in days)
+        {
+            await DeleteDayAsync(day);
+        }
+        return await _db.DeleteAsync(project);
+    }
 }

@@ -114,10 +114,32 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadTakes()
     {
-        // Stub for Phase 2 implementation
-        // TODO: Query database for all takes in this day
-        // Convert each Take model to TakeViewModel
-        // Add to Takes collection
+        var takes = await _databaseService.GetTakesForDayAsync(Id);
+
+        Takes.Clear();
+        foreach (var take in takes.OrderBy(t => t.SequenceOrder))
+        {
+            var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
+            takeVM.LoadFromModel(take);
+            await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
+            Takes.Add(takeVM);
+        }
+
+        // Merge active camera labels discovered across all takes with the defaults
+        var discoveredCameras = takes
+            .SelectMany(t => _cameraDataManager.GetActiveCameraLabels(_cameraDataManager.ParseCameraData(t.CameraData)))
+            .Distinct();
+
+        foreach (var camera in discoveredCameras)
+        {
+            if (!ActiveCameras.Contains(camera))
+                ActiveCameras.Add(camera);
+        }
+
+        RefreshAllExtraCameraRolls();
+        await UpdateTotalTakesCommand.ExecuteAsync(null);
+        await UpdateCurrentShotCommand.ExecuteAsync(null);
+        BuildHierarchicalGroups();
     }
 
     [RelayCommand]
@@ -129,38 +151,89 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddTake()
     {
-        // Stub for Phase 2 implementation
-        // TODO: Create new Take with next sequence order
-        // TODO: Increment CurrentShot if scene/episode same as last take
+        var lastTake = Takes.LastOrDefault();
+
+        var newTake = new Take
+        {
+            DayId = Id,
+            SequenceOrder = Takes.Count,
+            Episode = lastTake?.Episode ?? string.Empty,
+            Scene = lastTake?.Scene ?? string.Empty,
+            Shot = lastTake?.Shot ?? 0,
+            TakeNumber = (lastTake?.TakeNumber ?? 0) + 1,
+            CameraData = lastTake?.CameraData ?? _cameraDataManager.SerializeCameraData(_cameraDataManager.InitializeDefaultCameras()),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
+        takeVM.LoadFromModel(newTake);
+        await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
+
+        await takeVM.SaveTakeCommand.ExecuteAsync(null);
+        Takes.Add(takeVM);
+
+        RefreshAllExtraCameraRolls();
+        await UpdateTotalTakesCommand.ExecuteAsync(null);
+        await UpdateCurrentShotCommand.ExecuteAsync(null);
+        BuildHierarchicalGroups();
+    }
+
+    /// <summary>
+    /// Rebuilds the ExtraCameraRolls collection on every take, based on the day's ActiveCameras list.
+    /// </summary>
+    private void RefreshAllExtraCameraRolls()
+    {
+        foreach (var take in Takes)
+        {
+            take.RefreshExtraCameraRolls(ActiveCameras);
+        }
     }
 
     [RelayCommand]
     public async Task DeleteTake(TakeViewModel take)
     {
-        // Stub for Phase 2 implementation
-        // TODO: Remove from Takes collection
-        // TODO: Persist deletion to database
+        if (take is null || !Takes.Contains(take))
+            return;
+
+        Takes.Remove(take);
+        await _databaseService.DeleteTakeAsync(take.ToModel());
+
+        await ReorderTakesCommand.ExecuteAsync(null);
+        await UpdateTotalTakesCommand.ExecuteAsync(null);
+        BuildHierarchicalGroups();
     }
 
     [RelayCommand]
     public async Task ReorderTakes()
     {
-        // Stub for Phase 3 implementation - drag and drop reordering
-        // TODO: Update SequenceOrder for all affected takes based on current order in collection
+        for (int i = 0; i < Takes.Count; i++)
+        {
+            if (Takes[i].SequenceOrder != i)
+            {
+                Takes[i].SequenceOrder = i;
+                await Takes[i].SaveTakeCommand.ExecuteAsync(null);
+            }
+        }
+
+        BuildHierarchicalGroups();
     }
 
+    /// <summary>
+    /// Marks the day as finalized (locked from further edits in the desktop grid).
+    /// </summary>
     [RelayCommand]
     public async Task FinalizeDay()
     {
-        // Stub for Phase 3 implementation - Undoable Finalize Day mechanics
         IsFinalized = true;
         await SaveDayCommand.ExecuteAsync(null);
     }
 
+    /// <summary>
+    /// Reopens a finalized day, allowing edits to resume.
+    /// </summary>
     [RelayCommand]
     public async Task UndoFinalizeDay()
     {
-        // Stub for Phase 3 implementation
         IsFinalized = false;
         await SaveDayCommand.ExecuteAsync(null);
     }
@@ -216,6 +289,7 @@ public partial class DayViewModel : ViewModelBase
         }
 
         await SaveDayCommand.ExecuteAsync(null);
+        RefreshAllExtraCameraRolls();
     }
 
     /// <summary>
@@ -248,6 +322,7 @@ public partial class DayViewModel : ViewModelBase
         }
 
         await SaveDayCommand.ExecuteAsync(null);
+        RefreshAllExtraCameraRolls();
     }
 
     /// <summary>

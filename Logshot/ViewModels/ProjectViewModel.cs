@@ -77,21 +77,36 @@ public partial class ProjectViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadDays()
     {
-        // Stub for Phase 2 implementation - will load all days for this project
-        // TODO: Implement day loading from database
+        var days = await _databaseService.GetDaysForProjectAsync(Id);
+
+        Days.Clear();
+        foreach (var day in days)
+        {
+            var dayVM = new DayViewModel(_databaseService);
+            dayVM.LoadFromModel(day);
+            await dayVM.LoadTakesCommand.ExecuteAsync(null);
+            Days.Add(dayVM);
+        }
     }
 
     [RelayCommand]
     public async Task AddDay()
     {
-        // Stub for Phase 2 implementation - creates new day in this project
-        // TODO: Implement adding new day
+        var newDay = new Day { ProjectId = Id, ShootDayNumber = (Days.Count + 1).ToString() };
+        var dayVM = new DayViewModel(_databaseService);
+        dayVM.LoadFromModel(newDay);
+
+        await dayVM.SaveDayCommand.ExecuteAsync(null);
+        Days.Add(dayVM);
     }
 
     [RelayCommand]
     public async Task DeleteDay(DayViewModel day)
     {
-        // Stub for Phase 2 implementation
-        // TODO: Implement day deletion
+        if (Days.Contains(day))
+        {
+            Days.Remove(day);
+            await _databaseService.DeleteDayAsync(day.ToModel());
+        }
     }
 }

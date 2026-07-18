@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -77,6 +78,12 @@ public partial class TakeViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private ObservableCollection<string> _activeCameras = new();
+
+    /// <summary>
+    /// Roll cells for any cameras beyond the two defaults (CAM A / CAM B)
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<CameraRollCell> _extraCameraRolls = new();
 
     /// <summary>
     /// Tracks which cameras are strikethrough (not active at time of take)
@@ -218,6 +225,22 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Phase 4 mobile quick-action: [ΑΚΥΡΟ] drawer button. Toggles the primary camera's
+    /// voided/no-roll status. Full per-camera cross-stitch rendering is handled in Phase 5.
+    /// </summary>
+    [RelayCommand]
+    public async Task ToggleVoidPrimaryCamera()
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        if (data.Cameras.TryGetValue("CAM A", out var state))
+        {
+            state.Status = state.Status == "voided" ? "active" : "voided";
+        }
+        CameraData = _cameraDataManager.SerializeCameraData(data);
+        await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>
     /// Refresh camera information from CameraData JSON
     /// Used when loading a take or when cameras are added/removed
     /// </summary>
@@ -254,4 +277,102 @@ public partial class TakeViewModel : ViewModelBase
         var cameraData = _cameraDataManager.ParseCameraData(CameraData);
         return _cameraDataManager.IsCameraActive(cameraData, cameraLabel);
     }
+
+    // -------------------------------------------------------------------------
+    // Roll number editing (14/48 Grid columns: CAM A ROLL / CAM B ROLL)
+    // -------------------------------------------------------------------------
+
+    public string CamARoll
+    {
+        get => GetCameraRoll("CAM A");
+        set => SetCameraRoll("CAM A", value);
+    }
+
+    public string CamBRoll
+    {
+        get => GetCameraRoll("CAM B");
+        set => SetCameraRoll("CAM B", value);
+    }
+
+    internal string GetCameraRoll(string cameraLabel)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        return data.Cameras.TryGetValue(cameraLabel, out var state) ? state.Notes : string.Empty;
+    }
+
+    internal void SetCameraRoll(string cameraLabel, string value)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        if (!data.Cameras.ContainsKey(cameraLabel))
+        {
+            data = _cameraDataManager.AddCamera(data, cameraLabel);
+        }
+        data.Cameras[cameraLabel].Notes = value ?? string.Empty;
+        CameraData = _cameraDataManager.SerializeCameraData(data);
+        _ = SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    partial void OnCameraDataChanged(string value)
+    {
+        OnPropertyChanged(nameof(CamARoll));
+        OnPropertyChanged(nameof(CamBRoll));
+
+        foreach (var cell in ExtraCameraRolls)
+        {
+            cell.NotifyRollChanged();
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the ExtraCameraRolls collection for cameras beyond the two defaults,
+    /// based on the day's full list of active camera labels.
+    /// </summary>
+    public void RefreshExtraCameraRolls(IEnumerable<string> dayActiveCameras)
+    {
+        var extras = dayActiveCameras.Where(c => c != "CAM A" && c != "CAM B").ToList();
+
+        // Remove cells no longer relevant
+        for (int i = ExtraCameraRolls.Count - 1; i >= 0; i--)
+        {
+            if (!extras.Contains(ExtraCameraRolls[i].Label))
+                ExtraCameraRolls.RemoveAt(i);
+        }
+
+        // Add new cells
+        foreach (var camera in extras)
+        {
+            if (!ExtraCameraRolls.Any(c => c.Label == camera))
+            {
+                ExtraCameraRolls.Add(new CameraRollCell(this, camera));
+            }
+        }
+    }
+}
+
+/// <summary>
+/// A single editable roll-number cell for a dynamically added camera column.
+/// </summary>
+public partial class CameraRollCell : ObservableObject
+{
+    private readonly TakeViewModel _owner;
+
+    public string Label { get; }
+
+    public CameraRollCell(TakeViewModel owner, string label)
+    {
+        _owner = owner;
+        Label = label;
+    }
+
+    public string Roll
+    {
+        get => _owner.GetCameraRoll(Label);
+        set
+        {
+            _owner.SetCameraRoll(Label, value);
+            OnPropertyChanged();
+        }
+    }
+
+    public void NotifyRollChanged() => OnPropertyChanged(nameof(Roll));
 }

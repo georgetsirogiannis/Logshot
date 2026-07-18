@@ -19,6 +19,10 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusMessage = "Initializing...";
 
+    // Phase 4: Responsive layout trigger. True when the workspace width drops below the mobile breakpoint.
+    [ObservableProperty]
+    private bool _isMobileLayout = false;
+
     public MainViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;

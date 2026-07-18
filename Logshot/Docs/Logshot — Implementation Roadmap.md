@@ -1,8 +1,8 @@
 # **Logshot — Implementation Roadmap**
 
-**Last Updated:** Master Commit 5cb3729  
-**Current Phase:** Phase 3 (Desktop UI)  
-**Overall Progress:** 2/7 phases complete (29%)
+**Last Updated:** Phase 4 completion pass  
+**Current Phase:** Phase 5 (Gestures, Shorthands & Advanced UX)  
+**Overall Progress:** 4/7 phases complete (57%)
 
 ---
 
@@ -34,38 +34,34 @@
 
 ---
 
-### **Phase 3: The Desktop UI (The A4 Grid)** 🔄 **IN PROGRESS**
+### **Phase 3: The Desktop UI (The A4 Grid)** ✅ **COMPLETE**
 
-**Target Completion:** TBD
+1. **Global Styling & Typography:** Import and configure the **Roboto Condensed** font and set up the dark-mode color palettes.  ✅ **COMPLETED**
+   - **Details:** Font declared and applied globally in `App.axaml`; full dark palette (backgrounds, text, grid lines, semantic colors) defined as app resources.
 
-1. **Global Styling & Typography:** Import and configure the **Roboto Condensed** font and set up the dark-mode color palettes.
-   - Status: ⏳ Not started
+2. **Main Layout & Navigation:** Build the left-side Project/Day browser and the main right-side Workspace.  ✅ **COMPLETED**
+   - **Details:** `MainView.axaml` implements the 280px sidebar (project selector, shoot-day list, new project/day actions) plus the right-side workspace with header metadata and Finalize/Reopen actions.
 
-2. **Main Layout & Navigation:** Build the left-side Project/Day browser and the main right-side Workspace.
-   - Status: ⏳ Not started
-   - Notes: MainView.axaml exists (referenced in workspace) but minimal UI implementation currently present
+3. **The 14/48 Grid Architecture:** Construct the data grid using the exact horizontal percentages, ensuring strict vertical-center alignment for all cells.  ✅ **COMPLETED**
+   - **Details:** `TakeGridView.axaml` implements the `Auto,14*,14*,6*,Auto,4*,4*,5*,5*,48*` column architecture with dynamic camera expansion (`+ CAM`) and vertically centered cells.
 
-3. **The 14/48 Grid Architecture:** Construct the data grid using the exact horizontal percentages, ensuring strict vertical-center alignment for all cells.
-   - Status: ⏳ Not started
-   - Requirements: 
-	 - CAM A ROLL (14%) | CAM B ROLL (14%) | SOUND ROLL (6%) | ΕΠ (4%) | ΣΚ (4%) | ΠΛΑΝΟ (5%) | ΛΗΨΗ (5%) | ΠΑΡΑΤΗΡΗΣΕΙΣ (48%)
-	 - Dynamic camera expansion with + buttons
-	 - Vertical center alignment throughout
-
-4. **Grid Interactions:** Implement inline typing, the + camera buttons, manual drag-and-drop reordering, and the Undoable Finalize Day mechanics.
-   - Status: ⏳ Not started
-   - Features needed: Inline editing, drag-and-drop, camera management UI, Finalize/Reopen toggle
+4. **Grid Interactions:** Implement inline typing, the + camera buttons, manual drag-and-drop reordering, and the Undoable Finalize Day mechanics.  ✅ **COMPLETED**
+   - **Details:** Inline `TextBox` editing on every column, `AddCamera_Click` handler, pointer-based drag-and-drop reordering (`Row_PointerPressed/Moved/Released` + `ReorderTakesCommand`), and `FinalizeDayCommand`/`UndoFinalizeDayCommand` toggle in `DayViewModel`.
 
 ---
 
-### **Phase 4: The Mobile UI (Adaptive Cards)** ⏳ **PENDING**
+### **Phase 4: The Mobile UI (Adaptive Cards)** ✅ **COMPLETE**
 
-**Dependency:** Phase 3 (Desktop UI foundation)
+**Dependency:** Phase 3 (Desktop UI foundation) — satisfied
 
-1. **Responsive Triggers:** Write the Avalonia rule that detects when the screen is < 720px wide and swaps the grid for the mobile layout.  
-2. **Episode-Scene Subheaders:** Build the collapsible setup bars with the dedicated [+ SHOT] and [+ TAKE] incremental buttons.  
-3. **Take Cards:** Design the vertically stacked card layout for individual takes.  
-4. **Quick-Action Drawers:** Implement the swipe-right gesture to reveal the [FS], [LS], and [ΑΚΥΡΟ] buttons.  
+1. **Responsive Triggers:** Write the Avalonia rule that detects when the screen is < 720px wide and swaps the grid for the mobile layout.  ✅ **COMPLETED**
+   - **Details:** `MainView.axaml.cs` tracks `SizeChanged`/`Bounds.Width` and sets `MainViewModel.IsMobileLayout` at a 720px breakpoint; `MainView.axaml` swaps between `TakeGridView` (desktop) and `MobileTakeListView` (mobile) via `IsVisible` bindings.
+2. **Episode-Scene Subheaders:** Build the collapsible setup bars with the dedicated [+ SHOT] and [+ TAKE] incremental buttons.  ✅ **COMPLETED**
+   - **Details:** `MobileTakeListView.axaml` renders `DayViewModel.MobileSetupGroups` with a collapsible header bar (`SetupGroupViewModel.ToggleCollapsedCommand`) hosting `AddShotCommand`/`AddTakeCommand` buttons.
+3. **Take Cards:** Design the vertically stacked card layout for individual takes.  ✅ **COMPLETED**
+   - **Details:** `TakeCardView.axaml` shows Shot/Take header, Circled/Failed badges, camera roll summary, and notes in a vertically stacked card.
+4. **Quick-Action Drawers:** Implement the swipe-right gesture to reveal the [FS], [LS], and [ΑΚΥΡΟ] buttons.  ✅ **COMPLETED**
+   - **Details:** `TakeCardView.axaml.cs` implements pointer-drag swipe detection with a `TranslateTransform`, revealing a drawer bound to `IncrementFalseStartsCommand`, `ToggleLongStartCommand`, and the new `ToggleVoidPrimaryCameraCommand`.
 
 ---
 
@@ -110,13 +106,14 @@
 |-------|--------|---------|-----------|
 | 1 | ✅ | 86c0df7, 4818cda | Models/*.cs, Services/DatabaseService.cs |
 | 2 | ✅ | 5ed4379, 99c9c2d, 5cb3729 | ViewModels/*.cs, Services/CameraDataManager.cs, Services/ContinuityService.cs |
-| 3 | 🔄 | (upcoming) | Views/MainView.axaml, Views/** |
-| 4-7 | ⏳ | (pending) | — |
+| 3 | ✅ | (current) | Views/MainView.axaml, Views/TakeGridView.axaml(.cs) |
+| 4 | ✅ | (current) | Views/MobileTakeListView.axaml(.cs), Views/TakeCardView.axaml(.cs), ViewModels/MainViewModel.cs, ViewModels/SetupGroupViewModel.cs |
+| 5-7 | ⏳ | (pending) | — |
 
 ---
 
 ## **Blockers & Notes**
 
-- **None currently blocking Phase 3 start.** All Phase 2 deliverables complete.
-- MainView.axaml exists but requires full desktop layout and grid implementation.
-- Roboto Condensed font integration is the recommended first task for Phase 3 Step 1.
+- **None currently blocking Phase 5 start.** Phases 1-4 deliverables complete and verified via full solution build.
+- `ToggleVoidPrimaryCamera` on `TakeViewModel` provides a basic whole-row void toggle for the mobile ΑΚΥΡΟ drawer button; the full camera-specific cross-stitch rendering described in Phase 5 Step 2 is still pending.
+- Phase 5 should build directly on the existing `IsCircled`/`IsFailed`/`FalseStartCount`/`IsLongStart` fields and commands already present on `TakeViewModel`.
