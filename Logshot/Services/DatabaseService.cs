@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using SQLite;
 using Logshot.Models;
@@ -69,5 +70,73 @@ public class DatabaseService
     {
         await InitAsync();
         return await _db.DeleteAsync(take);
+    }
+
+    // --- QUERY OPERATIONS (For Cross-Day Continuity) ---
+
+    /// <summary>
+    /// Get all takes for a project across all days (for historical queries)
+    /// </summary>
+    public async Task<List<Take>> GetTakesForProjectAsync(string projectId)
+    {
+        await InitAsync();
+
+        // Get all days in the project first
+        var days = await _db.Table<Day>()
+                           .Where(d => d.ProjectId == projectId)
+                           .ToListAsync();
+
+        // Get all takes for those days
+        var dayIds = days.Select(d => d.Id).ToList();
+
+        if (dayIds.Count == 0)
+            return new List<Take>();
+
+        var takes = new List<Take>();
+        foreach (var dayId in dayIds)
+        {
+            var takesForDay = await _db.Table<Take>()
+                                      .Where(t => t.DayId == dayId)
+                                      .ToListAsync();
+            takes.AddRange(takesForDay);
+        }
+
+        return takes.OrderBy(t => t.CreatedAt).ToList();
+    }
+
+    /// <summary>
+    /// Get all takes for a specific Episode/Scene combination across a project
+    /// </summary>
+    public async Task<List<Take>> GetTakesForEpisodeSceneAsync(string projectId, string episode, string scene)
+    {
+        await InitAsync();
+
+        var allProjectTakes = await GetTakesForProjectAsync(projectId);
+
+        return allProjectTakes
+            .Where(t => t.Episode == episode && t.Scene == scene)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Get a specific day by ID
+    /// </summary>
+    public async Task<Day> GetDayAsync(string dayId)
+    {
+        await InitAsync();
+        return await _db.FindAsync<Day>(dayId);
+    }
+
+    /// <summary>
+    /// Get all days for a project
+    /// </summary>
+    public async Task<List<Day>> GetDaysForProjectAsync(string projectId)
+    {
+        await InitAsync();
+        return await _db.Table<Day>()
+                       .Where(d => d.ProjectId == projectId)
+                       .OrderByDescending(d => d.CalendarDate)
+                       .ToListAsync();
     }
 }

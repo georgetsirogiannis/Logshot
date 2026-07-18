@@ -11,9 +11,9 @@
 
 ### **Phase 2: Core Business Logic (The Engine)**
 
-1. **The ViewModels (MVVM Setup):** Create the logic bridges between the database and the future UI.  
-2. **Dynamic Camera Logic:** Write the code that manages adding/removing camera columns and storing them in the JSON camera\_data field.  
-3. **Cross-Day Continuity Engine:** Write the query that runs when an Episode/Scene is entered to check historical data, find the max Shot number, and pre-fill camera setups.  
+1. **The ViewModels (MVVM Setup):** Create the logic bridges between the database and the future UI.  ✅ **COMPLETED**
+2. **Dynamic Camera Logic:** Write the code that manages adding/removing camera columns and storing them in the JSON camera\_data field.  ✅ **COMPLETED**
+3. **Cross-Day Continuity Engine:** Write the query that runs when an Episode/Scene is entered to check historical data, find the max Shot number, and pre-fill camera setups.  ✅ **COMPLETED**
 4. **Hierarchical Grouping Logic:** Write the algorithm that groups raw Take rows into Episode-Scene chunks for the mobile view.  
    
 

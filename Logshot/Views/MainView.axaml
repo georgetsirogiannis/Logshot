@@ -12,5 +12,8 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+    <TextBlock Text="{Binding AppViewModel.AppTitle}" TextAlignment="Center" FontSize="18"/>
+    <ProgressBar IsIndeterminate="{Binding AppViewModel.IsLoading}" Height="4" />
+  </StackPanel>
 </UserControl>
