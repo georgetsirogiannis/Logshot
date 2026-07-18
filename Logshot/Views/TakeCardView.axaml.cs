@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Logshot.ViewModels;
 
 namespace Logshot.Views;
 
@@ -76,5 +77,22 @@ public partial class TakeCardView : UserControl
         _isOpen = _cardTransform.X > SwipeThreshold;
         _cardTransform.X = _isOpen ? DrawerWidth : 0;
         _isDragging = false;
+    }
+
+    // Phase 5.1: Single-tap on the take number toggles Circled, double-tap toggles Failed.
+    private async void TakeNumber_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TextBox { DataContext: TakeViewModel takeVm })
+        {
+            await takeVm.MarkCircledCommand.ExecuteAsync(null);
+        }
+    }
+
+    private async void TakeNumber_DoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TextBox { DataContext: TakeViewModel takeVm })
+        {
+            await takeVm.MarkFailedCommand.ExecuteAsync(null);
+        }
     }
 }

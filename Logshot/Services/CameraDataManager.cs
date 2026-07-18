@@ -33,6 +33,28 @@ public class CameraDataManager
 
         [JsonPropertyName("notes")]
         public string Notes { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Marks that this take begins a fresh camera roll for this camera column.
+        /// The roll number is shown above the row, underlined, on the desktop grid and mobile card.
+        /// </summary>
+        [JsonPropertyName("rollChangeMarker")]
+        public bool RollChangeMarker { get; set; } = false;
+
+        /// <summary>
+        /// True when the camera did not roll for this specific take ("No Roll"),
+        /// rendered as a diagonal slash across the roll cell.
+        /// </summary>
+        [JsonPropertyName("noRoll")]
+        public bool NoRoll { get; set; } = false;
+
+        /// <summary>
+        /// The actual camera roll number/ID (e.g. "A012"), set via the "Change Roll" popup.
+        /// Shown as an underlined label above the row when <see cref="RollChangeMarker"/> is true.
+        /// Kept separate from <see cref="Notes"/>, which holds the free-text shot description.
+        /// </summary>
+        [JsonPropertyName("rollNumber")]
+        public string RollNumber { get; set; } = string.Empty;
     }
 
     /// <summary>

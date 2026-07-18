@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -54,11 +57,19 @@ public partial class DayViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<string> _activeCameras = new(CameraDataManager.DEFAULT_CAMERAS);
 
+    /// <summary>
+    /// Cameras beyond the two defaults (CAM A / CAM B), used to populate any
+    /// dynamically added camera columns in the header (positioned before SOUND ROLL).
+    /// </summary>
+    public IEnumerable<string> ExtraActiveCameras => ActiveCameras.Where(c => c != "CAM A" && c != "CAM B");
+
     public DayViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;
         _cameraDataManager = new CameraDataManager();
         _continuityService = new ContinuityService(databaseService, _cameraDataManager);
+        SubscribeActiveCameras(ActiveCameras);
+        SubscribeTakes(Takes);
     }
 
     public DayViewModel(DatabaseService databaseService, CameraDataManager cameraDataManager)
@@ -66,6 +77,8 @@ public partial class DayViewModel : ViewModelBase
         _databaseService = databaseService;
         _cameraDataManager = cameraDataManager;
         _continuityService = new ContinuityService(databaseService, cameraDataManager);
+        SubscribeActiveCameras(ActiveCameras);
+        SubscribeTakes(Takes);
     }
 
     public DayViewModel(DatabaseService databaseService, CameraDataManager cameraDataManager, ContinuityService continuityService)
@@ -73,6 +86,73 @@ public partial class DayViewModel : ViewModelBase
         _databaseService = databaseService;
         _cameraDataManager = cameraDataManager;
         _continuityService = continuityService;
+        SubscribeActiveCameras(ActiveCameras);
+        SubscribeTakes(Takes);
+    }
+
+    private void SubscribeActiveCameras(ObservableCollection<string> cameras)
+    {
+        cameras.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ExtraActiveCameras));
+    }
+
+    partial void OnActiveCamerasChanged(ObservableCollection<string> oldValue, ObservableCollection<string> newValue)
+    {
+        SubscribeActiveCameras(newValue);
+        OnPropertyChanged(nameof(ExtraActiveCameras));
+    }
+
+    /// <summary>
+    /// Keeps the mobile hierarchical grouping in sync with the Takes collection, watching both
+    /// additions/removals and in-place edits (e.g. retroactively changing a take's Episode/Scene).
+    /// </summary>
+    private void SubscribeTakes(ObservableCollection<TakeViewModel> takes)
+    {
+        takes.CollectionChanged += Takes_CollectionChanged;
+        foreach (var take in takes)
+        {
+            take.PropertyChanged += Take_PropertyChanged;
+        }
+    }
+
+    private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (TakeViewModel take in e.OldItems)
+            {
+                take.PropertyChanged -= Take_PropertyChanged;
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (TakeViewModel take in e.NewItems)
+            {
+                take.PropertyChanged += Take_PropertyChanged;
+            }
+        }
+    }
+
+    private void Take_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TakeViewModel.Episode) || e.PropertyName == nameof(TakeViewModel.Scene))
+        {
+            BuildHierarchicalGroups();
+        }
+    }
+
+    partial void OnTakesChanged(ObservableCollection<TakeViewModel> oldValue, ObservableCollection<TakeViewModel> newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.CollectionChanged -= Takes_CollectionChanged;
+            foreach (var take in oldValue)
+            {
+                take.PropertyChanged -= Take_PropertyChanged;
+            }
+        }
+
+        SubscribeTakes(newValue);
     }
 
     /// <summary>
@@ -146,6 +226,20 @@ public partial class DayViewModel : ViewModelBase
     public async Task SaveDay()
     {
         await _databaseService.SaveDayAsync(ToModel());
+    }
+
+    /// <summary>
+    /// Desktop equivalent of the mobile "+ SHOT" button: starts a brand new Shot (Take 1)
+    /// under the current Episode/Scene, using the continuity engine to inherit the camera setup.
+    /// </summary>
+    [RelayCommand]
+    public async Task AddShot()
+    {
+        var lastTake = Takes.LastOrDefault();
+        var episode = string.IsNullOrWhiteSpace(lastTake?.Episode) ? "1" : lastTake!.Episode;
+        var scene = string.IsNullOrWhiteSpace(lastTake?.Scene) ? "1" : lastTake!.Scene;
+
+        await CreateTakeWithContinuity(episode, scene);
     }
 
     [RelayCommand]

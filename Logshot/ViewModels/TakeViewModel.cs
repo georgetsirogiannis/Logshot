@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -225,19 +226,157 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Phase 5.7: [FS] chip decrement. Tap the "-" icon to reduce the false-start count.
+    /// </summary>
+    [RelayCommand]
+    public async Task DecrementFalseStarts()
+    {
+        if (FalseStartCount > 0)
+            FalseStartCount--;
+        await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 5.5: Camera-specific ΑΚΥΡΟ CLIP (per-camera void + row cross-stitch)
+    // -------------------------------------------------------------------------
+
+    private List<string> GetVoidCameraLabelsList()
+    {
+        if (string.IsNullOrWhiteSpace(VoidCameraLabels))
+            return new List<string>();
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(VoidCameraLabels) ?? new List<string>();
+        }
+        catch
+        {
+            return new List<string>();
+        }
+    }
+
+    /// <summary>
+    /// True when at least one camera on this take is flagged ΑΚΥΡΟ CLIP (false clip).
+    /// Collapses the row height to 16pt and crosses out every other cell.
+    /// </summary>
+    public bool HasVoidedCameras => GetVoidCameraLabelsList().Count > 0;
+
+    /// <summary>
+    /// Row height budget: collapses to 16pt when any camera is voided on this take.
+    /// </summary>
+    public double RowHeight => HasVoidedCameras ? 16 : double.NaN;
+
+    /// <summary>
+    /// XAML-friendly row minimum height (16pt collapsed, 30pt standard) avoiding NaN bindings.
+    /// </summary>
+    public double RowMinHeight => HasVoidedCameras ? 16 : 30;
+
+    public bool IsCamAVoided => IsCameraVoided("CAM A");
+    public bool IsCamBVoided => IsCameraVoided("CAM B");
+    public bool ShowCamACrossed => HasVoidedCameras && !IsCamAVoided;
+    public bool ShowCamBCrossed => HasVoidedCameras && !IsCamBVoided;
+
+    /// <summary>
+    /// Whole-row safety constraint (5.5): every non-camera cell (EP, SC, Shot, Take, Sound, Notes)
+    /// is overlaid with the tight cross-stitch pattern whenever this take has a voided camera.
+    /// </summary>
+    public bool ShowRowCrossed => HasVoidedCameras;
+
+    public const string CrossStitchPattern = "XXXXXXXXXXXXXXXXXXXX";
+
+    public bool IsCameraVoided(string cameraLabel) => GetVoidCameraLabelsList().Contains(cameraLabel);
+
+    /// <summary>
+    /// Toggles the ΑΚΥΡΟ CLIP (false clip) flag for a specific camera on this take.
+    /// </summary>
+    [RelayCommand]
+    public async Task ToggleVoidCamera(string cameraLabel)
+    {
+        var list = GetVoidCameraLabelsList();
+        if (!list.Remove(cameraLabel))
+            list.Add(cameraLabel);
+        VoidCameraLabels = JsonSerializer.Serialize(list);
+        await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>
     /// Phase 4 mobile quick-action: [ΑΚΥΡΟ] drawer button. Toggles the primary camera's
-    /// voided/no-roll status. Full per-camera cross-stitch rendering is handled in Phase 5.
+    /// voided/false-clip status using the same per-camera list as the desktop grid.
     /// </summary>
     [RelayCommand]
     public async Task ToggleVoidPrimaryCamera()
     {
-        var data = _cameraDataManager.ParseCameraData(CameraData);
-        if (data.Cameras.TryGetValue("CAM A", out var state))
+        await ToggleVoidCamera("CAM A");
+    }
+
+    partial void OnVoidCameraLabelsChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasVoidedCameras));
+        OnPropertyChanged(nameof(RowHeight));
+        OnPropertyChanged(nameof(RowMinHeight));
+        OnPropertyChanged(nameof(IsCamAVoided));
+        OnPropertyChanged(nameof(IsCamBVoided));
+        OnPropertyChanged(nameof(ShowCamACrossed));
+        OnPropertyChanged(nameof(ShowCamBCrossed));
+        OnPropertyChanged(nameof(ShowRowCrossed));
+
+        foreach (var cell in ExtraCameraRolls)
         {
-            state.Status = state.Status == "voided" ? "active" : "voided";
+            cell.NotifyRollChanged();
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 5.6: Diagonal camera slashes ("No Roll")
+    // -------------------------------------------------------------------------
+
+    public bool IsCamANoRoll => GetCameraFlag("CAM A", s => s.NoRoll);
+    public bool IsCamBNoRoll => GetCameraFlag("CAM B", s => s.NoRoll);
+
+    [RelayCommand]
+    public async Task ToggleCameraNoRoll(string cameraLabel)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        if (!data.Cameras.TryGetValue(cameraLabel, out var state))
+        {
+            data = _cameraDataManager.AddCamera(data, cameraLabel);
+            state = data.Cameras[cameraLabel];
+        }
+        state.NoRoll = !state.NoRoll;
         CameraData = _cameraDataManager.SerializeCameraData(data);
         await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 5.8: Camera roll change marker
+    // -------------------------------------------------------------------------
+
+    public bool IsCamARollChangeMarked => GetCameraFlag("CAM A", s => s.RollChangeMarker);
+    public bool IsCamBRollChangeMarked => GetCameraFlag("CAM B", s => s.RollChangeMarker);
+
+    [RelayCommand]
+    public async Task ToggleRollChangeMarker(string cameraLabel)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        if (!data.Cameras.TryGetValue(cameraLabel, out var state))
+        {
+            data = _cameraDataManager.AddCamera(data, cameraLabel);
+            state = data.Cameras[cameraLabel];
+        }
+        state.RollChangeMarker = !state.RollChangeMarker;
+        CameraData = _cameraDataManager.SerializeCameraData(data);
+        await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    private bool GetCameraFlag(string cameraLabel, Func<Services.CameraDataManager.CameraState, bool> selector)
+        => GetCameraFlagPublic(cameraLabel, selector);
+
+    /// <summary>
+    /// Internal helper exposed for <see cref="CameraRollCell"/> to read per-camera flags.
+    /// </summary>
+    internal bool GetCameraFlagPublic(string cameraLabel, Func<Services.CameraDataManager.CameraState, bool> selector)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        return data.Cameras.TryGetValue(cameraLabel, out var state) && selector(state);
     }
 
     /// <summary>
@@ -282,6 +421,10 @@ public partial class TakeViewModel : ViewModelBase
     // Roll number editing (14/48 Grid columns: CAM A ROLL / CAM B ROLL)
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Free-text field for CAM A (shot description / notes). Kept separate from the
+    /// physical roll number, which is edited via the "Change Roll" popup.
+    /// </summary>
     public string CamARoll
     {
         get => GetCameraRoll("CAM A");
@@ -292,6 +435,18 @@ public partial class TakeViewModel : ViewModelBase
     {
         get => GetCameraRoll("CAM B");
         set => SetCameraRoll("CAM B", value);
+    }
+
+    public string CamARollNumber
+    {
+        get => GetCameraRollNumber("CAM A");
+        set => SetCameraRollNumber("CAM A", value);
+    }
+
+    public string CamBRollNumber
+    {
+        get => GetCameraRollNumber("CAM B");
+        set => SetCameraRollNumber("CAM B", value);
     }
 
     internal string GetCameraRoll(string cameraLabel)
@@ -312,10 +467,39 @@ public partial class TakeViewModel : ViewModelBase
         _ = SaveTakeCommand.ExecuteAsync(null);
     }
 
+    /// <summary>
+    /// Gets the physical camera roll number/ID (set via the "Change Roll" popup),
+    /// separate from the free-text shot description held by <see cref="GetCameraRoll"/>.
+    /// </summary>
+    internal string GetCameraRollNumber(string cameraLabel)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        return data.Cameras.TryGetValue(cameraLabel, out var state) ? state.RollNumber : string.Empty;
+    }
+
+    internal void SetCameraRollNumber(string cameraLabel, string value)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        if (!data.Cameras.ContainsKey(cameraLabel))
+        {
+            data = _cameraDataManager.AddCamera(data, cameraLabel);
+        }
+        data.Cameras[cameraLabel].RollNumber = value ?? string.Empty;
+        CameraData = _cameraDataManager.SerializeCameraData(data);
+        _ = SaveTakeCommand.ExecuteAsync(null);
+        OnPropertyChanged(cameraLabel == "CAM A" ? nameof(CamARollNumber) : nameof(CamBRollNumber));
+    }
+
     partial void OnCameraDataChanged(string value)
     {
         OnPropertyChanged(nameof(CamARoll));
         OnPropertyChanged(nameof(CamBRoll));
+        OnPropertyChanged(nameof(CamARollNumber));
+        OnPropertyChanged(nameof(CamBRollNumber));
+        OnPropertyChanged(nameof(IsCamANoRoll));
+        OnPropertyChanged(nameof(IsCamBNoRoll));
+        OnPropertyChanged(nameof(IsCamARollChangeMarked));
+        OnPropertyChanged(nameof(IsCamBRollChangeMarked));
 
         foreach (var cell in ExtraCameraRolls)
         {
@@ -374,5 +558,32 @@ public partial class CameraRollCell : ObservableObject
         }
     }
 
-    public void NotifyRollChanged() => OnPropertyChanged(nameof(Roll));
+    /// <summary>
+    /// The physical camera roll number/ID, edited via the "Change Roll" popup,
+    /// separate from the free-text shot description held by <see cref="Roll"/>.
+    /// </summary>
+    public string RollNumber
+    {
+        get => _owner.GetCameraRollNumber(Label);
+        set
+        {
+            _owner.SetCameraRollNumber(Label, value);
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsVoided => _owner.IsCameraVoided(Label);
+    public bool ShowCrossed => _owner.HasVoidedCameras && !IsVoided;
+    public bool IsNoRoll => _owner.GetCameraFlagPublic(Label, s => s.NoRoll);
+    public bool IsRollChangeMarked => _owner.GetCameraFlagPublic(Label, s => s.RollChangeMarker);
+
+    public void NotifyRollChanged()
+    {
+        OnPropertyChanged(nameof(Roll));
+        OnPropertyChanged(nameof(RollNumber));
+        OnPropertyChanged(nameof(IsVoided));
+        OnPropertyChanged(nameof(ShowCrossed));
+        OnPropertyChanged(nameof(IsNoRoll));
+        OnPropertyChanged(nameof(IsRollChangeMarked));
+    }
 }

@@ -7,7 +7,12 @@
 			 mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
 			 x:Class="Logshot.Views.MobileTakeListView"
 			 x:DataType="vm:DayViewModel">
-  <ScrollViewer>
+  <DockPanel>
+	<StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" Margin="10,10,10,0">
+	  <TextBox Name="NewCameraLabelBox" Watermark="e.g. CAM C" Width="80" FontSize="11" VerticalAlignment="Center"/>
+	  <Button Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddCamera_Click"/>
+	</StackPanel>
+	<ScrollViewer>
 	<ItemsControl ItemsSource="{Binding MobileSetupGroups}">
 	  <ItemsControl.ItemTemplate>
 		<DataTemplate x:DataType="vm:SetupGroupViewModel">
@@ -34,4 +39,5 @@
 	  </ItemsControl.ItemTemplate>
 	</ItemsControl>
   </ScrollViewer>
+  </DockPanel>
 </UserControl>

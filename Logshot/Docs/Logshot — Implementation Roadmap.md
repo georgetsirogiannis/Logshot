@@ -1,8 +1,8 @@
 # **Logshot — Implementation Roadmap**
 
-**Last Updated:** Phase 4 completion pass  
-**Current Phase:** Phase 5 (Gestures, Shorthands & Advanced UX)  
-**Overall Progress:** 4/7 phases complete (57%)
+**Last Updated:** Phase 5 completion pass  
+**Current Phase:** Phase 6 (The PDF Export Engine)  
+**Overall Progress:** 5/7 phases complete (71%)
 
 ---
 
@@ -65,20 +65,26 @@
 
 ---
 
-### **Phase 5: Gestures, Shorthands & Advanced UX** ⏳ **PENDING**
+### **Phase 5: Gestures, Shorthands & Advanced UX** ✅ **COMPLETE**
 
-**Dependency:** Phase 3 & 4 (UI layers)
+**Dependency:** Phase 3 & 4 (UI layers) — satisfied
 
-1. **Tap Gestures:** Program the single-tap (Circled) and double-tap (Failed) logic, linking them to visual UI updates.  
-2. **Camera-Specific ΑΚΥΡΟ:** Implement the logic that collapses the row height to 16pt, identifies the voided cameras, and renders the "XXXXXXX" cross-stitch pattern.  
-3. **Quick-Tag Chips:** Add the tap-to-increment [FS] and [LS] badges inside the mobile notes cell.  
-4. **Diagonal Slashes:** Apply the tap/swipe mechanism to render "No Roll" camera slashes.  
+1. **Tap Gestures:** Program the single-tap (Circled) and double-tap (Failed) logic, linking them to visual UI updates.  ✅ **COMPLETED**
+   - **Details:** `TakeGridView`/`TakeCardView` wire `Tapped`/`DoubleTapped` on the take-number box to `TakeViewModel.MarkCircledCommand`/`MarkFailedCommand`. Circled renders a hand-drawn-style circle border around the take number; Failed renders a centered red strike-through line.
+2. **Camera-Specific ΑΚΥΡΟ:** Implement the logic that collapses the row height to 16pt, identifies the voided cameras, and renders the "XXXXXXX" cross-stitch pattern.  ✅ **COMPLETED**
+   - **Details:** `TakeViewModel.VoidCameraLabels` now tracks a per-camera list (`ToggleVoidCameraCommand`), exposing `HasVoidedCameras`/`RowMinHeight` (16pt collapse) plus per-camera `IsCamAVoided`/`ShowCamACrossed` (and `CameraRollCell.IsVoided`/`ShowCrossed` for extra cameras). Offending cells show "ΑΚΥΡΟ CLIP"; all other cells across the row render the `CrossStitchPattern` overlay in both `TakeGridView` and `TakeCardView`. A row context menu (desktop) exposes the per-camera toggle.
+3. **Quick-Tag Chips:** Add the tap-to-increment [FS] and [LS] badges inside the mobile notes cell. Add something for the desktop version too.  ✅ **COMPLETED**
+   - **Details:** Added `TakeViewModel.DecrementFalseStartsCommand` alongside the existing increment/long-start commands. Both `TakeCardView` (mobile) and `TakeGridView` (desktop) render an [FS xN] chip with +/- buttons and an [LS] toggle chip directly above the notes field.
+4. **Diagonal Slashes:** Apply the tap/swipe mechanism to render "No Roll" camera slashes.  Add something for the desktop version too.  ✅ **COMPLETED**
+   - **Details:** `CameraDataManager.CameraState.NoRoll` flag plus `TakeViewModel.ToggleCameraNoRollCommand` (per camera). Rendered as a diagonal `Path` (`M0,0 L1,1`, `Stretch="Fill"`) across the roll cell in both `TakeGridView` and `TakeCardView`, toggled via a small inline button (mobile) or the row context menu (desktop).
+5. **Camera Roll Change:** Write the logic that enables the user to log a camera roll change as per described in the Project Master Document.  ✅ **COMPLETED**
+   - **Details:** `CameraDataManager.CameraState.RollChangeMarker` plus `TakeViewModel.ToggleRollChangeMarkerCommand` (per camera). When marked, the current roll number is rendered underlined directly above that camera's roll cell on the row where the new roll starts, on both the desktop grid and mobile card.
 
 ---
 
 ### **Phase 6: The PDF Export Engine (QuestPDF)** ⏳ **PENDING**
 
-**Dependency:** Phase 3, 5 (UI data complete)
+**Dependency:** Phase 3, 5 (UI data complete) — satisfied
 
 1. **A4 Portrait Canvas & Headers:** Set up the QuestPDF document, locking dimensions to A4 and building the repeating metadata header and top-margin scribble box (strictly white-label).  
 2. **Table Generation:** Map the database values to the PDF table, implementing dynamic column width calculations.  

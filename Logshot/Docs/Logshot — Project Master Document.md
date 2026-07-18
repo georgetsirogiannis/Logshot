@@ -164,6 +164,11 @@ When typing observations inside the notes cell, a quick-bar of tap-and-go button
 * **Row Swiping (Mobile Quick Drawer):** Swiping right on any take card slides out a quick-action drawer containing thumb-friendly buttons for \[FS\], \[LS\], and \[ΑΚΥΡΟ\].  
 * 
 
+### **5.8 Change Camera Roll**
+
+During a shooting day, camera assistants may swap out camera rolls. A dedicated **"Change Roll"** button is available in the row options menu. Tapping it prompts you to select a new roll number for that camera, and the change is reflected immediately in the database and UI. The new camera roll number shows directly above its first clip in a separate short row. For example, when the camera roll for CAM A changes from A110 to A111, a small "A111" underlined text must appear on the CAM A column, directly above the first take's row of the new roll.
+
+
 ## **6\. Cross-Day Scene Continuity & Shot Memory**
 
 1. **Automatic Database Query:** The moment you enter or create an Episode and Scene combination within the active project, the app queries the global database for previous takes of that exact setup across all days of the active project.  

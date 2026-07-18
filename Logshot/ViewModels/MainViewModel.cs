@@ -23,6 +23,27 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isMobileLayout = false;
 
+    /// <summary>
+    /// Controls whether the left Project/Day sidebar is expanded. On mobile layouts it starts
+    /// collapsed so the day workspace can use the full screen width, and can be toggled via a
+    /// hamburger button; on desktop it always stays open.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSidebarOpen = true;
+
+    partial void OnIsMobileLayoutChanged(bool value)
+    {
+        // Auto-collapse the sidebar the moment we drop into mobile layout so the day view
+        // gets the full screen; always keep it open again once back on desktop.
+        IsSidebarOpen = !value;
+    }
+
+    [RelayCommand]
+    public void ToggleSidebar()
+    {
+        IsSidebarOpen = !IsSidebarOpen;
+    }
+
     public MainViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;
