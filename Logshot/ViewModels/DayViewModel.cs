@@ -356,4 +356,75 @@ public partial class DayViewModel : ViewModelBase
 
         return await _continuityService.GetContinuityDataAsync(ProjectId, episode, scene);
     }
+
+    // The collection the mobile Avalonia UI will bind to for the adaptive card layout
+    public ObservableCollection<SetupGroupViewModel> MobileSetupGroups { get; } = new();
+
+    /// <summary>
+    /// Phase 2 Step 4: Hierarchical Grouping Algorithm
+    /// Groups raw Take rows into Episode-Scene chunks for the mobile view.
+    /// </summary>
+    public void BuildHierarchicalGroups()
+    {
+        // 1. Identify unique Episode-Scene setups currently in the raw Takes list
+        var groupedData = Takes
+            .GroupBy(t => new { t.Episode, t.Scene })
+            .OrderBy(g => g.Min(t => t.CreatedAt)); // Order chronologically by when the setup started
+
+        var updatedGroups = new System.Collections.Generic.List<SetupGroupViewModel>();
+
+        foreach (var group in groupedData)
+        {
+            // 2. Check if we already have this group in the UI to preserve its IsCollapsed state
+            var existingGroup = MobileSetupGroups.FirstOrDefault(g =>
+                g.Episode == group.Key.Episode && g.Scene == group.Key.Scene);
+
+            var setupGroup = existingGroup ?? new SetupGroupViewModel(group.Key.Episode, group.Key.Scene, this);
+
+            // 3. Sync the takes inside this specific group
+            setupGroup.GroupedTakes.Clear();
+            foreach (var take in group.OrderBy(t => t.SequenceOrder))
+            {
+                setupGroup.GroupedTakes.Add(take);
+            }
+
+            updatedGroups.Add(setupGroup);
+        }
+
+        // 4. Apply the final grouped list to the observable collection bound to the mobile UI
+        MobileSetupGroups.Clear();
+        foreach (var group in updatedGroups)
+        {
+            MobileSetupGroups.Add(group);
+        }
+    }
+
+    /// <summary>
+    /// Supports the mobile [ + TAKE ] button on the subheader card.
+    /// </summary>
+    public void CreateSubsequentTake(string episode, string scene, int currentShot, int currentTake)
+    {
+        // Create a new take that duplicates the active Shot number and increments the Take number by 1
+        var newTakeModel = new Logshot.Models.Take
+        {
+            DayId = this.Id,
+            Episode = episode,
+            Scene = scene,
+            Shot = currentShot,
+            TakeNumber = currentTake + 1,
+            CreatedAt = System.DateTime.UtcNow,
+            SequenceOrder = Takes.Count + 1 // Append to the bottom of the raw list
+        };
+
+        var takeViewModel = new TakeViewModel(_databaseService, _cameraDataManager);
+        takeViewModel.LoadFromModel(newTakeModel);
+
+        // Add to the main linear collection
+        Takes.Add(takeViewModel);
+
+        // NOTE: Add your DatabaseService call here to persist the new take (e.g., takeViewModel.SaveTakeCommand.Execute(null))
+
+        // Re-run the grouping algorithm to update the mobile UI
+        BuildHierarchicalGroups();
+    }
 }
