@@ -370,7 +370,7 @@ public partial class TakeViewModel : ViewModelBase
     public bool IsCamBRollChangeMarked => GetCameraFlag("CAM B", s => s.RollChangeMarker);
 
     [RelayCommand]
-    public async Task ToggleRollChangeMarker(string cameraLabel)
+    public async Task ApplyRollChange(string cameraLabel)
     {
         var data = _cameraDataManager.ParseCameraData(CameraData);
         if (!data.Cameras.TryGetValue(cameraLabel, out var state))
@@ -378,9 +378,22 @@ public partial class TakeViewModel : ViewModelBase
             data = _cameraDataManager.AddCamera(data, cameraLabel);
             state = data.Cameras[cameraLabel];
         }
-        state.RollChangeMarker = !state.RollChangeMarker;
+        state.RollChangeMarker = true;
         CameraData = _cameraDataManager.SerializeCameraData(data);
         await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
+    public async Task RemoveRollChange(string cameraLabel)
+    {
+        var data = _cameraDataManager.ParseCameraData(CameraData);
+        if (data.Cameras.TryGetValue(cameraLabel, out var state))
+        {
+            state.RollChangeMarker = false;
+            state.RollNumber = string.Empty; // Clears the number out
+            CameraData = _cameraDataManager.SerializeCameraData(data);
+            await SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     private bool GetCameraFlag(string cameraLabel, Func<Services.CameraDataManager.CameraState, bool> selector)
@@ -602,4 +615,16 @@ public partial class CameraRollCell : ObservableObject
         OnPropertyChanged(nameof(IsNoRoll));
         OnPropertyChanged(nameof(IsRollChangeMarked));
     }
+
+    [RelayCommand]
+    public async Task ToggleVoid() => await _owner.ToggleVoidCamera(Label);
+
+    [RelayCommand]
+    public async Task ToggleNoRoll() => await _owner.ToggleCameraNoRoll(Label);
+
+    [RelayCommand]
+    public async Task ApplyRollChange() => await _owner.ApplyRollChange(Label);
+
+    [RelayCommand]
+    public async Task RemoveRollChange() => await _owner.RemoveRollChange(Label);
 }

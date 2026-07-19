@@ -1,5 +1,7 @@
 # **Logshot — Implementation Roadmap**
 
+CAUTION: THIS IS AN OUTDATED REPORT.
+
 **Last Updated:** Phase 5 completion pass  
 **Current Phase:** Phase 6 (The PDF Export Engine)  
 **Overall Progress:** 5/7 phases complete (71%)

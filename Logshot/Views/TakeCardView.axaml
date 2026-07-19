@@ -1,136 +1,169 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:vm="using:Logshot.ViewModels"
-			 mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="140"
-			 x:Class="Logshot.Views.TakeCardView"
-			 x:DataType="vm:TakeViewModel">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Logshot.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="140"
+             x:Class="Logshot.Views.TakeCardView"
+             x:DataType="vm:TakeViewModel">
   <Grid ClipToBounds="True">
-	<StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="{StaticResource HeaderBackground}" Spacing="0">
-	  <Button Name="FsButton" Content="FS" Width="60" HorizontalContentAlignment="Center" Command="{Binding IncrementFalseStartsCommand}"/>
-	  <Button Name="LsButton" Content="LS" Width="60" HorizontalContentAlignment="Center" Command="{Binding ToggleLongStartCommand}"/>
-	  <Button Name="VoidButton" Content="AKYRO" Width="70" HorizontalContentAlignment="Center" Background="{StaticResource FailRed}" Command="{Binding ToggleVoidPrimaryCameraCommand}"/>
-	</StackPanel>
-	<Border Name="CardSurface" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,0,1" Padding="12,8" MinHeight="{Binding RowMinHeight}" PointerPressed="Card_PointerPressed" PointerMoved="Card_PointerMoved" PointerReleased="Card_PointerReleased">
-	  <Border.RenderTransform>
-		<TranslateTransform/>
-	  </Border.RenderTransform>
-	  <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
-		<StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6">
-		  <TextBlock Text="SHOT" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-		  <TextBox Text="{Binding Shot}" Width="50" FontWeight="Bold" FontSize="15" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
-		  <TextBlock Text="TAKE" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-		  <Grid>
-			<Border Width="26" Height="26" CornerRadius="13" BorderThickness="2" BorderBrush="{StaticResource ActionAccent}" IsVisible="{Binding IsCircled}"/>
-			<TextBox Name="TakeNumberBox" Text="{Binding TakeNumber}" Width="50" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource ActionAccent}"
-					 Tapped="TakeNumber_Tapped" DoubleTapped="TakeNumber_DoubleTapped"/>
-			<Line StartPoint="0,15" EndPoint="50,15" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsFailed}"/>
-		  </Grid>
-		  <TextBlock Text="&#9679;" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCircled}"/>
-		  <TextBlock Text="X" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsFailed}"/>
-		</StackPanel>
-		<StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="16" Margin="0,6,0,0">
-		  <StackPanel Orientation="Horizontal" Spacing="4">
-			<TextBlock Text="EP:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-			<TextBox Text="{Binding Episode}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
-		  </StackPanel>
-		  <StackPanel Orientation="Horizontal" Spacing="4">
-			<TextBlock Text="SC:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-			<TextBox Text="{Binding Scene}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
-		  </StackPanel>
-		</StackPanel>
-		<WrapPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,6,0,0" IsVisible="{Binding !HasVoidedCameras}">
-		  <StackPanel Orientation="Vertical" Spacing="0" Margin="0,0,16,4">
-			<TextBlock Text="{Binding CamARollNumber}" FontSize="9" TextDecorations="Underline" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCamARollChangeMarked}"/>
-			<StackPanel Orientation="Horizontal" Spacing="4">
-			  <TextBlock Text="CAM A:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-			  <Grid Width="80" Height="18">
-				<TextBox Text="{Binding CamARoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsCamAVoided}"/>
-				<TextBlock Text="&#913;&#922;&#933;&#929;&#927;" FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamAVoided}"/>
-				<Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsCamANoRoll}"/>
-			  </Grid>
-			  <Button Content="&#8635;" FontSize="10" Padding="2,0" ToolTip.Tip="Toggle No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A"/>
-			  <Button Content="&#8635;R" FontSize="10" Padding="2,0" ToolTip.Tip="Mark New Roll" Command="{Binding ToggleRollChangeMarkerCommand}" CommandParameter="CAM A"/>
-			  <Button Content="&#9998;" FontSize="10" Padding="2,0" ToolTip.Tip="Change Camera Roll">
-				<Button.Flyout>
-				  <Flyout Placement="Bottom">
-					<StackPanel Spacing="4" Width="140">
-					  <TextBlock Text="CAM A Roll #" FontWeight="Bold" FontSize="11"/>
-					  <TextBox Text="{Binding CamARollNumber}" Watermark="Roll number"/>
-					</StackPanel>
-				  </Flyout>
-				</Button.Flyout>
-			  </Button>
-			</StackPanel>
-		  </StackPanel>
-		  <StackPanel Orientation="Vertical" Spacing="0" Margin="0,0,16,4">
-			<TextBlock Text="{Binding CamBRollNumber}" FontSize="9" TextDecorations="Underline" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCamBRollChangeMarked}"/>
-			<StackPanel Orientation="Horizontal" Spacing="4">
-			  <TextBlock Text="CAM B:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-			  <Grid Width="80" Height="18">
-				<TextBox Text="{Binding CamBRoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsCamBVoided}"/>
-				<TextBlock Text="&#913;&#922;&#933;&#929;&#927;" FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamBVoided}"/>
-				<Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsCamBNoRoll}"/>
-			  </Grid>
-			  <Button Content="&#8635;" FontSize="10" Padding="2,0" ToolTip.Tip="Toggle No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B"/>
-			  <Button Content="&#8635;R" FontSize="10" Padding="2,0" ToolTip.Tip="Mark New Roll" Command="{Binding ToggleRollChangeMarkerCommand}" CommandParameter="CAM B"/>
-			  <Button Content="&#9998;" FontSize="10" Padding="2,0" ToolTip.Tip="Change Camera Roll">
-				<Button.Flyout>
-				  <Flyout Placement="Bottom">
-					<StackPanel Spacing="4" Width="140">
-					  <TextBlock Text="CAM B Roll #" FontWeight="Bold" FontSize="11"/>
-					  <TextBox Text="{Binding CamBRollNumber}" Watermark="Roll number"/>
-					</StackPanel>
-				  </Flyout>
-				</Button.Flyout>
-			  </Button>
-			</StackPanel>
-		  </StackPanel>
-		  <ItemsControl ItemsSource="{Binding ExtraCameraRolls}">
-			<ItemsControl.ItemsPanel>
-			  <ItemsPanelTemplate>
-				<StackPanel Orientation="Horizontal"/>
-			  </ItemsPanelTemplate>
-			</ItemsControl.ItemsPanel>
-			<ItemsControl.ItemTemplate>
-			  <DataTemplate x:DataType="vm:CameraRollCell">
-				<StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,4">
-				  <TextBlock Text="{Binding Label, StringFormat={}{0}:}" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-				  <TextBox Text="{Binding Roll}" Watermark="Shot..." Width="70" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
-				  <Button Content="&#9998;" FontSize="10" Padding="2,0" ToolTip.Tip="Change Camera Roll">
-					<Button.Flyout>
-					  <Flyout Placement="Bottom">
-						<StackPanel Spacing="4" Width="140">
-						  <StackPanel Orientation="Horizontal" Spacing="2">
-							<TextBlock Text="{Binding Label}" FontWeight="Bold" FontSize="11"/>
-							<TextBlock Text=" Roll #" FontWeight="Bold" FontSize="11"/>
-						  </StackPanel>
-						  <TextBox Text="{Binding RollNumber}" Watermark="Roll number"/>
-						</StackPanel>
-					  </Flyout>
-					</Button.Flyout>
-				  </Button>
-				</StackPanel>
-			  </DataTemplate>
-			</ItemsControl.ItemTemplate>
-		  </ItemsControl>
-		  <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,4">
-			<TextBlock Text="SOUND:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-			<TextBox Text="{Binding SoundNotes}" Width="70" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
-		  </StackPanel>
-		</WrapPanel>
-		<Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,6,0,0" IsVisible="{Binding HasVoidedCameras}">
-		  <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="10" TextWrapping="Wrap" Opacity="0.6"/>
-		</Border>
-		<StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,6,0,0">
-		  <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" Padding="4,1" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}"/>
-		  <Button Content="+FS" FontSize="10" Padding="4,0" Command="{Binding IncrementFalseStartsCommand}"/>
-		  <Button Content="-FS" FontSize="10" Padding="4,0" IsVisible="{Binding FalseStartCount}" Command="{Binding DecrementFalseStartsCommand}"/>
-		  <ToggleButton Content="LS" FontSize="10" Padding="4,0" IsChecked="{Binding IsLongStart}" Command="{Binding ToggleLongStartCommand}"/>
-		</StackPanel>
-		<TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding TakeNotes}" Watermark="Notes..." AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Margin="0,6,0,0"/>
-	  </Grid>
-	</Border>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="{StaticResource HeaderBackground}" Spacing="0">
+      <Button Name="FsButton" Content="FS" Width="60" HorizontalContentAlignment="Center" Command="{Binding IncrementFalseStartsCommand}"/>
+      <Button Name="LsButton" Content="LS" Width="60" HorizontalContentAlignment="Center" Command="{Binding ToggleLongStartCommand}"/>
+      <Button Name="VoidButton" Content="AKYRO" Width="70" HorizontalContentAlignment="Center" Background="{StaticResource FailRed}" Command="{Binding ToggleVoidPrimaryCameraCommand}"/>
+    </StackPanel>
+    <Border Name="CardSurface" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,0,1" Padding="12,8" MinHeight="{Binding RowMinHeight}" PointerPressed="Card_PointerPressed" PointerMoved="Card_PointerMoved" PointerReleased="Card_PointerReleased">
+      <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+      <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6">
+          <TextBlock Text="SHOT" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+          <TextBox Text="{Binding Shot}" Width="50" FontWeight="Bold" FontSize="15" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
+          <TextBlock Text="TAKE" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+          <Grid>
+            <Border Width="26" Height="26" CornerRadius="13" BorderThickness="2" BorderBrush="{StaticResource ActionAccent}" IsVisible="{Binding IsCircled}"/>
+            <TextBox Name="TakeNumberBox" Text="{Binding TakeNumber}" Width="50" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource ActionAccent}">
+              <TextBox.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="Mark Circled" Command="{Binding MarkCircledCommand}"/>
+                  <MenuItem Header="Mark Failed" Command="{Binding MarkFailedCommand}"/>
+                </ContextMenu>
+              </TextBox.ContextMenu>
+            </TextBox>
+            <Line StartPoint="0,15" EndPoint="50,15" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsFailed}"/>
+          </Grid>
+          <TextBlock Text="●" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCircled}"/>
+          <TextBlock Text="X" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsFailed}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="16" Margin="0,6,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="EP:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding Episode}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="SC:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding Scene}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
+          </StackPanel>
+        </StackPanel>
+        <WrapPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,6,0,0" IsVisible="{Binding !HasVoidedCameras}">
+          <StackPanel Orientation="Vertical" Spacing="0" Margin="0,0,16,4">
+            <TextBlock Text="{Binding CamARollNumber}" FontSize="9" TextDecorations="Underline" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCamARollChangeMarked}"/>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBlock Text="CAM A:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+              <Grid Width="80" Height="18">
+                <TextBox Text="{Binding CamARoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsCamAVoided}">
+                  <FlyoutBase.AttachedFlyout>
+                    <Flyout Placement="Bottom">
+                      <StackPanel Spacing="6" Width="160">
+                        <TextBlock Text="CAM A Roll #" FontWeight="Bold" FontSize="11"/>
+                        <TextBox Text="{Binding CamARollNumber}" Watermark="Enter roll number..."/>
+                        <Grid ColumnDefinitions="*,*">
+                          <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM A" Click="CloseFlyout_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="0,0,2,0"/>
+                          <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM A" Click="CloseFlyout_Click" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="2,0,0,0"/>
+                        </Grid>
+                      </StackPanel>
+                    </Flyout>
+                  </FlyoutBase.AttachedFlyout>
+                  <TextBox.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A"/>
+                      <MenuItem Header="No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A"/>
+                      <Separator/>
+                      <MenuItem Header="Set / Edit Roll Change..." Click="ChangeRollMenuItem_Click"/>
+                    </ContextMenu>
+                  </TextBox.ContextMenu>
+                </TextBox>
+                <TextBlock Text="ΑΚΥΡΟ" FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamAVoided}"/>
+                <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsCamANoRoll}"/>
+              </Grid>
+            </StackPanel>
+          </StackPanel>
+          <StackPanel Orientation="Vertical" Spacing="0" Margin="0,0,16,4">
+            <TextBlock Text="{Binding CamBRollNumber}" FontSize="9" TextDecorations="Underline" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCamBRollChangeMarked}"/>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBlock Text="CAM B:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+              <Grid Width="80" Height="18">
+                <TextBox Text="{Binding CamBRoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsCamBVoided}">
+                  <FlyoutBase.AttachedFlyout>
+                    <Flyout Placement="Bottom">
+                      <StackPanel Spacing="6" Width="160">
+                        <TextBlock Text="CAM B Roll #" FontWeight="Bold" FontSize="11"/>
+                        <TextBox Text="{Binding CamBRollNumber}" Watermark="Enter roll number..."/>
+                        <Grid ColumnDefinitions="*,*">
+                          <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM B" Click="CloseFlyout_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="0,0,2,0"/>
+                          <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM B" Click="CloseFlyout_Click" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="2,0,0,0"/>
+                        </Grid>
+                      </StackPanel>
+                    </Flyout>
+                  </FlyoutBase.AttachedFlyout>
+                  <TextBox.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B"/>
+                      <MenuItem Header="No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B"/>
+                      <Separator/>
+                      <MenuItem Header="Set / Edit Roll Change..." Click="ChangeRollMenuItem_Click"/>
+                    </ContextMenu>
+                  </TextBox.ContextMenu>
+                </TextBox>
+                <TextBlock Text="ΑΚΥΡΟ" FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamBVoided}"/>
+                <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsCamBNoRoll}"/>
+              </Grid>
+            </StackPanel>
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding ExtraCameraRolls}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:CameraRollCell">
+                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,4">
+                  <TextBlock Text="{Binding Label, StringFormat={}{0}:}" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                  <Grid>
+                    <TextBox Text="{Binding Roll}" Watermark="Shot..." Width="70" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsVoided}">
+                      <FlyoutBase.AttachedFlyout>
+                        <Flyout Placement="Bottom">
+                          <StackPanel Spacing="6" Width="160">
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                              <TextBlock Text="{Binding Label}" FontWeight="Bold" FontSize="11"/>
+                              <TextBlock Text=" Roll #" FontWeight="Bold" FontSize="11"/>
+                            </StackPanel>
+                            <TextBox Text="{Binding RollNumber}" Watermark="Enter roll number..."/>
+                            <Grid ColumnDefinitions="*,*">
+                              <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyRollChangeCommand}" Click="CloseFlyout_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="0,0,2,0"/>
+                              <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveRollChangeCommand}" Click="CloseFlyout_Click" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="2,0,0,0"/>
+                            </Grid>
+                          </StackPanel>
+                        </Flyout>
+                      </FlyoutBase.AttachedFlyout>
+                      <TextBox.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCommand}"/>
+                          <MenuItem Header="No Roll" Command="{Binding ToggleNoRollCommand}"/>
+                          <Separator/>
+                          <MenuItem Header="Set / Edit Roll Change..." Click="ChangeRollMenuItem_Click"/>
+                        </ContextMenu>
+                      </TextBox.ContextMenu>
+                    </TextBox>
+                    <TextBlock Text="ΑΚΥΡΟ" FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsVoided}"/>
+                    <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsNoRoll}"/>
+                  </Grid>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,4">
+            <TextBlock Text="SOUND:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding SoundNotes}" Width="70" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
+          </StackPanel>
+        </WrapPanel>
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,6,0,0" IsVisible="{Binding HasVoidedCameras}">
+          <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="10" TextWrapping="Wrap" Opacity="0.6"/>
+        </Border>
+        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,6,0,0">
+          <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" Padding="4,1" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}"/>
+          <Button Content="+FS" FontSize="10" Padding="4,0" Command="{Binding IncrementFalseStartsCommand}"/>
+          <Button Content="-FS" FontSize="10" Padding="4,0" IsVisible="{Binding FalseStartCount}" Command="{Binding DecrementFalseStartsCommand}"/>
+          <ToggleButton Content="LS" FontSize="10" Padding="4,0" IsChecked="{Binding IsLongStart}" Command="{Binding ToggleLongStartCommand}"/>
+        </StackPanel>
+        <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding TakeNotes}" Watermark="Notes..." AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Margin="0,6,0,0"/>
+      </Grid>
+    </Border>
   </Grid>
 </UserControl>

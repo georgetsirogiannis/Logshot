@@ -1,5 +1,7 @@
 # **Logshot — Current Development Status Report**
 
+CAUTION: THIS IS AN OUTDATED REPORT
+
 **Report Date:** 2025-01-Current  
 **Project:** Logshot (Film/TV Production Logging System)  
 **Target Platform:** .NET 10 (Avalonia UI)  

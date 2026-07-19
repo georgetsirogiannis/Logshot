@@ -1,5 +1,7 @@
 # Logshot Architecture & Current State
 
+CAUTION: THIS IS AN OUTDATED REPORT
+
 **Last Updated:** Phase 2 Complete (All Core Business Logic)  
 **Project Target:** .NET 10  
 **UI Framework:** Avalonia (cross-platform desktop, Android, iOS, browser)  

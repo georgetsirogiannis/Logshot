@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Logshot.ViewModels;
@@ -11,6 +12,7 @@ public partial class TakeGridView : UserControl
     private TakeViewModel? _draggedTake;
     private bool _isDragging;
     private Point _dragStartPoint;
+    private Control? _currentFlyoutTarget; // Tracks the open flyout
 
     public TakeGridView()
     {
@@ -19,26 +21,18 @@ public partial class TakeGridView : UserControl
 
     private async void AddCamera_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not DayViewModel dayVm)
-            return;
-
+        if (DataContext is not DayViewModel dayVm) return;
         var textBox = this.FindControl<TextBox>("NewCameraLabelBox");
         var label = textBox?.Text?.Trim();
-
-        if (string.IsNullOrWhiteSpace(label))
-            return;
+        if (string.IsNullOrWhiteSpace(label)) return;
 
         await dayVm.AddCameraCommand.ExecuteAsync(label);
-
-        if (textBox is not null)
-            textBox.Text = string.Empty;
+        if (textBox is not null) textBox.Text = string.Empty;
     }
 
     private void Row_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is not Border border)
-            return;
-
+        if (sender is not Border border) return;
         _dragStartPoint = e.GetPosition(border);
         _draggedTake = border.Tag as TakeViewModel;
         _isDragging = false;
@@ -46,20 +40,13 @@ public partial class TakeGridView : UserControl
 
     private void Row_PointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_draggedTake is null || sender is not Border border)
-            return;
-
-        if (!e.GetCurrentPoint(border).Properties.IsLeftButtonPressed)
-            return;
-
+        if (_draggedTake is null || sender is not Border border) return;
+        if (!e.GetCurrentPoint(border).Properties.IsLeftButtonPressed) return;
         var currentPoint = e.GetPosition(border);
         var delta = currentPoint - _dragStartPoint;
 
-        // Require a small movement threshold before treating this as a drag
         if (!_isDragging && (System.Math.Abs(delta.Y) > 4 || System.Math.Abs(delta.X) > 4))
-        {
             _isDragging = true;
-        }
     }
 
     private async void Row_PointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -92,20 +79,29 @@ public partial class TakeGridView : UserControl
         _isDragging = false;
     }
 
-    // Phase 5.1: Single-tap on the take number toggles Circled, double-tap toggles Failed.
-    private async void TakeNumber_Tapped(object? sender, TappedEventArgs e)
+    private void ChangeRollMenuItem_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is TextBox { DataContext: TakeViewModel takeVm })
+        if (sender is MenuItem menuItem)
         {
-            await takeVm.MarkCircledCommand.ExecuteAsync(null);
+            var parent = menuItem.Parent;
+            while (parent != null && !(parent is ContextMenu))
+                parent = parent.Parent;
+
+            if (parent is ContextMenu contextMenu && contextMenu.PlacementTarget is Control target)
+            {
+                _currentFlyoutTarget = target;
+                FlyoutBase.ShowAttachedFlyout(target);
+            }
         }
     }
 
-    private async void TakeNumber_DoubleTapped(object? sender, TappedEventArgs e)
+    // Closes the flyout when Apply or Remove is clicked
+    private void CloseFlyout_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is TextBox { DataContext: TakeViewModel takeVm })
+        if (_currentFlyoutTarget != null)
         {
-            await takeVm.MarkFailedCommand.ExecuteAsync(null);
+            FlyoutBase.GetAttachedFlyout(_currentFlyoutTarget)?.Hide();
+            _currentFlyoutTarget = null;
         }
     }
 }
