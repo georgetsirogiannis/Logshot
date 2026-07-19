@@ -45,6 +45,22 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private string _soundNotes = string.Empty;
 
+    // Visibility Flags for Row Spanning
+    [ObservableProperty]
+    private bool _showEpisode = true;
+
+    [ObservableProperty]
+    private bool _showScene = true;
+
+    [ObservableProperty]
+    private bool _showShot = true;
+
+    [ObservableProperty]
+    private bool _showCamARoll = true;
+
+    [ObservableProperty]
+    private bool _showCamBRoll = true;
+
     // Gestures & Modifiers
     [ObservableProperty]
     private string _takeNotes = string.Empty;

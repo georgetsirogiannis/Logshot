@@ -140,10 +140,22 @@
                                HorizontalAlignment="Center" Foreground="{StaticResource ActionAccent}"
                                IsVisible="{Binding IsCamARollChangeMarked}"/>
                     <Grid Grid.Row="1">
-                      <TextBox Text="{Binding CamARoll}" VerticalContentAlignment="Center" TextAlignment="Center"
-                               AcceptsReturn="True" TextWrapping="Wrap" Watermark="..."
-                               HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"
-                               IsVisible="{Binding !HasVoidedCameras}"/>
+                      
+                      <!-- View / Edit Span logic -->
+                      <Panel IsVisible="{Binding !HasVoidedCameras}">
+                        <TextBlock Text="{Binding CamARoll}" IsVisible="{Binding ShowCamARoll}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBox Text="{Binding CamARoll}" VerticalContentAlignment="Center" TextAlignment="Center"
+                                 AcceptsReturn="True" TextWrapping="Wrap" Watermark="..."
+                                 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent">
+                          <TextBox.Styles>
+                            <Style Selector="TextBox:not(:focus)">
+                              <Setter Property="Opacity" Value="0"/>
+                            </Style>
+                          </TextBox.Styles>
+                        </TextBox>
+                      </Panel>
+
                       <TextBlock Text="&#913;&#922;&#933;&#929;&#927; CLIP" FontWeight="Bold" FontSize="10"
                                  HorizontalAlignment="Center" VerticalAlignment="Center"
                                  Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamAVoided}"/>
@@ -181,10 +193,22 @@
                                HorizontalAlignment="Center" Foreground="{StaticResource ActionAccent}"
                                IsVisible="{Binding IsCamBRollChangeMarked}"/>
                     <Grid Grid.Row="1">
-                      <TextBox Text="{Binding CamBRoll}" VerticalContentAlignment="Center" TextAlignment="Center"
-                               AcceptsReturn="True" TextWrapping="Wrap" Watermark="..."
-                               HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"
-                               IsVisible="{Binding !HasVoidedCameras}"/>
+
+                      <!-- View / Edit Span logic -->
+                      <Panel IsVisible="{Binding !HasVoidedCameras}">
+                        <TextBlock Text="{Binding CamBRoll}" IsVisible="{Binding ShowCamBRoll}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBox Text="{Binding CamBRoll}" VerticalContentAlignment="Center" TextAlignment="Center"
+                                 AcceptsReturn="True" TextWrapping="Wrap" Watermark="..."
+                                 HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent">
+                          <TextBox.Styles>
+                            <Style Selector="TextBox:not(:focus)">
+                              <Setter Property="Opacity" Value="0"/>
+                            </Style>
+                          </TextBox.Styles>
+                        </TextBox>
+                      </Panel>
+
                       <TextBlock Text="&#913;&#922;&#933;&#929;&#927; CLIP" FontWeight="Bold" FontSize="10"
                                  HorizontalAlignment="Center" VerticalAlignment="Center"
                                  Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamBVoided}"/>
@@ -291,10 +315,22 @@
                 <!-- EPISODE -->
                 <Border Grid.Column="5" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Padding="4">
                   <Grid>
-                    <TextBox Text="{Binding Episode}" VerticalContentAlignment="Center" TextAlignment="Center"
-                             AcceptsReturn="True" TextWrapping="Wrap"
-                             HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"
-                             IsVisible="{Binding !ShowRowCrossed}"/>
+                    
+                    <!-- View / Edit Span logic -->
+                    <Panel IsVisible="{Binding !ShowRowCrossed}">
+                      <TextBlock Text="{Binding Episode}" IsVisible="{Binding ShowEpisode}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBox Text="{Binding Episode}" VerticalContentAlignment="Center" TextAlignment="Center"
+                               AcceptsReturn="True" TextWrapping="Wrap"
+                               HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent">
+                        <TextBox.Styles>
+                          <Style Selector="TextBox:not(:focus)">
+                            <Setter Property="Opacity" Value="0"/>
+                          </Style>
+                        </TextBox.Styles>
+                      </TextBox>
+                    </Panel>
+                    
                     <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="10" TextWrapping="Wrap"
                                Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center"
                                IsVisible="{Binding ShowRowCrossed}"/>
@@ -304,10 +340,22 @@
                 <!-- SCENE -->
                 <Border Grid.Column="6" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Padding="4">
                   <Grid>
-                    <TextBox Text="{Binding Scene}" VerticalContentAlignment="Center" TextAlignment="Center"
-                             AcceptsReturn="True" TextWrapping="Wrap"
-                             HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"
-                             IsVisible="{Binding !ShowRowCrossed}"/>
+
+                    <!-- View / Edit Span logic -->
+                    <Panel IsVisible="{Binding !ShowRowCrossed}">
+                      <TextBlock Text="{Binding Scene}" IsVisible="{Binding ShowScene}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBox Text="{Binding Scene}" VerticalContentAlignment="Center" TextAlignment="Center"
+                               AcceptsReturn="True" TextWrapping="Wrap"
+                               HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent">
+                        <TextBox.Styles>
+                          <Style Selector="TextBox:not(:focus)">
+                            <Setter Property="Opacity" Value="0"/>
+                          </Style>
+                        </TextBox.Styles>
+                      </TextBox>
+                    </Panel>
+
                     <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="10" TextWrapping="Wrap"
                                Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center"
                                IsVisible="{Binding ShowRowCrossed}"/>
@@ -317,10 +365,22 @@
                 <!-- SHOT -->
                 <Border Grid.Column="7" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Padding="4">
                   <Grid>
-                    <TextBox Text="{Binding Shot}" VerticalContentAlignment="Center" TextAlignment="Center"
-                             AcceptsReturn="True" TextWrapping="Wrap"
-                             HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent"
-                             IsVisible="{Binding !ShowRowCrossed}"/>
+
+                    <!-- View / Edit Span logic -->
+                    <Panel IsVisible="{Binding !ShowRowCrossed}">
+                      <TextBlock Text="{Binding Shot}" IsVisible="{Binding ShowShot}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBox Text="{Binding Shot}" VerticalContentAlignment="Center" TextAlignment="Center"
+                               AcceptsReturn="True" TextWrapping="Wrap"
+                               HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent">
+                        <TextBox.Styles>
+                          <Style Selector="TextBox:not(:focus)">
+                            <Setter Property="Opacity" Value="0"/>
+                          </Style>
+                        </TextBox.Styles>
+                      </TextBox>
+                    </Panel>
+
                     <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="10" TextWrapping="Wrap"
                                Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center"
                                IsVisible="{Binding ShowRowCrossed}"/>

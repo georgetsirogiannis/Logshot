@@ -159,6 +159,9 @@ public partial class DayViewModel : ViewModelBase
                 take.PropertyChanged += Take_PropertyChanged;
             }
         }
+
+        // Recalculate visibility when rows are added or removed
+        UpdateRowVisibilities();
     }
 
     private void Take_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -167,8 +170,18 @@ public partial class DayViewModel : ViewModelBase
         {
             BuildHierarchicalGroups();
         }
-    }
 
+        // ---> ADD THIS BLOCK <---
+        // Recalculate visibility only if one of the span-enabled text fields was edited
+        if (e.PropertyName == nameof(TakeViewModel.Episode) ||
+            e.PropertyName == nameof(TakeViewModel.Scene) ||
+            e.PropertyName == nameof(TakeViewModel.Shot) ||
+            e.PropertyName == nameof(TakeViewModel.CamARoll) ||
+            e.PropertyName == nameof(TakeViewModel.CamBRoll))
+        {
+            UpdateRowVisibilities();
+        }
+    }
     partial void OnTakesChanged(ObservableCollection<TakeViewModel> oldValue, ObservableCollection<TakeViewModel> newValue)
     {
         if (oldValue is not null)
@@ -247,6 +260,9 @@ public partial class DayViewModel : ViewModelBase
         RefreshAllExtraCameraRolls();
         await UpdateTotalTakesCommand.ExecuteAsync(null);
         await UpdateCurrentShotCommand.ExecuteAsync(null);
+
+        UpdateRowVisibilities();
+
         BuildHierarchicalGroups();
     }
 
@@ -640,5 +656,45 @@ public partial class DayViewModel : ViewModelBase
 
         // Re-run the grouping algorithm to update the mobile UI
         BuildHierarchicalGroups();
+    }
+
+    public void UpdateRowVisibilities()
+    {
+        if (Takes == null || Takes.Count == 0) return;
+
+        TakeViewModel? previousTake = null;
+
+        // Iterate through takes in their sequence order
+        foreach (var currentTake in Takes.OrderBy(t => t.SequenceOrder))
+        {
+            if (previousTake == null)
+            {
+                // The very first row must always show everything
+                currentTake.ShowEpisode = true;
+                currentTake.ShowScene = true;
+                currentTake.ShowShot = true;
+                currentTake.ShowCamARoll = true;
+                currentTake.ShowCamBRoll = true;
+            }
+            else
+            {
+                // Compare with the previous row.
+
+                // 1. EPISODE
+                currentTake.ShowEpisode = currentTake.Episode != previousTake.Episode;
+
+                // 2. SCENE (If the episode changes, the scene MUST show, even if the number matches)
+                currentTake.ShowScene = currentTake.ShowEpisode || (currentTake.Scene != previousTake.Scene);
+
+                // 3. SHOT (If the scene changes, the shot MUST show)
+                currentTake.ShowShot = currentTake.ShowScene || (currentTake.Shot != previousTake.Shot);
+
+                // 4. CAMERAS (Show if the text is different from the row above)
+                currentTake.ShowCamARoll = currentTake.CamARoll != previousTake.CamARoll;
+                currentTake.ShowCamBRoll = currentTake.CamBRoll != previousTake.CamBRoll;
+            }
+
+            previousTake = currentTake;
+        }
     }
 }
