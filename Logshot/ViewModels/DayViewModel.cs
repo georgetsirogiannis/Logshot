@@ -102,6 +102,34 @@ public partial class DayViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Synchronizes inherited or previous camera data with the Day's current ActiveCameras.
+    /// This ensures any extra cameras added mid-day are injected into brand new shots and takes.
+    /// </summary>
+    private string SyncCameraDataWithActiveCameras(string baseCameraData)
+    {
+        // Fallback to default cameras if the base data is empty
+        if (string.IsNullOrWhiteSpace(baseCameraData) || baseCameraData == "{}")
+        {
+            baseCameraData = _cameraDataManager.SerializeCameraData(_cameraDataManager.InitializeDefaultCameras());
+        }
+
+        // Parse the data and get a list of the cameras it currently holds
+        var cameraData = _cameraDataManager.ParseCameraData(baseCameraData);
+        var existingCameras = _cameraDataManager.GetActiveCameraLabels(cameraData).ToList();
+
+        // Loop through the day's master list. If the new camera isn't in the data, add it.
+        foreach (var activeCam in ActiveCameras)
+        {
+            if (!existingCameras.Contains(activeCam))
+            {
+                cameraData = _cameraDataManager.AddCamera(cameraData, activeCam);
+            }
+        }
+
+        return _cameraDataManager.SerializeCameraData(cameraData);
+    }
+
+    /// <summary>
     /// Keeps the mobile hierarchical grouping in sync with the Takes collection, watching both
     /// additions/removals and in-place edits (e.g. retroactively changing a take's Episode/Scene).
     /// </summary>
@@ -255,7 +283,10 @@ public partial class DayViewModel : ViewModelBase
             Scene = lastTake?.Scene ?? string.Empty,
             Shot = lastTake?.Shot ?? 0,
             TakeNumber = (lastTake?.TakeNumber ?? 0) + 1,
-            CameraData = lastTake?.CameraData ?? _cameraDataManager.SerializeCameraData(_cameraDataManager.InitializeDefaultCameras()),
+
+            // FIX: Synchronize the last take's data with the Day's active cameras
+            CameraData = SyncCameraDataWithActiveCameras(lastTake?.CameraData),
+
             CreatedAt = DateTime.UtcNow
         };
 
@@ -498,7 +529,10 @@ public partial class DayViewModel : ViewModelBase
             Scene = scene,
             Shot = continuityData.NextShotNumber,
             TakeNumber = 1,
-            CameraData = continuityData.InheritedCameraData, // Inherit camera setup from last occurrence
+
+            // 1. DATA FIX: Synchronize historical continuity data with the Day's active cameras
+            CameraData = SyncCameraDataWithActiveCameras(continuityData.InheritedCameraData),
+
             CreatedAt = DateTime.UtcNow
         };
 
@@ -509,7 +543,11 @@ public partial class DayViewModel : ViewModelBase
 
         await takeVM.SaveTakeCommand.ExecuteAsync(null);
         Takes.Add(takeVM);
+
+        // 2. UI FIX: These three lines tell Avalonia to draw the cells for CAM C and group everything correctly
+        RefreshAllExtraCameraRolls();
         await UpdateTotalTakesCommand.ExecuteAsync(null);
+        BuildHierarchicalGroups();
 
         // Update CurrentShot for UI feedback
         CurrentShot = continuityData.NextShotNumber;
@@ -573,6 +611,9 @@ public partial class DayViewModel : ViewModelBase
     /// </summary>
     public void CreateSubsequentTake(string episode, string scene, int currentShot, int currentTake)
     {
+        // Find the camera data from the specific take we are duplicating
+        var previousTake = Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene && t.Shot == currentShot && t.TakeNumber == currentTake);
+
         // Create a new take that duplicates the active Shot number and increments the Take number by 1
         var newTakeModel = new Logshot.Models.Take
         {
@@ -581,6 +622,10 @@ public partial class DayViewModel : ViewModelBase
             Scene = scene,
             Shot = currentShot,
             TakeNumber = currentTake + 1,
+
+            // FIX: Explicitly assign and synchronize the camera data
+            CameraData = SyncCameraDataWithActiveCameras(previousTake?.CameraData),
+
             CreatedAt = System.DateTime.UtcNow,
             SequenceOrder = Takes.Count + 1 // Append to the bottom of the raw list
         };
