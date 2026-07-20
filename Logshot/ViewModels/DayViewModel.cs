@@ -51,6 +51,24 @@ public partial class DayViewModel : ViewModelBase
     [ObservableProperty]
     private int _currentShot = 0;
 
+    // --- CONTINUITY PROMPT STATE ---
+    [ObservableProperty]
+    private bool _isContinuityPopupOpen = false;
+
+    [ObservableProperty]
+    private string _continuityMessage = string.Empty;
+
+    [ObservableProperty]
+    private string _continuityOption1Text = string.Empty;
+
+    [ObservableProperty]
+    private string _continuityOption2Text = string.Empty;
+
+    private ContinuityService.ContinuityData? _pendingContinuityData;
+    private string _pendingEpisode = string.Empty;
+    private string _pendingScene = string.Empty;
+    // -------------------------------
+
     /// <summary>
     /// List of active camera labels for this day
     /// </summary>
@@ -346,7 +364,7 @@ public partial class DayViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(episode) || string.IsNullOrWhiteSpace(scene))
             return;
 
-        await CreateTakeWithContinuity(episode, scene);
+        await CheckContinuityAndPromptAsync(episode, scene);
     }
 
     /// <summary>
@@ -613,6 +631,129 @@ public partial class DayViewModel : ViewModelBase
 
         return await _continuityService.GetContinuityDataAsync(ProjectId, episode, scene);
     }
+
+    // === START NEW CONTINUITY PROMPT LOGIC ===
+    public async Task CheckContinuityAndPromptAsync(string episode, string scene)
+    {
+        if (string.IsNullOrWhiteSpace(episode) || string.IsNullOrWhiteSpace(scene)) return;
+
+        var continuityData = await _continuityService.GetContinuityDataAsync(ProjectId, episode, scene);
+
+        if (!continuityData.HasHistory || continuityData.LastReferenceTake == null)
+        {
+            // No history found, just create normally (Shot 1, Take 1)
+            await CreateTakeWithContinuity(episode, scene);
+            return;
+        }
+
+        // History found! Let's find all the unique days this scene was shot on.
+        var historicalTakes = await _databaseService.GetTakesForEpisodeSceneAsync(ProjectId, episode, scene);
+        var distinctDayIds = historicalTakes.Select(t => t.DayId).Distinct().ToList();
+
+        var dayNumbers = new List<string>();
+        foreach (var dId in distinctDayIds)
+        {
+            var day = await _databaseService.GetDayAsync(dId);
+            if (day != null && !string.IsNullOrWhiteSpace(day.ShootDayNumber))
+            {
+                dayNumbers.Add(day.ShootDayNumber);
+            }
+        }
+
+        // historicalTakes is ordered descending by date, so reverse the day numbers to show them chronologically
+        dayNumbers.Reverse();
+
+        string daysString = "Unknown Day";
+        if (dayNumbers.Count == 1)
+        {
+            daysString = $"Day {dayNumbers[0]}";
+        }
+        else if (dayNumbers.Count == 2)
+        {
+            daysString = $"Days {dayNumbers[0]} and {dayNumbers[1]}";
+        }
+        else if (dayNumbers.Count > 2)
+        {
+            daysString = $"Days {string.Join(", ", dayNumbers.Take(dayNumbers.Count - 1))}, and {dayNumbers.Last()}";
+        }
+
+        _pendingEpisode = episode;
+        _pendingScene = scene;
+        _pendingContinuityData = continuityData;
+
+        // Build the prompt text with the dynamic days string
+        ContinuityMessage = $"Scene {episode}/{scene} already has recorded shots on {daysString}. How would you like to continue?";
+
+        int nextShot = continuityData.NextShotNumber;
+        ContinuityOption1Text = $"[ ADD A NEW SHOT ]";
+
+        int lastShot = continuityData.LastReferenceTake.Shot;
+        int lastTake = continuityData.LastReferenceTake.TakeNumber;
+        ContinuityOption2Text = $"[ Continue with SHOT {lastShot} TAKE {lastTake + 1} ]";
+
+        IsContinuityPopupOpen = true;
+    }
+
+    [RelayCommand]
+    public async Task ConfirmContinuityNewShot()
+    {
+        IsContinuityPopupOpen = false;
+        // Option 1: Add a new shot. This behaves identically to the standard auto-continuity
+        await CreateTakeWithContinuity(_pendingEpisode, _pendingScene);
+    }
+
+    [RelayCommand]
+    public async Task ConfirmContinuitySameShot()
+    {
+        IsContinuityPopupOpen = false;
+        if (_pendingContinuityData == null || _pendingContinuityData.LastReferenceTake == null) return;
+
+        int shot = _pendingContinuityData.LastReferenceTake.Shot;
+        int nextTake = _pendingContinuityData.LastReferenceTake.TakeNumber + 1;
+
+        // Inherit and clean the camera data
+        var cameraData = _cameraDataManager.ParseCameraData(_pendingContinuityData.InheritedCameraData);
+        foreach (var kvp in cameraData.Cameras)
+        {
+            kvp.Value.Notes = string.Empty;
+            kvp.Value.NoRoll = false;
+            kvp.Value.RollChangeMarker = false;
+        }
+        var cleanedCameraDataJson = _cameraDataManager.SerializeCameraData(cameraData);
+
+        var newTake = new Take
+        {
+            DayId = Id,
+            SequenceOrder = Takes.Count,
+            Episode = _pendingEpisode,
+            Scene = _pendingScene,
+            Shot = shot,
+            TakeNumber = nextTake,
+            CameraData = SyncCameraDataWithActiveCameras(cleanedCameraDataJson),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
+        takeVM.LoadFromModel(newTake);
+        takeVM.IsFromContinuity = true;
+        takeVM.ContinuityContext = $"Continued from Shot {shot} Take {nextTake - 1}";
+
+        await takeVM.SaveTakeCommand.ExecuteAsync(null);
+        Takes.Add(takeVM);
+
+        RefreshAllExtraCameraRolls();
+        await UpdateTotalTakesCommand.ExecuteAsync(null);
+        BuildHierarchicalGroups();
+
+        CurrentShot = shot;
+    }
+
+    [RelayCommand]
+    public void CancelContinuityPrompt()
+    {
+        IsContinuityPopupOpen = false;
+    }
+    // === END NEW CONTINUITY PROMPT LOGIC ===
 
     public ObservableCollection<SetupGroupViewModel> MobileSetupGroups { get; } = new();
 

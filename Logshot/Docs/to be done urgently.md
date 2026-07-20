@@ -33,14 +33,24 @@
 
 #### **Medium Priority**
 
-7. **Section 6: Interactive Continuity Prompt Dialog & Pathways**
+7. **Section 6: Interactive Continuity Prompt Dialog & Pathways** [ **COMPLETED** ]
 * **Master Spec:** When entering/creating an Episode & Scene with existing history, the app halts and displays a high-visibility continuity notification presenting explicit action pathways:
 1. `[ ADD A NEW SHOT ]` (Prominent option)
-2. `[ Continue with SHOT X TAKE Y ]`
+2. `[ Continue with SHOT X TAKE Y ]` (increments the last take of the preexisting shot by one)
 
 
 * **Current Status:** `ContinuityService` and `CreateTakeWithContinuity` handle continuity logic in the background, but the UI silently auto-applies it without displaying an interactive prompt dialog with these specific pathways.
 
+8. **Multiple scenes intelligence:**
+* **Master Spec:** Sometimes a shot may contain action from multiple scenes. The app should be able to understand that and log the shot/take(s) under all of the multiple scenes.
+* Example: The director decides to shoot two continuous scenes (let's say scene 13 and 14 of episode 1) in one continuous shot. The script supervisor is obliged to write this as "Episode 1 - Scenes 13-14".
+  * On the app, the script supervisor can enter multiple scenes in the scene field, separated by a line break. The app should understand that this is a single shot that belongs to multiple scenes, and log the shot/take(s) under all of the multiple scenes.
+  * This comes especially handy when tracking the continuity. If the first shot of the day (let's say shot 1) contains action from both scene 13 and 14, but the second shot is logged as Episode 1 - Scene 13", the app should know to increment the shot number to 2 for the second shot, even though the first shot was logged under both scenes 13 and 14.
+	* If, then, the third shot is logged as "Episode 1 - Scene 14", the app should know to increment from the shared shot number of shot 1 (first shot of the day), and increment the new shot number to 2.
+	* If the fourth shot contains action from both scene 13 and 14, the app should know to increment the shot number to 3 for the fourth shot etc.
+	* This way, both scenes have the correct shot numbering.
+  * This way, the app will always suggest the correct number for a shot, even if the previous shot was logged under multiple scenes.
+  * Always remember that a "scene" is actually a combination of episode and scene. The app shouldn't compare episode 2 scenes 13-14 to episode 5 scenes 13-14. These are two different couples of scenes.
 
 8. **Section 4.1: Targeted Episode & Scene Search Bar**
 * **Master Spec:** A global search bar designed **strictly for Episode (ΕΠ) and Scene (ΣΚ) inputs** to quickly filter or locate setups, bypassing shot and take numbers.

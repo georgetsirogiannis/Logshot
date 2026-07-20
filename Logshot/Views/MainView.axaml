@@ -345,5 +345,42 @@
       </Border>
     </Grid>
 
+      <!-- ========================================== -->
+    <!-- OVERLAY POPUP: Continuity Prompt Dialog    -->
+    <!-- ========================================== -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.CurrentDay.IsContinuityPopupOpen, FallbackValue=False}" ZIndex="250"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="440" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="20">
+          <StackPanel Spacing="8">
+              <TextBlock Text="Continuity History Found" FontSize="20" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+              <TextBlock Text="{Binding AppViewModel.CurrentDay.ContinuityMessage}"
+                         TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" FontSize="15" LineHeight="22"/>
+          </StackPanel>
+          
+          <StackPanel Spacing="12" Margin="0,10,0,0">
+            <!-- Option 1: Prominent Accent Button -->
+            <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption1Text}" 
+                    Command="{Binding AppViewModel.CurrentDay.ConfirmContinuityNewShotCommand}" 
+                    Background="{StaticResource ActionAccent}" Foreground="#121212" 
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                    FontWeight="Bold" FontSize="14" Padding="12"/>
+                    
+            <!-- Option 2: Outlined Outline Button -->
+            <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption2Text}" 
+                    Command="{Binding AppViewModel.CurrentDay.ConfirmContinuitySameShotCommand}" 
+                    Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                    FontWeight="Bold" FontSize="13" Padding="10"/>
+          </StackPanel>
+          
+          <Button Content="Cancel" Command="{Binding AppViewModel.CurrentDay.CancelContinuityPromptCommand}" 
+                  Background="Transparent" Foreground="{StaticResource TextSecondary}"
+                  HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0,4,0,0"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+
   </Grid>
 </UserControl>

@@ -111,8 +111,14 @@ public partial class AppViewModel : ViewModelBase
         if (CurrentDay is null || string.IsNullOrWhiteSpace(PopupNewEpisode) || string.IsNullOrWhiteSpace(PopupNewScene))
             return;
 
-        await CurrentDay.CreateTakeWithContinuity(PopupNewEpisode.Trim(), PopupNewScene.Trim());
+        var ep = PopupNewEpisode.Trim();
+        var sc = PopupNewScene.Trim();
+
+        // Close the initial "New Scene" dialog
         IsAddScenePopupOpen = false;
+
+        // Pass it to the DayViewModel to check history and prompt if needed
+        await CurrentDay.CheckContinuityAndPromptAsync(ep, sc);
     }
 
     // --- Take Deletion Safety Modal State (Delegated to CurrentDay safely) ---
