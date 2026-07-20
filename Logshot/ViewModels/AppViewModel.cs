@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -329,20 +330,40 @@ public partial class AppViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Create a new day in the current project
+    /// Create a new day in the current project, auto-incrementing the day number and using today's date
     /// </summary>
     [RelayCommand]
-    public async Task CreateDay(string shootDayNumber)
+    public async Task CreateDay()
     {
         if (CurrentProject is null)
             return;
 
-        var newDay = new Day { ProjectId = CurrentProject.Id, ShootDayNumber = shootDayNumber };
+        string nextDayNumber = "1";
+        if (CurrentProject.Days != null && CurrentProject.Days.Count > 0)
+        {
+            var lastDay = CurrentProject.Days.Last();
+            if (int.TryParse(lastDay.ShootDayNumber, out int lastNum))
+            {
+                nextDayNumber = (lastNum + 1).ToString();
+            }
+            else
+            {
+                nextDayNumber = (CurrentProject.Days.Count + 1).ToString();
+            }
+        }
+
+        var newDay = new Day
+        {
+            ProjectId = CurrentProject.Id,
+            ShootDayNumber = nextDayNumber,
+            CalendarDate = DateTime.Today
+        };
         var dayVM = new DayViewModel(_databaseService);
         dayVM.LoadFromModel(newDay);
 
         await dayVM.SaveDayCommand.ExecuteAsync(null);
         CurrentProject.Days.Add(dayVM);
+        CurrentDay = dayVM;
     }
 
     /// <summary>

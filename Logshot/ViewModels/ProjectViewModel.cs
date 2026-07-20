@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -96,7 +97,26 @@ public partial class ProjectViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddDay()
     {
-        var newDay = new Day { ProjectId = Id, ShootDayNumber = (Days.Count + 1).ToString() };
+        string nextDayNumber = "1";
+        if (Days != null && Days.Count > 0)
+        {
+            var lastDay = Days.Last();
+            if (int.TryParse(lastDay.ShootDayNumber, out int lastNum))
+            {
+                nextDayNumber = (lastNum + 1).ToString();
+            }
+            else
+            {
+                nextDayNumber = (Days.Count + 1).ToString();
+            }
+        }
+
+        var newDay = new Day
+        {
+            ProjectId = Id,
+            ShootDayNumber = nextDayNumber,
+            CalendarDate = DateTime.Today
+        };
         var dayVM = new DayViewModel(_databaseService);
         dayVM.LoadFromModel(newDay);
 

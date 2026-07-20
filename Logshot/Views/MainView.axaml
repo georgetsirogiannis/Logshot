@@ -114,7 +114,6 @@
             
             <Button Content="+ NEW DAY" 
                     Command="{Binding AppViewModel.CreateDayCommand}" 
-                    CommandParameter="1" 
                     IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}" 
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
           </StackPanel>
