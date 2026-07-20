@@ -1,14 +1,41 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Logshot.ViewModels;
+using System.Collections.Specialized;
 
 namespace Logshot.Views;
 
 public partial class MobileTakeListView : UserControl
 {
+    private DayViewModel? _dayVm;
+
     public MobileTakeListView()
     {
         InitializeComponent();
+
+        DataContextChanged += (_, _) =>
+        {
+            if (_dayVm != null)
+            {
+                _dayVm.Takes.CollectionChanged -= Takes_CollectionChanged;
+            }
+            if (DataContext is DayViewModel dayVm)
+            {
+                _dayVm = dayVm;
+                _dayVm.Takes.CollectionChanged += Takes_CollectionChanged;
+            }
+        };
+    }
+
+    private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Add)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                MobileScrollViewer?.ScrollToEnd();
+            }, Avalonia.Threading.DispatcherPriority.Loaded);
+        }
     }
 
     private async void AddCamera_Click(object? sender, RoutedEventArgs e)

@@ -34,7 +34,7 @@
       <Button Content="+ SCENE" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddScene_Click"/>
 	</StackPanel>
 
-	<ScrollViewer>
+	<ScrollViewer Name="MobileScrollViewer">
 	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}">
 	    <ItemsControl.ItemTemplate>
 		  <DataTemplate x:DataType="vm:SetupGroupViewModel">

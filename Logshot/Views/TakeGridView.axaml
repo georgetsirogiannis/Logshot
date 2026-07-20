@@ -28,7 +28,7 @@
     <!-- ========================================================================= -->
     <!-- SECTION 2 & 3: SCROLLABLE WORKSPACE (Header + Takes Rows)                   -->
     <!-- ========================================================================= -->
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible">
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible" Name="TakesScrollViewer">
       <StackPanel Orientation="Vertical">
 
         <!-- TABLE HEADER ROW (Column Titles & Dynamic Extra Camera Headers) -->

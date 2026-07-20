@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Logshot.ViewModels;
 using System;
+using System.Collections.Specialized;
 
 namespace Logshot.Views;
 
@@ -14,10 +15,35 @@ public partial class TakeGridView : UserControl
     private TakeViewModel? _draggedItem;
     private Point _startPoint;
     private bool _isDragging;
+    private DayViewModel? _dayVm;
 
     public TakeGridView()
     {
         InitializeComponent();
+
+        DataContextChanged += (_, _) =>
+        {
+            if (_dayVm != null)
+            {
+                _dayVm.Takes.CollectionChanged -= Takes_CollectionChanged;
+            }
+            if (DataContext is DayViewModel dayVm)
+            {
+                _dayVm = dayVm;
+                _dayVm.Takes.CollectionChanged += Takes_CollectionChanged;
+            }
+        };
+    }
+
+    private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Add)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                TakesScrollViewer?.ScrollToEnd();
+            }, Avalonia.Threading.DispatcherPriority.Loaded);
+        }
     }
 
     private async void AddCamera_Click(object sender, RoutedEventArgs e)
