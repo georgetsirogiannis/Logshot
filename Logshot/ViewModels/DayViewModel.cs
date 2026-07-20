@@ -183,11 +183,12 @@ public partial class DayViewModel : ViewModelBase
             e.PropertyName == nameof(TakeViewModel.Shot) ||
             e.PropertyName == nameof(TakeViewModel.CamARoll) ||
             e.PropertyName == nameof(TakeViewModel.CamBRoll) ||
-            e.PropertyName == nameof(TakeViewModel.CameraData)) // <--- Added this to catch extra camera edits
+            e.PropertyName == nameof(TakeViewModel.CameraData))
         {
             UpdateRowVisibilities();
         }
     }
+
     partial void OnTakesChanged(ObservableCollection<TakeViewModel> oldValue, ObservableCollection<TakeViewModel> newValue)
     {
         if (oldValue is not null)
@@ -268,7 +269,6 @@ public partial class DayViewModel : ViewModelBase
         await UpdateCurrentShotCommand.ExecuteAsync(null);
 
         UpdateRowVisibilities();
-
         BuildHierarchicalGroups();
     }
 
@@ -305,10 +305,7 @@ public partial class DayViewModel : ViewModelBase
             Scene = lastTake?.Scene ?? string.Empty,
             Shot = lastTake?.Shot ?? 0,
             TakeNumber = (lastTake?.TakeNumber ?? 0) + 1,
-
-            // FIX: Synchronize the last take's data with the Day's active cameras
             CameraData = SyncCameraDataWithActiveCameras(lastTake?.CameraData),
-
             CreatedAt = DateTime.UtcNow
         };
 
@@ -323,6 +320,27 @@ public partial class DayViewModel : ViewModelBase
         await UpdateTotalTakesCommand.ExecuteAsync(null);
         await UpdateCurrentShotCommand.ExecuteAsync(null);
         BuildHierarchicalGroups();
+    }
+
+    /// <summary>
+    /// Mobile [ + SCENE ] button handler: initializes a completely new Episode-Scene setup.
+    /// </summary>
+    [RelayCommand]
+    public async Task AddNewScene(object parameter)
+    {
+        string episode = string.Empty;
+        string scene = string.Empty;
+
+        if (parameter is (string ep, string sc))
+        {
+            episode = ep;
+            scene = sc;
+        }
+
+        if (string.IsNullOrWhiteSpace(episode) || string.IsNullOrWhiteSpace(scene))
+            return;
+
+        await CreateTakeWithContinuity(episode, scene);
     }
 
     /// <summary>
@@ -388,14 +406,12 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task UpdateTotalTakes()
     {
-        // Helper to recalculate total take count
         TotalTakes = Takes.Count;
     }
 
     [RelayCommand]
     public async Task UpdateCurrentShot()
     {
-        // Helper to calculate current shot (for Phase 2 Continuity Engine)
         if (Takes.Count > 0)
         {
             CurrentShot = Takes.Last().Shot;
@@ -415,20 +431,16 @@ public partial class DayViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(cameraLabel))
             return;
 
-        // Add to UI immediately
         if (!ActiveCameras.Contains(cameraLabel))
         {
             ActiveCameras.Add(cameraLabel);
         }
 
-        // Update camera data for all existing takes
         var cameraCreatedAt = DateTime.UtcNow;
         foreach (var take in Takes)
         {
             var cameraData = _cameraDataManager.ParseCameraData(take.CameraData);
             cameraData = _cameraDataManager.AddCamera(cameraData, cameraLabel);
-
-            // Mark as strikethrough if take was recorded before camera was added
             cameraData = _cameraDataManager.MarkCameraStrikethrough(cameraData, cameraLabel, cameraCreatedAt, take.CreatedAt);
 
             take.CameraData = _cameraDataManager.SerializeCameraData(cameraData);
@@ -448,18 +460,15 @@ public partial class DayViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(cameraLabel))
             return;
 
-        // Prevent removing default cameras
         if (CameraDataManager.DEFAULT_CAMERAS.Contains(cameraLabel))
             return;
 
-        // Remove from UI
         var cameraToRemove = ActiveCameras.FirstOrDefault(c => c == cameraLabel);
         if (cameraToRemove != null)
         {
             ActiveCameras.Remove(cameraToRemove);
         }
 
-        // Update camera data for all takes
         foreach (var take in Takes)
         {
             var cameraData = _cameraDataManager.ParseCameraData(take.CameraData);
@@ -472,16 +481,12 @@ public partial class DayViewModel : ViewModelBase
         RefreshAllExtraCameraRolls();
     }
 
-    /// <summary>
-    /// Initialize cameras for this day on first load
-    /// </summary>
     [RelayCommand]
     public async Task InitializeCameras()
     {
         var defaultCameras = new ObservableCollection<string>(CameraDataManager.DEFAULT_CAMERAS);
         ActiveCameras = defaultCameras;
 
-        // Ensure all takes have camera data initialized
         foreach (var take in Takes)
         {
             if (string.IsNullOrWhiteSpace(take.CameraData) || take.CameraData == "{}")
@@ -493,9 +498,6 @@ public partial class DayViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Refresh the active cameras list based on the first take's camera data
-    /// </summary>
     [RelayCommand]
     public async Task RefreshActiveCameras()
     {
@@ -505,7 +507,6 @@ public partial class DayViewModel : ViewModelBase
             return;
         }
 
-        // Get cameras from the first take
         var firstTake = Takes[0];
         var cameraData = _cameraDataManager.ParseCameraData(firstTake.CameraData);
         var cameras = _cameraDataManager.GetActiveCameraLabels(cameraData);
@@ -513,47 +514,31 @@ public partial class DayViewModel : ViewModelBase
         ActiveCameras = new ObservableCollection<string>(cameras);
     }
 
-    /// <summary>
-    /// Apply continuity data to a new take when Episode/Scene is set
-    /// Looks up historical data and pre-fills shot number and camera setup
-    /// </summary>
     public async Task ApplyContinuity(string episode, string scene)
     {
         if (string.IsNullOrWhiteSpace(episode) || string.IsNullOrWhiteSpace(scene) || string.IsNullOrWhiteSpace(ProjectId))
             return;
 
         var continuityData = await _continuityService.GetContinuityDataAsync(ProjectId, episode, scene);
-
-        // Pre-fill for the next take: update the CurrentShot to the next expected shot
-        CurrentShot = continuityData.NextShotNumber - 1; // We'll increment when creating the take
-
-        // Note: Camera setup inheritance happens when the take is created
-        // The new take will initialize with the inherited camera data
+        CurrentShot = continuityData.NextShotNumber - 1;
     }
 
-    /// <summary>
-    /// Create a new take with continuity data pre-filled
-    /// </summary>
     public async Task CreateTakeWithContinuity(string episode, string scene)
     {
         if (string.IsNullOrWhiteSpace(episode) || string.IsNullOrWhiteSpace(scene))
             return;
 
-        // Get continuity data for this Episode/Scene
         var continuityData = await _continuityService.GetContinuityDataAsync(ProjectId, episode, scene);
 
-        // Parse inherited camera data, but clear out shot-specific camera cell notes/descriptions
-        // so that a brand new shot starts with empty camera cells ready for new information.
         var cameraData = _cameraDataManager.ParseCameraData(continuityData.InheritedCameraData);
         foreach (var kvp in cameraData.Cameras)
         {
-            kvp.Value.Notes = string.Empty; // Clear camera text/descriptions for the new shot
+            kvp.Value.Notes = string.Empty;
             kvp.Value.NoRoll = false;
             kvp.Value.RollChangeMarker = false;
         }
         var cleanedCameraDataJson = _cameraDataManager.SerializeCameraData(cameraData);
 
-        // Create the new take
         var newTake = new Take
         {
             DayId = Id,
@@ -562,10 +547,7 @@ public partial class DayViewModel : ViewModelBase
             Scene = scene,
             Shot = continuityData.NextShotNumber,
             TakeNumber = 1,
-
-            // Synchronize with active cameras while using the cleaned camera setup
             CameraData = SyncCameraDataWithActiveCameras(cleanedCameraDataJson),
-
             CreatedAt = DateTime.UtcNow
         };
 
@@ -581,13 +563,9 @@ public partial class DayViewModel : ViewModelBase
         await UpdateTotalTakesCommand.ExecuteAsync(null);
         BuildHierarchicalGroups();
 
-        // Update CurrentShot for UI feedback
         CurrentShot = continuityData.NextShotNumber;
     }
 
-    /// <summary>
-    /// Get continuity information for a specific Episode/Scene (for UI display)
-    /// </summary>
     public async Task<ContinuityService.ContinuityData> GetContinuityInfoAsync(string episode, string scene)
     {
         if (string.IsNullOrWhiteSpace(ProjectId))
@@ -596,31 +574,23 @@ public partial class DayViewModel : ViewModelBase
         return await _continuityService.GetContinuityDataAsync(ProjectId, episode, scene);
     }
 
-    // The collection the mobile Avalonia UI will bind to for the adaptive card layout
     public ObservableCollection<SetupGroupViewModel> MobileSetupGroups { get; } = new();
 
-    /// <summary>
-    /// Phase 2 Step 4: Hierarchical Grouping Algorithm
-    /// Groups raw Take rows into Episode-Scene chunks for the mobile view.
-    /// </summary>
     public void BuildHierarchicalGroups()
     {
-        // 1. Identify unique Episode-Scene setups currently in the raw Takes list
         var groupedData = Takes
             .GroupBy(t => new { t.Episode, t.Scene })
-            .OrderBy(g => g.Min(t => t.CreatedAt)); // Order chronologically by when the setup started
+            .OrderBy(g => g.Min(t => t.CreatedAt));
 
         var updatedGroups = new System.Collections.Generic.List<SetupGroupViewModel>();
 
         foreach (var group in groupedData)
         {
-            // 2. Check if we already have this group in the UI to preserve its IsCollapsed state
             var existingGroup = MobileSetupGroups.FirstOrDefault(g =>
                 g.Episode == group.Key.Episode && g.Scene == group.Key.Scene);
 
             var setupGroup = existingGroup ?? new SetupGroupViewModel(group.Key.Episode, group.Key.Scene, this);
 
-            // 3. Sync the takes inside this specific group
             setupGroup.GroupedTakes.Clear();
             foreach (var take in group.OrderBy(t => t.SequenceOrder))
             {
@@ -630,7 +600,6 @@ public partial class DayViewModel : ViewModelBase
             updatedGroups.Add(setupGroup);
         }
 
-        // 4. Apply the final grouped list to the observable collection bound to the mobile UI
         MobileSetupGroups.Clear();
         foreach (var group in updatedGroups)
         {
@@ -638,15 +607,10 @@ public partial class DayViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Supports the mobile [ + TAKE ] button on the subheader card.
-    /// </summary>
     public void CreateSubsequentTake(string episode, string scene, int currentShot, int currentTake)
     {
-        // Find the camera data from the specific take we are duplicating
         var previousTake = Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene && t.Shot == currentShot && t.TakeNumber == currentTake);
 
-        // Create a new take that duplicates the active Shot number and increments the Take number by 1
         var newTakeModel = new Logshot.Models.Take
         {
             DayId = this.Id,
@@ -654,23 +618,15 @@ public partial class DayViewModel : ViewModelBase
             Scene = scene,
             Shot = currentShot,
             TakeNumber = currentTake + 1,
-
-            // FIX: Explicitly assign and synchronize the camera data
             CameraData = SyncCameraDataWithActiveCameras(previousTake?.CameraData),
-
             CreatedAt = System.DateTime.UtcNow,
-            SequenceOrder = Takes.Count + 1 // Append to the bottom of the raw list
+            SequenceOrder = Takes.Count + 1
         };
 
         var takeViewModel = new TakeViewModel(_databaseService, _cameraDataManager);
         takeViewModel.LoadFromModel(newTakeModel);
 
-        // Add to the main linear collection
         Takes.Add(takeViewModel);
-
-        // NOTE: Add your DatabaseService call here to persist the new take (e.g., takeViewModel.SaveTakeCommand.Execute(null))
-
-        // Re-run the grouping algorithm to update the mobile UI
         BuildHierarchicalGroups();
     }
 
@@ -680,12 +636,11 @@ public partial class DayViewModel : ViewModelBase
 
         TakeViewModel? previousTake = null;
 
-        // Iterate through takes in their sequence order
         foreach (var currentTake in Takes.OrderBy(t => t.SequenceOrder))
         {
             if (previousTake == null)
             {
-                // The very first row must always show everything
+                currentTake.IsGroupStart = false;
                 currentTake.ShowEpisode = true;
                 currentTake.ShowScene = true;
                 currentTake.ShowShot = true;
@@ -699,14 +654,18 @@ public partial class DayViewModel : ViewModelBase
             }
             else
             {
-                // Compare with the previous row.
-                currentTake.ShowEpisode = currentTake.Episode != previousTake.Episode;
-                currentTake.ShowScene = currentTake.ShowEpisode || (currentTake.Scene != previousTake.Scene);
+                // A new group starts if either the episode or the scene changes
+                currentTake.IsGroupStart = (currentTake.Episode != previousTake.Episode) || (currentTake.Scene != previousTake.Scene);
+
+                // Show Episode whenever there's a group start (whether a new episode or a new scene in the same episode)
+                currentTake.ShowEpisode = currentTake.IsGroupStart;
+
+                // Show Scene if it's a group start or the scene itself changed
+                currentTake.ShowScene = currentTake.IsGroupStart || (currentTake.Scene != previousTake.Scene);
                 currentTake.ShowShot = currentTake.ShowScene || (currentTake.Shot != previousTake.Shot);
                 currentTake.ShowCamARoll = currentTake.CamARoll != previousTake.CamARoll;
                 currentTake.ShowCamBRoll = currentTake.CamBRoll != previousTake.CamBRoll;
 
-                // Compare extra cameras with previous row
                 foreach (var cell in currentTake.ExtraCameraRolls)
                 {
                     var prevCell = previousTake.ExtraCameraRolls.FirstOrDefault(c => c.Label == cell.Label);

@@ -61,6 +61,10 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showCamBRoll = true;
 
+    // Setup group boundary flag for desktop thick borders
+    [ObservableProperty]
+    private bool _isGroupStart = false;
+
     // Gestures & Modifiers
     [ObservableProperty]
     private string _takeNotes = string.Empty;
@@ -132,6 +136,45 @@ public partial class TakeViewModel : ViewModelBase
     {
         _databaseService = databaseService;
         _cameraDataManager = cameraDataManager;
+    }
+
+    partial void OnEpisodeChanged(string value)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            var topLine = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+            if (topLine != value)
+            {
+                Episode = topLine;
+                return;
+            }
+        }
+    }
+
+    partial void OnSceneChanged(string value)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            var topLine = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+            if (topLine != value)
+            {
+                Scene = topLine;
+                return;
+            }
+        }
+    }
+
+    partial void OnSoundNotesChanged(string value)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            var topLine = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+            if (topLine != value)
+            {
+                SoundNotes = topLine;
+                return;
+            }
+        }
     }
 
     /// <summary>
@@ -527,6 +570,11 @@ public partial class TakeViewModel : ViewModelBase
 
     internal void SetCameraRoll(string cameraLabel, string value)
     {
+        if (!string.IsNullOrEmpty(value))
+        {
+            value = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+        }
+
         var data = _cameraDataManager.ParseCameraData(CameraData);
         if (!data.Cameras.ContainsKey(cameraLabel))
         {
@@ -557,6 +605,11 @@ public partial class TakeViewModel : ViewModelBase
 
     internal void SetCameraRollNumber(string cameraLabel, string value)
     {
+        if (!string.IsNullOrEmpty(value))
+        {
+            value = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+        }
+
         var data = _cameraDataManager.ParseCameraData(CameraData);
         if (!data.Cameras.ContainsKey(cameraLabel))
         {

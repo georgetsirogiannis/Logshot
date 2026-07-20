@@ -2,7 +2,7 @@
 
 #### **High Priority**
 
-1. **Section 4.2.3: Mobile Workspace `[ + SCENE ]` (New Setup) Button**
+1. **Section 4.2.3: Mobile Workspace `[ + SCENE ]` (New Setup) Button** [ **COMPLETED** ]
 * **Master Spec:** A prominent control in the mobile interface to close the current scene setup, input a new Episode-Scene combination, and initialize Shot 1, Take 1 (with continuity checks if previously shot).
 * **Current Status:** `MobileTakeListView` currently provides `[ + SHOT ]` and `[ + TAKE ]` buttons under existing setup groups, but lacks a `[ + SCENE ]` button to start an entirely new Episode/Scene group from scratch.
 

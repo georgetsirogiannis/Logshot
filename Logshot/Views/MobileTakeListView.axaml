@@ -25,35 +25,41 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
       
-	  <TextBox Name="NewCameraLabelBox" Watermark="e.g. CAM C" Width="80" FontSize="11" VerticalAlignment="Center"/>
+	  <TextBox Name="NewCameraLabelBox" Watermark="e.g. CAM C" Width="70" FontSize="11" VerticalAlignment="Center"/>
 	  <Button Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddCamera_Click"/>
+
+      <!-- New Scene Inputs & Button -->
+      <TextBox Name="NewEpisodeBox" Watermark="EP" Width="40" FontSize="11" VerticalAlignment="Center"/>
+      <TextBox Name="NewSceneBox" Watermark="SC" Width="40" FontSize="11" VerticalAlignment="Center"/>
+      <Button Content="+ SCENE" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddScene_Click"/>
 	</StackPanel>
+
 	<ScrollViewer>
-	<ItemsControl ItemsSource="{Binding MobileSetupGroups}">
-	  <ItemsControl.ItemTemplate>
-		<DataTemplate x:DataType="vm:SetupGroupViewModel">
-		  <Border Margin="10,6" CornerRadius="6" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Background="{StaticResource CardBackground}" ClipToBounds="True">
-			<StackPanel>
-			  <Button Command="{Binding ToggleCollapsedCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
-				<Grid ColumnDefinitions="Auto,*,Auto,Auto">
-				  <TextBlock Grid.Column="0" Text="&#9656;" Margin="0,0,8,0" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
-				  <TextBlock Grid.Column="1" Text="{Binding HeaderTitle}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}"/>
-				  <Button Grid.Column="2" Content="+ SHOT" FontSize="11" Margin="0,0,6,0" Command="{Binding AddShotCommand}"/>
-				  <Button Grid.Column="3" Content="+ TAKE" FontSize="11" Command="{Binding AddTakeCommand}"/>
-				</Grid>
-			  </Button>
-			  <ItemsControl ItemsSource="{Binding GroupedTakes}" IsVisible="{Binding !IsCollapsed}">
-				<ItemsControl.ItemTemplate>
-				  <DataTemplate x:DataType="vm:TakeViewModel">
-					<views:TakeCardView/>
-				  </DataTemplate>
-				</ItemsControl.ItemTemplate>
-			  </ItemsControl>
-			</StackPanel>
-		  </Border>
-		</DataTemplate>
-	  </ItemsControl.ItemTemplate>
-	</ItemsControl>
-  </ScrollViewer>
+	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}">
+	    <ItemsControl.ItemTemplate>
+		  <DataTemplate x:DataType="vm:SetupGroupViewModel">
+		    <Border Margin="10,6" CornerRadius="6" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Background="{StaticResource CardBackground}" ClipToBounds="True">
+			  <StackPanel>
+			    <Button Command="{Binding ToggleCollapsedCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
+				  <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+				    <TextBlock Grid.Column="0" Text="&#9656;" Margin="0,0,8,0" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+				    <TextBlock Grid.Column="1" Text="{Binding HeaderTitle}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}"/>
+				    <Button Grid.Column="2" Content="+ SHOT" FontSize="11" Margin="0,0,6,0" Command="{Binding AddShotCommand}"/>
+				    <Button Grid.Column="3" Content="+ TAKE" FontSize="11" Command="{Binding AddTakeCommand}"/>
+				  </Grid>
+			    </Button>
+			    <ItemsControl ItemsSource="{Binding GroupedTakes}" IsVisible="{Binding !IsCollapsed}">
+				  <ItemsControl.ItemTemplate>
+				    <DataTemplate x:DataType="vm:TakeViewModel">
+					  <views:TakeCardView/>
+				    </DataTemplate>
+				  </ItemsControl.ItemTemplate>
+			    </ItemsControl>
+			  </StackPanel>
+		    </Border>
+		  </DataTemplate>
+	    </ItemsControl.ItemTemplate>
+	  </ItemsControl>
+    </ScrollViewer>
   </DockPanel>
 </UserControl>
