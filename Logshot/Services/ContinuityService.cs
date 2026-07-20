@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Logshot.Models;
 
@@ -50,6 +51,39 @@ public class ContinuityService
         _cameraDataManager = cameraDataManager;
     }
 
+    private bool IsSoundOnlyTake(Take take)
+    {
+        if (string.IsNullOrWhiteSpace(take.SoundNotes))
+            return false;
+
+        var data = _cameraDataManager.ParseCameraData(take.CameraData);
+        if (data.Cameras.Count == 0)
+            return false;
+
+        foreach (var kvp in data.Cameras)
+        {
+            if (!kvp.Value.NoRoll && kvp.Value.Status != "strikethrough")
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool HasVoidedCamerasTake(Take take)
+    {
+        if (string.IsNullOrWhiteSpace(take.VoidCameraLabels))
+            return false;
+        try
+        {
+            var list = JsonSerializer.Deserialize<List<string>>(take.VoidCameraLabels);
+            return list != null && list.Count > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     /// <summary>
     /// Look up continuity data for a specific Episode/Scene combination within a project
     /// </summary>
@@ -60,26 +94,26 @@ public class ContinuityService
         // Get all takes with this Episode/Scene combination across the project
         var historicalTakes = await _databaseService.GetTakesForEpisodeSceneAsync(projectId, episode, scene);
 
-        // Filter out voided takes (only count non-voided takes for continuity)
-        var nonVoidedTakes = historicalTakes.Where(t => !t.HasVoidedCameras).ToList();
+        // Filter out voided takes and sound-only rows (only count valid camera takes for continuity)
+        var nonVoidedTakes = historicalTakes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t)).ToList();
 
         if (nonVoidedTakes.Count == 0)
         {
-            // No non-voided history - start fresh with shot 1
+            // No valid history - start fresh with shot 1
             continuity.NextShotNumber = 1;
             continuity.HasHistory = false;
             return continuity;
         }
 
-        // We have non-voided history - use the most recent non-voided take as reference
+        // We have valid history - use the most recent valid take as reference
         continuity.HasHistory = true;
         continuity.LastReferenceTake = nonVoidedTakes.First(); // Already ordered descending by date
 
-        // Find the maximum shot number we've seen for non-voided takes with this Episode/Scene
+        // Find the maximum shot number we've seen for valid takes with this Episode/Scene
         int maxShot = nonVoidedTakes.Max(t => t.Shot);
         continuity.NextShotNumber = maxShot + 1;
 
-        // Inherit camera setup from the most recent non-voided take with this Episode/Scene
+        // Inherit camera setup from the most recent valid take with this Episode/Scene
         continuity.InheritedCameraData = continuity.LastReferenceTake.CameraData;
 
         return continuity;
@@ -112,7 +146,7 @@ public class ContinuityService
         var allTakes = await _databaseService.GetTakesForProjectAsync(projectId);
 
         return allTakes
-            .Where(t => !string.IsNullOrWhiteSpace(t.Episode) && !string.IsNullOrWhiteSpace(t.Scene))
+            .Where(t => !string.IsNullOrWhiteSpace(t.Episode) && !string.IsNullOrWhiteSpace(t.Scene) && !IsSoundOnlyTake(t))
             .GroupBy(t => (t.Episode, t.Scene))
             .Select(g => g.Key)
             .OrderBy(es => es.Episode)
@@ -127,8 +161,8 @@ public class ContinuityService
     {
         var takes = await _databaseService.GetTakesForEpisodeSceneAsync(projectId, episode, scene);
 
-        // For stats, only count non-voided takes
-        var nonVoidedTakes = takes.Where(t => !t.HasVoidedCameras).ToList();
+        // For stats, only count non-voided takes and non-sound-only rows
+        var nonVoidedTakes = takes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t)).ToList();
 
         var stats = new EpisodeSceneStatistics
         {
@@ -166,7 +200,7 @@ public class ContinuityService
     public async Task<List<Take>> GetRecentTakesAsync(string projectId, int limit = 10)
     {
         var allTakes = await _databaseService.GetTakesForProjectAsync(projectId);
-        return allTakes.Take(limit).ToList();
+        return allTakes.Where(t => !IsSoundOnlyTake(t)).Take(limit).ToList();
     }
 
     /// <summary>
@@ -184,6 +218,7 @@ public class ContinuityService
         if (previousDay == null)
             return new List<Take>();
 
-        return await _databaseService.GetTakesForDayAsync(previousDay.Id);
+        var takes = await _databaseService.GetTakesForDayAsync(previousDay.Id);
+        return takes.Where(t => !IsSoundOnlyTake(t)).ToList();
     }
 }

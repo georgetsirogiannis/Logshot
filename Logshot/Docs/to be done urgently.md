@@ -24,7 +24,7 @@
 5. **Add No-Roll to Sound** [ **COMPLETED** ]
 * **Master Spec:** A new "No-Roll" toggle in the sound column of the take row, which when enabled, visually indicates that the take wasn't rolled for sound. The No Roll option should be reachable by a context menu that opens when the user right-clicks a sound cell.
 
-6. **Sound-only Rows**
+6. **Sound-only Rows** [ **COMPLETED** ]
 * Add the logic to allow for sound-only rows in the take grid. This sound-only row is triggered when all camera cells are marked as no-roll and the sound cell contains written information. In this case, the row doesn't count as a take. Shot and take numbers should be ignored and are empty. The sound-only row should be able to be created, edited, and deleted like any other take row.
 * This row will be used in practice when a sound recordist records sounds separately from the camera (e.g. foley, ADR etc).
 * In a sound-only row, only the sound cell and the notes cell are useful. All other cells can be made non-editable - but we should be careful to still allow the user to remove the no-roll from cameras, in which case the row stops being a sound-only row and behaves as a normal row again.

@@ -299,8 +299,8 @@
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="5" Padding="4">
                       <Grid>
                         <Panel IsVisible="{Binding !ShowRowCrossed}">
-                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowEpisode}" Text="{Binding Episode}" VerticalAlignment="Center"/>
-                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Episode}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowEpisode}" Text="{Binding DisplayEpisode}" VerticalAlignment="Center"/>
+                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Episode}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
                         </Panel>
                         <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
                       </Grid>
@@ -312,8 +312,8 @@
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4">
                       <Grid>
                         <Panel IsVisible="{Binding !ShowRowCrossed}">
-                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowScene}" Text="{Binding Scene}" VerticalAlignment="Center"/>
-                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Scene}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowScene}" Text="{Binding DisplayScene}" VerticalAlignment="Center"/>
+                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Scene}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
                         </Panel>
                         <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
                       </Grid>
@@ -325,8 +325,8 @@
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4">
                       <Grid>
                         <Panel IsVisible="{Binding !ShowRowCrossed}">
-                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowShot}" Text="{Binding Shot}" VerticalAlignment="Center"/>
-                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Shot}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowShot}" Text="{Binding DisplayShot}" VerticalAlignment="Center"/>
+                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Shot}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
                         </Panel>
                         <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
                       </Grid>
@@ -338,7 +338,7 @@
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4">
                       <Grid>
                         <Border BorderBrush="{StaticResource ActionAccent}" BorderThickness="2" CornerRadius="13" Height="26" HorizontalAlignment="Center" IsVisible="{Binding ShowCircledActive}" VerticalAlignment="Center" Width="26"/>
-                        <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding !ShowRowCrossed}" Name="TakeNumberBox" Text="{Binding TakeNumber}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center">
+                        <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding !ShowRowCrossed}" Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}">
                           <TextBox.ContextMenu>
                             <ContextMenu>
                               <MenuItem Command="{Binding MarkCircledCommand}" Header="Mark Circled"/>

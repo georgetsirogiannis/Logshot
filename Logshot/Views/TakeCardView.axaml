@@ -24,11 +24,11 @@
         <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
           <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !ShowRowCrossed}">
             <TextBlock Text="SHOT" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-            <TextBox Text="{Binding Shot}" Width="50" FontWeight="Bold" FontSize="15" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
+            <TextBox Text="{Binding DisplayShot}" Width="50" FontWeight="Bold" FontSize="15" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
             <TextBlock Text="TAKE" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
             <Grid>
               <Border Width="26" Height="26" CornerRadius="13" BorderThickness="2" BorderBrush="{StaticResource ActionAccent}" IsVisible="{Binding ShowCircledActive}"/>
-              <TextBox Name="TakeNumberBox" Text="{Binding TakeNumber}" Width="50" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource ActionAccent}">
+              <TextBox Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" Width="50" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource ActionAccent}" IsReadOnly="{Binding IsSoundOnlyRow}">
                 <TextBox.ContextMenu>
                   <ContextMenu>
                     <MenuItem Header="Mark Circled" Command="{Binding MarkCircledCommand}"/>
@@ -52,11 +52,11 @@
           <StackPanel Orientation="Horizontal" Spacing="16" IsVisible="{Binding !ShowRowCrossed}">
             <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Text="EP:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-              <TextBox Text="{Binding Episode}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
+              <TextBox Text="{Binding DisplayEpisode}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Text="SC:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-              <TextBox Text="{Binding Scene}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}"/>
+              <TextBox Text="{Binding DisplayScene}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
             </StackPanel>
           </StackPanel>
           <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="12" Opacity="0.6" VerticalAlignment="Center" IsVisible="{Binding ShowRowCrossed}"/>

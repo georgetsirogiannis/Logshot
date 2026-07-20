@@ -129,6 +129,36 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private string _continuityContext = string.Empty;
 
+    /// <summary>
+    /// True when all camera cells are marked as NoRoll or Strikethrough AND sound notes contain text.
+    /// In this state, the row is a sound-only log (e.g. foley, ADR) rather than a camera take.
+    /// </summary>
+    public bool IsSoundOnlyRow
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SoundNotes))
+                return false;
+
+            var data = _cameraDataManager.ParseCameraData(CameraData);
+            if (data.Cameras.Count == 0)
+                return false;
+
+            foreach (var kvp in data.Cameras)
+            {
+                if (!kvp.Value.NoRoll && kvp.Value.Status != "strikethrough")
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    public string DisplayEpisode => IsSoundOnlyRow ? string.Empty : Episode;
+    public string DisplayScene => IsSoundOnlyRow ? string.Empty : Scene;
+    public string DisplayShot => IsSoundOnlyRow ? string.Empty : (Shot == 0 ? string.Empty : Shot.ToString());
+    public string DisplayTakeNumber => IsSoundOnlyRow ? string.Empty : (TakeNumber == 0 ? string.Empty : TakeNumber.ToString());
+
     public TakeViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;
@@ -152,6 +182,7 @@ public partial class TakeViewModel : ViewModelBase
                 return;
             }
         }
+        OnPropertyChanged(nameof(DisplayEpisode));
     }
 
     partial void OnSceneChanged(string value)
@@ -165,6 +196,7 @@ public partial class TakeViewModel : ViewModelBase
                 return;
             }
         }
+        OnPropertyChanged(nameof(DisplayScene));
     }
 
     partial void OnSoundNotesChanged(string value)
@@ -178,6 +210,11 @@ public partial class TakeViewModel : ViewModelBase
                 return;
             }
         }
+        OnPropertyChanged(nameof(IsSoundOnlyRow));
+        OnPropertyChanged(nameof(DisplayEpisode));
+        OnPropertyChanged(nameof(DisplayScene));
+        OnPropertyChanged(nameof(DisplayShot));
+        OnPropertyChanged(nameof(DisplayTakeNumber));
     }
 
     partial void OnIsSoundNoRollChanged(bool value)
@@ -313,7 +350,7 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     // -------------------------------------------------------------------------
-    // Phase 5.5: Camera-specific ΑΚΥΡΟ CLIP (per-camera void + row cross-stitch)
+    // Phase 5.5: Camera-specific AKYRO CLIP (per-camera void + row cross-stitch)
     // -------------------------------------------------------------------------
 
     private List<string> GetVoidCameraLabelsList()
@@ -331,7 +368,7 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Checks if this take has any voided cameras (ΑΚΥΡΟ CLIP marked)
+    /// Checks if this take has any voided cameras (AKYRO CLIP marked)
     /// </summary>
     public bool HasVoidedCameras => GetVoidCameraLabelsList().Count > 0;
 
@@ -370,7 +407,7 @@ public partial class TakeViewModel : ViewModelBase
     public bool IsCameraVoided(string cameraLabel) => GetVoidCameraLabelsList().Contains(cameraLabel);
 
     /// <summary>
-    /// Toggles the ΑΚΥΡΟ CLIP (false clip) flag for a specific camera on this take.
+    /// Toggles the AKYRO CLIP (false clip) flag for a specific camera on this take.
     /// Enforces state exclusivity: sets No-Roll to false and clears description text.
     /// </summary>
     [RelayCommand]
@@ -402,7 +439,7 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Phase 4 mobile quick-action: [ΑΚΥΡΟ] drawer button. Toggles the primary camera's
+    /// Phase 4 mobile quick-action: [AKYRO] drawer button. Toggles the primary camera's
     /// voided/false-clip status using the same per-camera list as the desktop grid.
     /// </summary>
     [RelayCommand]
@@ -659,6 +696,11 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsCamBNotEditable));
         OnPropertyChanged(nameof(ShowCamANormal));
         OnPropertyChanged(nameof(ShowCamBNormal));
+        OnPropertyChanged(nameof(IsSoundOnlyRow));
+        OnPropertyChanged(nameof(DisplayEpisode));
+        OnPropertyChanged(nameof(DisplayScene));
+        OnPropertyChanged(nameof(DisplayShot));
+        OnPropertyChanged(nameof(DisplayTakeNumber));
 
         foreach (var cell in ExtraCameraRolls)
         {

@@ -168,6 +168,8 @@ public partial class DayViewModel : ViewModelBase
 
         // Recalculate visibility when rows are added or removed
         UpdateRowVisibilities();
+        _ = UpdateTotalTakesCommand.ExecuteAsync(null);
+        _ = UpdateCurrentShotCommand.ExecuteAsync(null);
     }
 
     private void Take_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -183,9 +185,13 @@ public partial class DayViewModel : ViewModelBase
             e.PropertyName == nameof(TakeViewModel.Shot) ||
             e.PropertyName == nameof(TakeViewModel.CamARoll) ||
             e.PropertyName == nameof(TakeViewModel.CamBRoll) ||
-            e.PropertyName == nameof(TakeViewModel.CameraData))
+            e.PropertyName == nameof(TakeViewModel.CameraData) ||
+            e.PropertyName == nameof(TakeViewModel.SoundNotes) ||
+            e.PropertyName == nameof(TakeViewModel.IsSoundOnlyRow))
         {
             UpdateRowVisibilities();
+            _ = UpdateTotalTakesCommand.ExecuteAsync(null);
+            _ = UpdateCurrentShotCommand.ExecuteAsync(null);
         }
     }
 
@@ -285,7 +291,7 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddShot()
     {
-        var lastTake = Takes.LastOrDefault();
+        var lastTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow) ?? Takes.LastOrDefault();
         var episode = string.IsNullOrWhiteSpace(lastTake?.Episode) ? "1" : lastTake!.Episode;
         var scene = string.IsNullOrWhiteSpace(lastTake?.Scene) ? "1" : lastTake!.Scene;
 
@@ -295,7 +301,7 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddTake()
     {
-        var lastTake = Takes.LastOrDefault();
+        var lastTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow) ?? Takes.LastOrDefault();
 
         var newTake = new Take
         {
@@ -439,15 +445,16 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task UpdateTotalTakes()
     {
-        TotalTakes = Takes.Count;
+        TotalTakes = Takes.Count(t => !t.IsSoundOnlyRow);
     }
 
     [RelayCommand]
     public async Task UpdateCurrentShot()
     {
-        if (Takes.Count > 0)
+        var validTakes = Takes.Where(t => !t.IsSoundOnlyRow).ToList();
+        if (validTakes.Count > 0)
         {
-            CurrentShot = Takes.Last().Shot;
+            CurrentShot = validTakes.Last().Shot;
         }
         else
         {
@@ -642,7 +649,8 @@ public partial class DayViewModel : ViewModelBase
 
     public void CreateSubsequentTake(string episode, string scene, int currentShot, int currentTake)
     {
-        var previousTake = Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene && t.Shot == currentShot && t.TakeNumber == currentTake);
+        var previousTake = Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene && t.Shot == currentShot && t.TakeNumber == currentTake && !t.IsSoundOnlyRow)
+                           ?? Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene && !t.IsSoundOnlyRow);
 
         var newTakeModel = new Logshot.Models.Take
         {
