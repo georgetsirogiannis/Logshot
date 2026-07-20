@@ -171,13 +171,13 @@ public partial class DayViewModel : ViewModelBase
             BuildHierarchicalGroups();
         }
 
-        // ---> ADD THIS BLOCK <---
-        // Recalculate visibility only if one of the span-enabled text fields was edited
+        // Recalculate visibility if one of the span-enabled text fields (OR the CameraData JSON) was edited
         if (e.PropertyName == nameof(TakeViewModel.Episode) ||
             e.PropertyName == nameof(TakeViewModel.Scene) ||
             e.PropertyName == nameof(TakeViewModel.Shot) ||
             e.PropertyName == nameof(TakeViewModel.CamARoll) ||
-            e.PropertyName == nameof(TakeViewModel.CamBRoll))
+            e.PropertyName == nameof(TakeViewModel.CamBRoll) ||
+            e.PropertyName == nameof(TakeViewModel.CameraData)) // <--- Added this to catch extra camera edits
         {
             UpdateRowVisibilities();
         }
@@ -675,23 +675,34 @@ public partial class DayViewModel : ViewModelBase
                 currentTake.ShowShot = true;
                 currentTake.ShowCamARoll = true;
                 currentTake.ShowCamBRoll = true;
+
+                foreach (var cell in currentTake.ExtraCameraRolls)
+                {
+                    cell.ShowRoll = true;
+                }
             }
             else
             {
                 // Compare with the previous row.
-
-                // 1. EPISODE
                 currentTake.ShowEpisode = currentTake.Episode != previousTake.Episode;
-
-                // 2. SCENE (If the episode changes, the scene MUST show, even if the number matches)
                 currentTake.ShowScene = currentTake.ShowEpisode || (currentTake.Scene != previousTake.Scene);
-
-                // 3. SHOT (If the scene changes, the shot MUST show)
                 currentTake.ShowShot = currentTake.ShowScene || (currentTake.Shot != previousTake.Shot);
-
-                // 4. CAMERAS (Show if the text is different from the row above)
                 currentTake.ShowCamARoll = currentTake.CamARoll != previousTake.CamARoll;
                 currentTake.ShowCamBRoll = currentTake.CamBRoll != previousTake.CamBRoll;
+
+                // Compare extra cameras with previous row
+                foreach (var cell in currentTake.ExtraCameraRolls)
+                {
+                    var prevCell = previousTake.ExtraCameraRolls.FirstOrDefault(c => c.Label == cell.Label);
+                    if (prevCell != null)
+                    {
+                        cell.ShowRoll = cell.Roll != prevCell.Roll;
+                    }
+                    else
+                    {
+                        cell.ShowRoll = true;
+                    }
+                }
             }
 
             previousTake = currentTake;

@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Logshot.ViewModels;
 
 namespace Logshot.Views;
@@ -18,7 +19,6 @@ public partial class TakeCardView : UserControl
 
     private Border? _cardSurface;
     private TranslateTransform? _cardTransform;
-    private Control? _currentFlyoutTarget;
 
     public TakeCardView()
     {
@@ -71,35 +71,67 @@ public partial class TakeCardView : UserControl
     }
 
     // Opens the hidden Flyout when Context Menu option is clicked
-    private void ChangeRollMenuItem_Click(object? sender, RoutedEventArgs e)
+    private void ChangeRollMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem menuItem && menuItem.CommandParameter is Control target)
+        if (sender is MenuItem menuItem)
         {
-            _currentFlyoutTarget = target;
-
-            // Delay the flyout opening slightly so the ContextMenu has time to close.
-            // This prevents the two popups from fighting for window focus.
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            // Find the ContextMenu by traversing visual and logical parent trees
+            ContextMenu? contextMenu = null;
+            Control? current = menuItem;
+            while (current != null)
             {
-                FlyoutBase.ShowAttachedFlyout(target);
-            });
+                if (current is ContextMenu cm)
+                {
+                    contextMenu = cm;
+                    break;
+                }
+                current = current.Parent as Control ?? current.GetVisualParent() as Control;
+            }
+
+            // In Avalonia, the logical Parent of an inline ContextMenu points to its owner control
+            Control? targetControl = (contextMenu?.Parent as Control) ?? (contextMenu?.PlacementTarget as Control);
+            if (targetControl != null)
+            {
+                Control? targetWithFlyout = targetControl;
+                while (targetWithFlyout != null)
+                {
+                    var flyout = FlyoutBase.GetAttachedFlyout(targetWithFlyout);
+                    if (flyout != null)
+                    {
+                        flyout.ShowAt(targetWithFlyout);
+                        return;
+                    }
+
+                    targetWithFlyout = targetWithFlyout.Parent as Control ?? targetWithFlyout.GetVisualParent() as Control;
+                }
+
+                // Fallback
+                var fallbackFlyout = FlyoutBase.GetAttachedFlyout(targetControl);
+                fallbackFlyout?.ShowAt(targetControl);
+            }
         }
     }
 
-    private void CloseFlyout_Click(object? sender, RoutedEventArgs e)
+    private void CloseFlyout_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentFlyoutTarget != null)
+        if (sender is Button btn)
         {
-            var target = _currentFlyoutTarget;
-
-            // Defer hiding the flyout so the Command has time to execute
-            // and the TextBox has time to push its value on LostFocus.
+            // Defer closing so the command has time to run and TextBox can commit its text on LostFocus
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                FlyoutBase.GetAttachedFlyout(target)?.Hide();
+                if (btn.Tag is Flyout flyout)
+                {
+                    flyout.Hide();
+                }
+                else
+                {
+                    var flyoutPresenter = btn.FindAncestorOfType<FlyoutPresenter>();
+                    if (flyoutPresenter?.Parent is Popup popupCtrl)
+                    {
+                        popupCtrl.IsOpen = false;
+                    }
+                }
             });
-
-            _currentFlyoutTarget = null;
         }
     }
 }

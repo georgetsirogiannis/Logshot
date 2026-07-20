@@ -3,117 +3,129 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using Logshot.ViewModels;
+using System;
 
 namespace Logshot.Views;
 
 public partial class TakeGridView : UserControl
 {
-    private TakeViewModel? _draggedTake;
+    private TakeViewModel? _draggedItem;
+    private Point _startPoint;
     private bool _isDragging;
-    private Point _dragStartPoint;
-    private Control? _currentFlyoutTarget; // Tracks the open flyout
 
     public TakeGridView()
     {
         InitializeComponent();
     }
 
-    private async void AddCamera_Click(object? sender, RoutedEventArgs e)
+    private async void AddCamera_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not DayViewModel dayVm) return;
-
-        var textBox = this.FindControl<TextBox>("NewCameraLabelBox");
-        var label = textBox?.Text?.Trim();
-
-        if (string.IsNullOrWhiteSpace(label)) return;
-
-        await dayVm.AddCameraCommand.ExecuteAsync(label);
-        if (textBox is not null) textBox.Text = string.Empty;
-    }
-
-    private void Row_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (sender is not Border border) return;
-
-        _dragStartPoint = e.GetPosition(border);
-        _draggedTake = border.Tag as TakeViewModel;
-        _isDragging = false;
-    }
-
-    private void Row_PointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (_draggedTake is null || sender is not Border border) return;
-        if (!e.GetCurrentPoint(border).Properties.IsLeftButtonPressed) return;
-
-        var currentPoint = e.GetPosition(border);
-        var delta = currentPoint - _dragStartPoint;
-
-        if (!_isDragging && (System.Math.Abs(delta.Y) > 4 || System.Math.Abs(delta.X) > 4))
-            _isDragging = true;
-    }
-
-    private async void Row_PointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (!_isDragging || _draggedTake is null || DataContext is not DayViewModel dayVm)
+        if (DataContext is DayViewModel dayVm && NewCameraLabelBox != null)
         {
-            _draggedTake = null;
-            _isDragging = false;
-            return;
+            var label = NewCameraLabelBox.Text?.Trim();
+            if (!string.IsNullOrEmpty(label))
+            {
+                await dayVm.AddCameraCommand.ExecuteAsync(label);
+                NewCameraLabelBox.Text = string.Empty;
+            }
         }
-
-        if (sender is not Border border || border.Tag is not TakeViewModel targetTake || ReferenceEquals(targetTake, _draggedTake))
-        {
-            _draggedTake = null;
-            _isDragging = false;
-            return;
-        }
-
-        var takes = dayVm.Takes;
-        var oldIndex = takes.IndexOf(_draggedTake);
-        var newIndex = takes.IndexOf(targetTake);
-
-        if (oldIndex >= 0 && newIndex >= 0 && oldIndex != newIndex)
-        {
-            takes.Move(oldIndex, newIndex);
-            await dayVm.ReorderTakesCommand.ExecuteAsync(null);
-        }
-
-        _draggedTake = null;
-        _isDragging = false;
     }
 
-    // Opens the hidden Flyout when Context Menu option is clicked
-    private void ChangeRollMenuItem_Click(object? sender, RoutedEventArgs e)
+    private void CloseFlyout_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem menuItem && menuItem.CommandParameter is Control target)
+        if (sender is Button btn)
         {
-            _currentFlyoutTarget = target;
-
-            // Delay the flyout opening slightly so the ContextMenu has time to close.
-            // This prevents the two popups from fighting for window focus.
+            // Defer closing so the command has time to run and TextBox can commit its text on LostFocus
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                FlyoutBase.ShowAttachedFlyout(target);
+                if (btn.Tag is Flyout flyout)
+                {
+                    flyout.Hide();
+                }
+                else
+                {
+                    var flyoutPresenter = btn.FindAncestorOfType<FlyoutPresenter>();
+                    if (flyoutPresenter?.Parent is Popup popupCtrl)
+                    {
+                        popupCtrl.IsOpen = false;
+                    }
+                }
             });
         }
     }
 
-    // Closes the flyout when Apply or Remove is clicked
-    private void CloseFlyout_Click(object? sender, RoutedEventArgs e)
+    private void ChangeRollMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentFlyoutTarget != null)
+        if (sender is MenuItem menuItem)
         {
-            var target = _currentFlyoutTarget;
-
-            // Defer hiding the flyout so the Command has time to execute
-            // and the TextBox has time to push its value on LostFocus.
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            // Find the ContextMenu by traversing visual and logical parent trees
+            ContextMenu? contextMenu = null;
+            Control? current = menuItem;
+            while (current != null)
             {
-                FlyoutBase.GetAttachedFlyout(target)?.Hide();
-            });
+                if (current is ContextMenu cm)
+                {
+                    contextMenu = cm;
+                    break;
+                }
+                current = current.Parent as Control ?? current.GetVisualParent() as Control;
+            }
 
-            _currentFlyoutTarget = null;
+            // In Avalonia, the logical Parent of an inline ContextMenu points to its owner control
+            Control? targetControl = (contextMenu?.Parent as Control) ?? (contextMenu?.PlacementTarget as Control);
+            if (targetControl != null)
+            {
+                Control? targetWithFlyout = targetControl;
+                while (targetWithFlyout != null)
+                {
+                    var flyout = FlyoutBase.GetAttachedFlyout(targetWithFlyout);
+                    if (flyout != null)
+                    {
+                        flyout.ShowAt(targetWithFlyout);
+                        return;
+                    }
+
+                    targetWithFlyout = targetWithFlyout.Parent as Control ?? targetWithFlyout.GetVisualParent() as Control;
+                }
+
+                // Fallback
+                var fallbackFlyout = FlyoutBase.GetAttachedFlyout(targetControl);
+                fallbackFlyout?.ShowAt(targetControl);
+            }
         }
+    }
+
+    private void Row_PointerPressed(object sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border border && border.Tag is TakeViewModel takeVm)
+        {
+            var point = e.GetCurrentPoint(border);
+            if (point.Properties.IsLeftButtonPressed)
+            {
+                _startPoint = e.GetPosition(this);
+                _draggedItem = takeVm;
+                _isDragging = false;
+            }
+        }
+    }
+
+    private void Row_PointerMoved(object sender, PointerEventArgs e)
+    {
+        if (_draggedItem != null && !_isDragging)
+        {
+            var currentPoint = e.GetPosition(this);
+            if (Math.Abs(currentPoint.Y - _startPoint.Y) > 5)
+            {
+                _isDragging = true;
+            }
+        }
+    }
+
+    private void Row_PointerReleased(object sender, PointerReleasedEventArgs e)
+    {
+        _draggedItem = null;
+        _isDragging = false;
     }
 }

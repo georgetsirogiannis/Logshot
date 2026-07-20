@@ -196,7 +196,6 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task MarkCircled()
     {
-        // Stub for Phase 5 implementation - tap gesture logic
         IsCircled = !IsCircled;
         await SaveTakeCommand.ExecuteAsync(null);
     }
@@ -204,7 +203,6 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task MarkFailed()
     {
-        // Stub for Phase 5 implementation - double-tap gesture logic
         IsFailed = !IsFailed;
         await SaveTakeCommand.ExecuteAsync(null);
     }
@@ -212,7 +210,6 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task IncrementFalseStarts()
     {
-        // Stub for Phase 2 implementation - increments FS count
         FalseStartCount++;
         await SaveTakeCommand.ExecuteAsync(null);
     }
@@ -220,7 +217,6 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task ToggleLongStart()
     {
-        // Stub for Phase 2 implementation
         IsLongStart = !IsLongStart;
         await SaveTakeCommand.ExecuteAsync(null);
     }
@@ -228,7 +224,6 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task ToggleBlooper()
     {
-        // Stub for Phase 2 implementation
         IsBlooper = !IsBlooper;
         await SaveTakeCommand.ExecuteAsync(null);
     }
@@ -236,7 +231,6 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task TogglePickup()
     {
-        // Stub for Phase 2 implementation
         IsPickup = !IsPickup;
         await SaveTakeCommand.ExecuteAsync(null);
     }
@@ -271,8 +265,7 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// True when at least one camera on this take is flagged ΑΚΥΡΟ CLIP (false clip).
-    /// Collapses the row height to 16pt and crosses out every other cell.
+    /// Checks if this take has any voided cameras (ΑΚΥΡΟ CLIP marked)
     /// </summary>
     public bool HasVoidedCameras => GetVoidCameraLabelsList().Count > 0;
 
@@ -291,6 +284,15 @@ public partial class TakeViewModel : ViewModelBase
     public bool ShowCamACrossed => HasVoidedCameras && !IsCamAVoided;
     public bool ShowCamBCrossed => HasVoidedCameras && !IsCamBVoided;
 
+    public bool IsCamANotEditable => IsCamAVoided || IsCamANoRoll || HasVoidedCameras;
+    public bool IsCamBNotEditable => IsCamBVoided || IsCamBNoRoll || HasVoidedCameras;
+
+    public bool ShowCamANormal => !IsCamANoRoll && !HasVoidedCameras;
+    public bool ShowCamBNormal => !IsCamBNoRoll && !HasVoidedCameras;
+
+    public bool ShowCircledActive => IsCircled && !ShowRowCrossed;
+    public bool ShowFailedActive => IsFailed && !ShowRowCrossed;
+
     /// <summary>
     /// Whole-row safety constraint (5.5): every non-camera cell (EP, SC, Shot, Take, Sound, Notes)
     /// is overlaid with the tight cross-stitch pattern whenever this take has a voided camera.
@@ -303,15 +305,34 @@ public partial class TakeViewModel : ViewModelBase
 
     /// <summary>
     /// Toggles the ΑΚΥΡΟ CLIP (false clip) flag for a specific camera on this take.
+    /// Enforces state exclusivity: sets No-Roll to false and clears description text.
     /// </summary>
     [RelayCommand]
     public async Task ToggleVoidCamera(string cameraLabel)
     {
         var list = GetVoidCameraLabelsList();
-        if (!list.Remove(cameraLabel))
+        bool isAdding = !list.Contains(cameraLabel);
+
+        if (isAdding)
+        {
             list.Add(cameraLabel);
+
+            var data = _cameraDataManager.ParseCameraData(CameraData);
+            if (data.Cameras.TryGetValue(cameraLabel, out var state))
+            {
+                state.NoRoll = false;
+                state.Notes = string.Empty;
+                CameraData = _cameraDataManager.SerializeCameraData(data);
+            }
+        }
+        else
+        {
+            list.Remove(cameraLabel);
+        }
+
         VoidCameraLabels = JsonSerializer.Serialize(list);
         await SaveTakeCommand.ExecuteAsync(null);
+        await RefreshCameraDataCommand.ExecuteAsync(null);
     }
 
     /// <summary>
@@ -334,6 +355,12 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowCamACrossed));
         OnPropertyChanged(nameof(ShowCamBCrossed));
         OnPropertyChanged(nameof(ShowRowCrossed));
+        OnPropertyChanged(nameof(IsCamANotEditable));
+        OnPropertyChanged(nameof(IsCamBNotEditable));
+        OnPropertyChanged(nameof(ShowCamANormal));
+        OnPropertyChanged(nameof(ShowCamBNormal));
+        OnPropertyChanged(nameof(ShowCircledActive));
+        OnPropertyChanged(nameof(ShowFailedActive));
 
         foreach (var cell in ExtraCameraRolls)
         {
@@ -345,9 +372,13 @@ public partial class TakeViewModel : ViewModelBase
     // Phase 5.6: Diagonal camera slashes ("No Roll")
     // -------------------------------------------------------------------------
 
-    public bool IsCamANoRoll => GetCameraFlag("CAM A", s => s.NoRoll);
-    public bool IsCamBNoRoll => GetCameraFlag("CAM B", s => s.NoRoll);
+    public bool IsCamANoRoll => GetCameraFlag("CAM A", s => s.NoRoll) || IsCameraStrikethrough("CAM A");
+    public bool IsCamBNoRoll => GetCameraFlag("CAM B", s => s.NoRoll) || IsCameraStrikethrough("CAM B");
 
+    /// <summary>
+    /// Toggles the No-Roll status on a specific camera.
+    /// Enforces state exclusivity: clears void status (AKYPO) and clears description text.
+    /// </summary>
     [RelayCommand]
     public async Task ToggleCameraNoRoll(string cameraLabel)
     {
@@ -357,9 +388,31 @@ public partial class TakeViewModel : ViewModelBase
             data = _cameraDataManager.AddCamera(data, cameraLabel);
             state = data.Cameras[cameraLabel];
         }
-        state.NoRoll = !state.NoRoll;
+
+        if (state.Status == "strikethrough")
+        {
+            state.Status = "active";
+            state.NoRoll = false;
+        }
+        else
+        {
+            state.NoRoll = !state.NoRoll;
+        }
+
+        if (state.NoRoll)
+        {
+            state.Notes = string.Empty;
+
+            var list = GetVoidCameraLabelsList();
+            if (list.Remove(cameraLabel))
+            {
+                VoidCameraLabels = JsonSerializer.Serialize(list);
+            }
+        }
+
         CameraData = _cameraDataManager.SerializeCameraData(data);
         await SaveTakeCommand.ExecuteAsync(null);
+        await RefreshCameraDataCommand.ExecuteAsync(null);
     }
 
     // -------------------------------------------------------------------------
@@ -390,7 +443,7 @@ public partial class TakeViewModel : ViewModelBase
         if (data.Cameras.TryGetValue(cameraLabel, out var state))
         {
             state.RollChangeMarker = false;
-            state.RollNumber = string.Empty; // Clears the number out
+            state.RollNumber = string.Empty;
             CameraData = _cameraDataManager.SerializeCameraData(data);
             await SaveTakeCommand.ExecuteAsync(null);
         }
@@ -410,7 +463,6 @@ public partial class TakeViewModel : ViewModelBase
 
     /// <summary>
     /// Refresh camera information from CameraData JSON
-    /// Used when loading a take or when cameras are added/removed
     /// </summary>
     [RelayCommand]
     public async Task RefreshCameraData()
@@ -420,7 +472,6 @@ public partial class TakeViewModel : ViewModelBase
 
         ActiveCameras = new ObservableCollection<string>(cameras);
 
-        // Build strikethrough tracking
         var strikethrough = new Dictionary<string, bool>();
         foreach (var camera in cameras)
         {
@@ -429,17 +480,11 @@ public partial class TakeViewModel : ViewModelBase
         StrikethroughCameras = strikethrough;
     }
 
-    /// <summary>
-    /// Check if a specific camera is strikethrough for this take
-    /// </summary>
     public bool IsCameraStrikethrough(string cameraLabel)
     {
         return StrikethroughCameras.TryGetValue(cameraLabel, out var isStrikethrough) && isStrikethrough;
     }
 
-    /// <summary>
-    /// Check if a specific camera is active for this take
-    /// </summary>
     public bool IsCameraActive(string cameraLabel)
     {
         var cameraData = _cameraDataManager.ParseCameraData(CameraData);
@@ -450,10 +495,6 @@ public partial class TakeViewModel : ViewModelBase
     // Roll number editing (14/48 Grid columns: CAM A ROLL / CAM B ROLL)
     // -------------------------------------------------------------------------
 
-    /// <summary>
-    /// Free-text field for CAM A (shot description / notes). Kept separate from the
-    /// physical roll number, which is edited via the "Change Roll" popup.
-    /// </summary>
     public string CamARoll
     {
         get => GetCameraRoll("CAM A");
@@ -492,14 +533,22 @@ public partial class TakeViewModel : ViewModelBase
             data = _cameraDataManager.AddCamera(data, cameraLabel);
         }
         data.Cameras[cameraLabel].Notes = value ?? string.Empty;
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            data.Cameras[cameraLabel].NoRoll = false;
+
+            var list = GetVoidCameraLabelsList();
+            if (list.Remove(cameraLabel))
+            {
+                VoidCameraLabels = JsonSerializer.Serialize(list);
+            }
+        }
+
         CameraData = _cameraDataManager.SerializeCameraData(data);
         _ = SaveTakeCommand.ExecuteAsync(null);
     }
 
-    /// <summary>
-    /// Gets the physical camera roll number/ID (set via the "Change Roll" popup),
-    /// separate from the free-text shot description held by <see cref="GetCameraRoll"/>.
-    /// </summary>
     internal string GetCameraRollNumber(string cameraLabel)
     {
         var data = _cameraDataManager.ParseCameraData(CameraData);
@@ -529,6 +578,10 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsCamBNoRoll));
         OnPropertyChanged(nameof(IsCamARollChangeMarked));
         OnPropertyChanged(nameof(IsCamBRollChangeMarked));
+        OnPropertyChanged(nameof(IsCamANotEditable));
+        OnPropertyChanged(nameof(IsCamBNotEditable));
+        OnPropertyChanged(nameof(ShowCamANormal));
+        OnPropertyChanged(nameof(ShowCamBNormal));
 
         foreach (var cell in ExtraCameraRolls)
         {
@@ -536,22 +589,26 @@ public partial class TakeViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Rebuilds the ExtraCameraRolls collection for cameras beyond the two defaults,
-    /// based on the day's full list of active camera labels.
-    /// </summary>
+    partial void OnIsCircledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowCircledActive));
+    }
+
+    partial void OnIsFailedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowFailedActive));
+    }
+
     public void RefreshExtraCameraRolls(IEnumerable<string> dayActiveCameras)
     {
         var extras = dayActiveCameras.Where(c => c != "CAM A" && c != "CAM B").ToList();
 
-        // Remove cells no longer relevant
         for (int i = ExtraCameraRolls.Count - 1; i >= 0; i--)
         {
             if (!extras.Contains(ExtraCameraRolls[i].Label))
                 ExtraCameraRolls.RemoveAt(i);
         }
 
-        // Add new cells
         foreach (var camera in extras)
         {
             if (!ExtraCameraRolls.Any(c => c.Label == camera))
@@ -571,6 +628,9 @@ public partial class CameraRollCell : ObservableObject
 
     public string Label { get; }
 
+    [ObservableProperty]
+    private bool _showRoll = true;
+
     public CameraRollCell(TakeViewModel owner, string label)
     {
         _owner = owner;
@@ -587,10 +647,6 @@ public partial class CameraRollCell : ObservableObject
         }
     }
 
-    /// <summary>
-    /// The physical camera roll number/ID, edited via the "Change Roll" popup,
-    /// separate from the free-text shot description held by <see cref="Roll"/>.
-    /// </summary>
     public string RollNumber
     {
         get => _owner.GetCameraRollNumber(Label);
@@ -603,8 +659,12 @@ public partial class CameraRollCell : ObservableObject
 
     public bool IsVoided => _owner.IsCameraVoided(Label);
     public bool ShowCrossed => _owner.HasVoidedCameras && !IsVoided;
-    public bool IsNoRoll => _owner.GetCameraFlagPublic(Label, s => s.NoRoll);
+
+    // Render Mid-Day additions (strikethroughs) exactly like No-Rolls
+    public bool IsNoRoll => _owner.GetCameraFlagPublic(Label, s => s.NoRoll) || _owner.IsCameraStrikethrough(Label);
+    public bool IsNotEditable => IsVoided || IsNoRoll || _owner.HasVoidedCameras;
     public bool IsRollChangeMarked => _owner.GetCameraFlagPublic(Label, s => s.RollChangeMarker);
+    public bool ShowNormal => !IsNoRoll && !_owner.HasVoidedCameras;
 
     public void NotifyRollChanged()
     {
@@ -614,6 +674,8 @@ public partial class CameraRollCell : ObservableObject
         OnPropertyChanged(nameof(ShowCrossed));
         OnPropertyChanged(nameof(IsNoRoll));
         OnPropertyChanged(nameof(IsRollChangeMarked));
+        OnPropertyChanged(nameof(IsNotEditable));
+        OnPropertyChanged(nameof(ShowNormal));
     }
 
     [RelayCommand]

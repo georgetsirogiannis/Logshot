@@ -9,6 +9,22 @@
 			 x:DataType="vm:DayViewModel">
   <DockPanel>
 	<StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" Margin="10,10,10,0">
+      
+      <!-- Active Extra Cameras Chips -->
+      <ItemsControl ItemsSource="{Binding ExtraActiveCameras}" VerticalAlignment="Center">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="{StaticResource BorderColor}" CornerRadius="12" Padding="8,2">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock Text="{Binding}" FontSize="10" VerticalAlignment="Center"/>
+                <Button Content="✕" FontSize="8" Padding="2,0" Background="Transparent" Foreground="{StaticResource FailRed}" Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).RemoveCameraCommand}" CommandParameter="{Binding}"/>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      
 	  <TextBox Name="NewCameraLabelBox" Watermark="e.g. CAM C" Width="80" FontSize="11" VerticalAlignment="Center"/>
 	  <Button Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddCamera_Click"/>
 	</StackPanel>
