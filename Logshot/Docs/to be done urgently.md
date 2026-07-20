@@ -7,7 +7,7 @@
 * **Current Status:** `MobileTakeListView` currently provides `[ + SHOT ]` and `[ + TAKE ]` buttons under existing setup groups, but lacks a `[ + SCENE ]` button to start an entirely new Episode/Scene group from scratch.
 
 
-2. **Section 4.2.2: Desktop `[ + ADD SCENE ]` Button & New Scene Dialog**
+2. **Section 4.2.2: Desktop `[ + ADD SCENE ]` Button & New Scene Dialog** [ **COMPLETED** ]
 * **Master Spec:** A prominent desktop header control to initiate a new scene setup and prompt for an Episode and Scene string.
 * **Current Status:** The header workspace currently only provides `+ ADD SHOT` and `+ ADD TAKE` actions without an explicit scene-creation workflow.
 

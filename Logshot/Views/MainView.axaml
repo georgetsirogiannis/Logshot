@@ -147,7 +147,11 @@
             <TextBlock Grid.Column="1" Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
                        FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+              <Button Content="+ ADD SCENE"
+                      Command="{Binding AppViewModel.OpenAddSceneDialogCommand}"
+                      IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+
               <Button Content="+ ADD SHOT"
                       Command="{Binding AppViewModel.CurrentDay.AddShotCommand}"
                       IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
@@ -289,6 +293,34 @@
           <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteDayCommand}" Width="100" HorizontalContentAlignment="Center"/>
             <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteDayCommand}" Background="{StaticResource FailRed}" Foreground="White" Width="100" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY POPUP: New Scene Dialog            -->
+    <!-- ========================================== -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsAddScenePopupOpen}" ZIndex="200"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="360" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="New Scene Setup" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Episode (ΕΠ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupNewEpisode}" Watermark="e.g. 1 or 10"/>
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Scene (ΣΚ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupNewScene}" Watermark="e.g. 32 or 28-29"/>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelAddSceneDialogCommand}" Width="100" HorizontalContentAlignment="Center"/>
+            <Button Content="Initialize Scene" Command="{Binding AppViewModel.ConfirmAddSceneDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" Width="140" HorizontalContentAlignment="Center" FontWeight="Bold"/>
           </StackPanel>
         </StackPanel>
       </Border>

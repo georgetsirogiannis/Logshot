@@ -80,6 +80,41 @@ public partial class AppViewModel : ViewModelBase
         _databaseService = databaseService;
     }
 
+    // --- New Scene Dialog State ---
+    [ObservableProperty]
+    private bool _isAddScenePopupOpen = false;
+
+    [ObservableProperty]
+    private string _popupNewEpisode = string.Empty;
+
+    [ObservableProperty]
+    private string _popupNewScene = string.Empty;
+
+    [RelayCommand]
+    public void OpenAddSceneDialog()
+    {
+        if (CurrentDay is null) return;
+        PopupNewEpisode = string.Empty;
+        PopupNewScene = string.Empty;
+        IsAddScenePopupOpen = true;
+    }
+
+    [RelayCommand]
+    public void CancelAddSceneDialog()
+    {
+        IsAddScenePopupOpen = false;
+    }
+
+    [RelayCommand]
+    public async Task ConfirmAddSceneDialog()
+    {
+        if (CurrentDay is null || string.IsNullOrWhiteSpace(PopupNewEpisode) || string.IsNullOrWhiteSpace(PopupNewScene))
+            return;
+
+        await CurrentDay.CreateTakeWithContinuity(PopupNewEpisode.Trim(), PopupNewScene.Trim());
+        IsAddScenePopupOpen = false;
+    }
+
     /// <summary>
     /// Initialize the app by loading all projects
     /// </summary>
