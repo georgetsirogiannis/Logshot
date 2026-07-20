@@ -232,7 +232,21 @@
           <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,4">
             <TextBlock Text="SOUND:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
             <Grid Width="70" Height="18" Background="Transparent">
-              <TextBox Text="{Binding SoundNotes}" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !ShowRowCrossed}"/>
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Panel IsVisible="{Binding ShowSoundNormal}">
+                <TextBox Text="{Binding SoundNotes}" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !ShowRowCrossed}" IsReadOnly="{Binding IsSoundNoRoll}">
+                  <TextBox.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
+                    </ContextMenu>
+                  </TextBox.ContextMenu>
+                </TextBox>
+              </Panel>
+              <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding IsSoundNoRoll}"/>
               <TextBlock Text="XXXX" FontSize="10" Opacity="0.6" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}"/>
             </Grid>
           </StackPanel>

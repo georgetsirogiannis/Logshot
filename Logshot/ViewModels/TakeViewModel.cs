@@ -45,6 +45,9 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private string _soundNotes = string.Empty;
 
+    [ObservableProperty]
+    private bool _isSoundNoRoll = false;
+
     // Visibility Flags for Row Spanning
     [ObservableProperty]
     private bool _showEpisode = true;
@@ -177,6 +180,13 @@ public partial class TakeViewModel : ViewModelBase
         }
     }
 
+    partial void OnIsSoundNoRollChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowSoundNormal));
+    }
+
+    public bool ShowSoundNormal => !IsSoundNoRoll && !ShowRowCrossed;
+
     /// <summary>
     /// Load take data from the model
     /// </summary>
@@ -191,6 +201,7 @@ public partial class TakeViewModel : ViewModelBase
         TakeNumber = take.TakeNumber;
         CameraData = take.CameraData;
         SoundNotes = take.SoundNotes;
+        IsSoundNoRoll = take.IsSoundNoRoll;
         TakeNotes = take.TakeNotes;
         FalseStartCount = take.FalseStartCount;
         IsLongStart = take.IsLongStart;
@@ -218,6 +229,7 @@ public partial class TakeViewModel : ViewModelBase
             TakeNumber = TakeNumber,
             CameraData = CameraData,
             SoundNotes = SoundNotes,
+            IsSoundNoRoll = IsSoundNoRoll,
             TakeNotes = TakeNotes,
             FalseStartCount = FalseStartCount,
             IsLongStart = IsLongStart,
@@ -275,6 +287,17 @@ public partial class TakeViewModel : ViewModelBase
     public async Task TogglePickup()
     {
         IsPickup = !IsPickup;
+        await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
+    public async Task ToggleSoundNoRoll()
+    {
+        IsSoundNoRoll = !IsSoundNoRoll;
+        if (IsSoundNoRoll)
+        {
+            SoundNotes = string.Empty;
+        }
         await SaveTakeCommand.ExecuteAsync(null);
     }
 
@@ -404,6 +427,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowCamBNormal));
         OnPropertyChanged(nameof(ShowCircledActive));
         OnPropertyChanged(nameof(ShowFailedActive));
+        OnPropertyChanged(nameof(ShowSoundNormal));
 
         foreach (var cell in ExtraCameraRolls)
         {

@@ -21,7 +21,7 @@
 * **Master Spec:** Triggered through the context menu of the Description/Notes cell, toggling a vertical orange **"BLOOPER"** badge on the observations field.
 * **Current Status:** The `IsBlooper` property and `ToggleBlooperCommand` exist in `TakeViewModel`, but the right-click context menus in `TakeGridView.axaml` and `TakeCardView.axaml` do not include an option to toggle "Blooper".
 
-5. **Add No-Roll to Sound**
+5. **Add No-Roll to Sound** [ **COMPLETED** ]
 * **Master Spec:** A new "No-Roll" toggle in the sound column of the take row, which when enabled, visually indicates that the take wasn't rolled for sound. The No Roll option should be reachable by a context menu that opens when the user right-clicks a sound cell.
 
 6. **Sound-only Rows**

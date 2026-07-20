@@ -26,6 +26,7 @@ public class Take
     // Camera & Sound
     public string CameraData { get; set; } = "{}"; // JSON for dynamic multi-cam columns
     public string SoundNotes { get; set; } = string.Empty;
+    public bool IsSoundNoRoll { get; set; } = false;
 
     // Gestures & Modifiers
     public string TakeNotes { get; set; } = string.Empty;

@@ -273,8 +273,22 @@
                     <!-- SOUND ROLL COLUMN                                 -->
                     <!-- ================================================= -->
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="4" Padding="4">
-                      <Grid>
-                        <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsVisible="{Binding !ShowRowCrossed}" Text="{Binding SoundNotes}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center"/>
+                      <Grid Background="Transparent">
+                        <Grid.ContextMenu>
+                          <ContextMenu>
+                            <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
+                          </ContextMenu>
+                        </Grid.ContextMenu>
+                        <Panel IsVisible="{Binding ShowSoundNormal}">
+                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsVisible="{Binding !ShowRowCrossed}" IsReadOnly="{Binding IsSoundNoRoll}" Text="{Binding SoundNotes}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center">
+                            <TextBox.ContextMenu>
+                              <ContextMenu>
+                                <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
+                              </ContextMenu>
+                            </TextBox.ContextMenu>
+                          </TextBox>
+                        </Panel>
+                        <Path Data="M1,0 L0,1" IsVisible="{Binding IsSoundNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2"/>
                         <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
                       </Grid>
                     </Border>
