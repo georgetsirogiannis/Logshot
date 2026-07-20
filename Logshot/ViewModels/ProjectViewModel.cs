@@ -28,6 +28,9 @@ public partial class ProjectViewModel : ViewModelBase
     private string _productionCompany = string.Empty;
 
     [ObservableProperty]
+    private string _scriptSupervisor = string.Empty;
+
+    [ObservableProperty]
     private DateTime _createdAt = DateTime.UtcNow;
 
     [ObservableProperty]
@@ -48,6 +51,7 @@ public partial class ProjectViewModel : ViewModelBase
         Director = project.Director;
         Dop = project.Dop;
         ProductionCompany = project.ProductionCompany;
+        ScriptSupervisor = project.ScriptSupervisor;
         CreatedAt = project.CreatedAt;
     }
 
@@ -63,6 +67,7 @@ public partial class ProjectViewModel : ViewModelBase
             Director = Director,
             Dop = Dop,
             ProductionCompany = ProductionCompany,
+            ScriptSupervisor = ScriptSupervisor,
             CreatedAt = CreatedAt
         };
     }
@@ -70,7 +75,6 @@ public partial class ProjectViewModel : ViewModelBase
     [RelayCommand]
     public async Task SaveProject()
     {
-        // Stub for Phase 2 implementation
         await _databaseService.SaveProjectAsync(ToModel());
     }
 

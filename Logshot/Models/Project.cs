@@ -14,5 +14,7 @@ public class Project
     public string Dop { get; set; } = string.Empty;
     public string ProductionCompany { get; set; } = string.Empty;
 
+    public string ScriptSupervisor { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

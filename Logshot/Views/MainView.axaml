@@ -16,7 +16,7 @@
     <!-- Top-level loading bar -->
     <ProgressBar IsIndeterminate="{Binding AppViewModel.IsLoading}" 
                  VerticalAlignment="Top" HorizontalAlignment="Stretch" 
-                 Height="4" ZIndex="100" 
+                 Height="4" ZIndex="300" 
                  IsVisible="{Binding AppViewModel.IsLoading}"
                  Foreground="{StaticResource ActionAccent}"/>
 
@@ -32,7 +32,7 @@
               BorderThickness="0,0,1,0"
               Padding="20"
               IsVisible="{Binding IsSidebarOpen}">
-        <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
+        <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, Auto">
 
           <!-- App Brand -->
           <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,25">
@@ -44,46 +44,72 @@
                     Command="{Binding ToggleSidebarCommand}"/>
           </Grid>
 
-          <!-- Project Selector -->
+          <!-- Project Selector & Management Buttons -->
           <TextBlock Grid.Row="1" Text="ACTIVE PROJECT" FontSize="12" 
                      Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+          
           <ComboBox Grid.Row="2" 
                     ItemsSource="{Binding AppViewModel.Projects}" 
                     SelectedItem="{Binding AppViewModel.CurrentProject}"
                     HorizontalAlignment="Stretch"
                     DisplayMemberBinding="{Binding Name}"
                     PlaceholderText="Select a Project"
-                    Margin="0,0,0,25"/>
+                    Margin="0,0,0,8"/>
+
+          <!-- Project Edit & Delete Buttons -->
+          <Grid Grid.Row="3" ColumnDefinitions="*,*" Margin="0,0,0,25">
+            <Button Grid.Column="0" Content="EDIT PROJECT" FontSize="11" Padding="4,6" Margin="0,0,3,0"
+                    Command="{Binding AppViewModel.OpenEditProjectDialogCommand}"
+                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="1" Content="DELETE" FontSize="11" Padding="4,6" Margin="3,0,0,0"
+                    Foreground="{StaticResource FailRed}"
+                    Command="{Binding AppViewModel.PromptDeleteProjectCommand}"
+                    CommandParameter="{Binding AppViewModel.CurrentProject}"
+                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+          </Grid>
 
           <!-- Shoot Days List -->
-          <TextBlock Grid.Row="3" Text="SHOOT DAYS" FontSize="12" 
+          <TextBlock Grid.Row="4" Text="SHOOT DAYS" FontSize="12" 
                      Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5" 
                      VerticalAlignment="Top"/>
           
-          <ListBox Grid.Row="3" 
+          <ListBox Grid.Row="4" 
                    ItemsSource="{Binding AppViewModel.CurrentProject.Days}" 
                    SelectedItem="{Binding AppViewModel.CurrentDay}"
                    Background="Transparent"
                    Margin="0,25,0,0"
                    CornerRadius="4">
             <ListBox.ItemTemplate>
-              <DataTemplate>
+              <DataTemplate x:DataType="vm:DayViewModel">
                 <Grid ColumnDefinitions="Auto, *">
                   <TextBlock Grid.Column="0" Text="{Binding ShootDayNumber, StringFormat='Day {0}'}" 
                              FontWeight="Bold" Margin="0,0,10,0"/>
                   <TextBlock Grid.Column="1" Text="{Binding CalendarDate, StringFormat='{}{0:MMM dd, yyyy}'}" 
                              Foreground="{StaticResource TextSecondary}"/>
+
+                  <!-- Right-click Context Menu for Day Management -->
+                  <Grid.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="Edit Day Details..." 
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).AppViewModel.OpenEditDayDialogCommand}" 
+                                CommandParameter="{Binding}"/>
+                      <MenuItem Header="Delete Day" 
+                                Foreground="{StaticResource FailRed}"
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).AppViewModel.PromptDeleteDayCommand}" 
+                                CommandParameter="{Binding}"/>
+                    </ContextMenu>
+                  </Grid.ContextMenu>
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
 
           <!-- Action Buttons -->
-          <StackPanel Grid.Row="4" Spacing="10" Margin="0,15,0,0">
-            <!-- CommandParameter passes a default string to your ViewModel -->
+          <StackPanel Grid.Row="5" Spacing="10" Margin="0,15,0,0">
             <Button Content="+ NEW PROJECT" 
-                    Command="{Binding AppViewModel.CreateProjectCommand}" 
-                    CommandParameter="Untitled Project" 
+                    Command="{Binding AppViewModel.OpenCreateProjectDialogCommand}" 
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
             
             <Button Content="+ NEW DAY" 
@@ -108,7 +134,7 @@
                      HorizontalAlignment="Center"/>
         </StackPanel>
 
-        <!-- State 2: Day Selected (The future A4 Workspace) -->
+        <!-- State 2: Day Selected (The A4 Workspace) -->
         <Grid RowDefinitions="Auto, *" Margin="30"
               IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNotNull}}">
           
@@ -148,7 +174,7 @@
             <views:TakeGridView DataContext="{Binding AppViewModel.CurrentDay}"/>
           </Border>
 
-          <!-- The Adaptive Card Layout (Mobile, Phase 4) -->
+          <!-- The Adaptive Card Layout (Mobile) -->
           <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
                   CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True"
                   IsVisible="{Binding IsMobileLayout}">
@@ -159,5 +185,115 @@
       </Grid>
       
     </Grid>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY POPUP: Project Details Form        -->
+    <!-- ========================================== -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsProjectPopupOpen}" ZIndex="200"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="440" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Project Details" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Project Title *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupProjectTitle}" Watermark="e.g. Ghosts Season 1"/>
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Director" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupDirector}" Watermark="Director name"/>
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="DOP (Director of Photography)" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupDop}" Watermark="DOP name"/>
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Production Company" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupProductionCompany}" Watermark="Production house"/>
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Script Supervisor" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupScriptSupervisor}" Watermark="Script supervisor name"/>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelProjectDialogCommand}" Width="100" HorizontalContentAlignment="Center"/>
+            <Button Content="Save Project" Command="{Binding AppViewModel.SaveProjectDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" Width="130" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY POPUP: Delete Project Confirmation -->
+    <!-- ========================================== -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsDeleteConfirmationOpen}" ZIndex="200"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="380" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Delete Project?" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
+          <TextBlock Text="Are you sure you want to delete this project? This action cannot be undone and will permanently delete all associated shoot days and takes."
+                     TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}"/>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteProjectCommand}" Width="100" HorizontalContentAlignment="Center"/>
+            <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteProjectCommand}" Background="{StaticResource FailRed}" Foreground="White" Width="100" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY POPUP: Edit Day Form               -->
+    <!-- ========================================== -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsDayPopupOpen}" ZIndex="200"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="360" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Edit Shoot Day" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Shoot Day Number *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBox Text="{Binding AppViewModel.PopupShootDayNumber}" Watermark="e.g. 54 or 54B"/>
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Calendar Date" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <DatePicker SelectedDate="{Binding AppViewModel.PopupCalendarDate}" HorizontalAlignment="Stretch"/>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelDayDialogCommand}" Width="100" HorizontalContentAlignment="Center"/>
+            <Button Content="Save Day" Command="{Binding AppViewModel.SaveDayDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" Width="120" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY POPUP: Delete Day Confirmation     -->
+    <!-- ========================================== -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsDayDeleteConfirmationOpen}" ZIndex="200"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="380" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Delete Shoot Day?" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
+          <TextBlock Text="Are you sure you want to delete this shoot day? This action cannot be undone and will permanently delete all takes logged for this day."
+                     TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}"/>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteDayCommand}" Width="100" HorizontalContentAlignment="Center"/>
+            <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteDayCommand}" Background="{StaticResource FailRed}" Foreground="White" Width="100" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
   </Grid>
 </UserControl>

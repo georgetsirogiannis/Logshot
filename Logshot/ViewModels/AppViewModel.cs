@@ -27,6 +27,53 @@ public partial class AppViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoading = false;
 
+    // --- Project Dialog & Deletion State ---
+    [ObservableProperty]
+    private bool _isProjectPopupOpen = false;
+
+    [ObservableProperty]
+    private bool _isEditingProjectModal = false;
+
+    [ObservableProperty]
+    private string _popupProjectTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _popupDirector = string.Empty;
+
+    [ObservableProperty]
+    private string _popupDop = string.Empty;
+
+    [ObservableProperty]
+    private string _popupProductionCompany = string.Empty;
+
+    [ObservableProperty]
+    private string _popupScriptSupervisor = string.Empty;
+
+    [ObservableProperty]
+    private bool _isDeleteConfirmationOpen = false;
+
+    [ObservableProperty]
+    private ProjectViewModel? _projectToDelete;
+
+    // --- Day Dialog & Deletion State ---
+    [ObservableProperty]
+    private bool _isDayPopupOpen = false;
+
+    [ObservableProperty]
+    private DayViewModel? _dayBeingEdited;
+
+    [ObservableProperty]
+    private string _popupShootDayNumber = string.Empty;
+
+    [ObservableProperty]
+    private DateTimeOffset _popupCalendarDate = DateTimeOffset.Now;
+
+    [ObservableProperty]
+    private bool _isDayDeleteConfirmationOpen = false;
+
+    [ObservableProperty]
+    private DayViewModel? _dayToDelete;
+
     public AppViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;
@@ -76,18 +123,111 @@ public partial class AppViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Create a new project
+    /// Opens the popup to create a new project
     /// </summary>
     [RelayCommand]
-    public async Task CreateProject(string projectName)
+    public void OpenCreateProjectDialog()
     {
-        // Stub for Phase 2 implementation
-        var newProject = new Project { Name = projectName };
-        var projectVM = new ProjectViewModel(_databaseService);
-        projectVM.LoadFromModel(newProject);
+        PopupProjectTitle = string.Empty;
+        PopupDirector = string.Empty;
+        PopupDop = string.Empty;
+        PopupProductionCompany = string.Empty;
+        PopupScriptSupervisor = string.Empty;
+        IsEditingProjectModal = false;
+        IsProjectPopupOpen = true;
+    }
 
-        await projectVM.SaveProjectCommand.ExecuteAsync(null);
-        Projects.Add(projectVM);
+    /// <summary>
+    /// Opens the popup to edit the currently selected project
+    /// </summary>
+    [RelayCommand]
+    public void OpenEditProjectDialog()
+    {
+        if (CurrentProject is null) return;
+
+        PopupProjectTitle = CurrentProject.Name;
+        PopupDirector = CurrentProject.Director;
+        PopupDop = CurrentProject.Dop;
+        PopupProductionCompany = CurrentProject.ProductionCompany;
+        PopupScriptSupervisor = CurrentProject.ScriptSupervisor;
+        IsEditingProjectModal = true;
+        IsProjectPopupOpen = true;
+    }
+
+    /// <summary>
+    /// Saves the project from the popup dialog (Create or Update)
+    /// </summary>
+    [RelayCommand]
+    public async Task SaveProjectDialog()
+    {
+        if (string.IsNullOrWhiteSpace(PopupProjectTitle))
+            return;
+
+        if (IsEditingProjectModal && CurrentProject != null)
+        {
+            CurrentProject.Name = PopupProjectTitle;
+            CurrentProject.Director = PopupDirector;
+            CurrentProject.Dop = PopupDop;
+            CurrentProject.ProductionCompany = PopupProductionCompany;
+            CurrentProject.ScriptSupervisor = PopupScriptSupervisor;
+            await CurrentProject.SaveProjectCommand.ExecuteAsync(null);
+        }
+        else
+        {
+            var newProject = new Project
+            {
+                Name = PopupProjectTitle,
+                Director = PopupDirector,
+                Dop = PopupDop,
+                ProductionCompany = PopupProductionCompany,
+                ScriptSupervisor = PopupScriptSupervisor
+            };
+            var projectVM = new ProjectViewModel(_databaseService);
+            projectVM.LoadFromModel(newProject);
+
+            await projectVM.SaveProjectCommand.ExecuteAsync(null);
+            Projects.Add(projectVM);
+            CurrentProject = projectVM;
+        }
+
+        IsProjectPopupOpen = false;
+    }
+
+    [RelayCommand]
+    public void CancelProjectDialog()
+    {
+        IsProjectPopupOpen = false;
+    }
+
+    /// <summary>
+    /// Prompts fail-safe confirmation before deleting a project
+    /// </summary>
+    [RelayCommand]
+    public void PromptDeleteProject(ProjectViewModel? project)
+    {
+        var target = project ?? CurrentProject;
+        if (target is null) return;
+
+        ProjectToDelete = target;
+        IsDeleteConfirmationOpen = true;
+    }
+
+    [RelayCommand]
+    public async Task ConfirmDeleteProject()
+    {
+        if (ProjectToDelete != null)
+        {
+            await DeleteProject(ProjectToDelete);
+        }
+        IsDeleteConfirmationOpen = false;
+        ProjectToDelete = null;
+    }
+
+    [RelayCommand]
+    public void CancelDeleteProject()
+    {
+        IsDeleteConfirmationOpen = false;
+        ProjectToDelete = null;
     }
 
     /// <summary>
@@ -121,6 +261,74 @@ public partial class AppViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Opens the popup to edit a shoot day's number and date
+    /// </summary>
+    [RelayCommand]
+    public void OpenEditDayDialog(DayViewModel day)
+    {
+        if (day is null) return;
+
+        DayBeingEdited = day;
+        PopupShootDayNumber = day.ShootDayNumber;
+        PopupCalendarDate = new DateTimeOffset(day.CalendarDate);
+        IsDayPopupOpen = true;
+    }
+
+    /// <summary>
+    /// Saves the edited shoot day details
+    /// </summary>
+    [RelayCommand]
+    public async Task SaveDayDialog()
+    {
+        if (DayBeingEdited is null || string.IsNullOrWhiteSpace(PopupShootDayNumber))
+            return;
+
+        DayBeingEdited.ShootDayNumber = PopupShootDayNumber;
+        DayBeingEdited.CalendarDate = PopupCalendarDate.Date;
+        await DayBeingEdited.SaveDayCommand.ExecuteAsync(null);
+
+        IsDayPopupOpen = false;
+        DayBeingEdited = null;
+    }
+
+    [RelayCommand]
+    public void CancelDayDialog()
+    {
+        IsDayPopupOpen = false;
+        DayBeingEdited = null;
+    }
+
+    /// <summary>
+    /// Prompts fail-safe confirmation before deleting a shoot day
+    /// </summary>
+    [RelayCommand]
+    public void PromptDeleteDay(DayViewModel day)
+    {
+        if (day is null) return;
+
+        DayToDelete = day;
+        IsDayDeleteConfirmationOpen = true;
+    }
+
+    [RelayCommand]
+    public async Task ConfirmDeleteDay()
+    {
+        if (DayToDelete != null)
+        {
+            await DeleteDay(DayToDelete);
+        }
+        IsDayDeleteConfirmationOpen = false;
+        DayToDelete = null;
+    }
+
+    [RelayCommand]
+    public void CancelDeleteDay()
+    {
+        IsDayDeleteConfirmationOpen = false;
+        DayToDelete = null;
+    }
+
+    /// <summary>
     /// Create a new day in the current project
     /// </summary>
     [RelayCommand]
@@ -129,7 +337,6 @@ public partial class AppViewModel : ViewModelBase
         if (CurrentProject is null)
             return;
 
-        // Stub for Phase 2 implementation
         var newDay = new Day { ProjectId = CurrentProject.Id, ShootDayNumber = shootDayNumber };
         var dayVM = new DayViewModel(_databaseService);
         dayVM.LoadFromModel(newDay);
@@ -174,9 +381,8 @@ public partial class AppViewModel : ViewModelBase
         if (CurrentDay is null)
             return;
 
-        // Stub for Phase 2 implementation
-        var newTake = new Take 
-        { 
+        var newTake = new Take
+        {
             DayId = CurrentDay.Id,
             SequenceOrder = CurrentDay.Takes.Count,
             Shot = CurrentDay.CurrentShot
@@ -208,12 +414,8 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task ExportDayToPdf()
     {
-        // Stub for Phase 6 implementation - PDF Export Engine
         if (CurrentDay is null)
             return;
-
-        // TODO: Use QuestPDF to generate PDF
-        // TODO: Include all takes, metadata, and custom rendering
     }
 
     /// <summary>
@@ -222,7 +424,5 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task SyncToSupabase()
     {
-        // Stub for Phase 7 implementation - The Outbox Sync Worker
-        // TODO: Push all pending changes to Supabase
     }
 }
