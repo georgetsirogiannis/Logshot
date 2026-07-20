@@ -1,5 +1,8 @@
 ﻿using SQLite;
 using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Linq;
 
 namespace Logshot.Models;
 
@@ -37,4 +40,26 @@ public class Take
     public string VoidCameraLabels { get; set; } = "[]"; // JSON array for specific voided cameras
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Checks if this take has any voided cameras (ΑΚΥΡΟ CLIP marked)
+    /// </summary>
+    public bool HasVoidedCameras
+    {
+        get
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(VoidCameraLabels))
+                    return false;
+
+                var voidedCameras = JsonSerializer.Deserialize<List<string>>(VoidCameraLabels);
+                return voidedCameras != null && voidedCameras.Count > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
 }

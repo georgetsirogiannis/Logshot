@@ -60,23 +60,26 @@ public class ContinuityService
         // Get all takes with this Episode/Scene combination across the project
         var historicalTakes = await _databaseService.GetTakesForEpisodeSceneAsync(projectId, episode, scene);
 
-        if (historicalTakes.Count == 0)
+        // Filter out voided takes (only count non-voided takes for continuity)
+        var nonVoidedTakes = historicalTakes.Where(t => !t.HasVoidedCameras).ToList();
+
+        if (nonVoidedTakes.Count == 0)
         {
-            // No history - start fresh with shot 1
+            // No non-voided history - start fresh with shot 1
             continuity.NextShotNumber = 1;
             continuity.HasHistory = false;
             return continuity;
         }
 
-        // We have history - use the most recent take as reference
+        // We have non-voided history - use the most recent non-voided take as reference
         continuity.HasHistory = true;
-        continuity.LastReferenceTake = historicalTakes.First(); // Already ordered descending by date
+        continuity.LastReferenceTake = nonVoidedTakes.First(); // Already ordered descending by date
 
-        // Find the maximum shot number we've seen for this Episode/Scene
-        int maxShot = historicalTakes.Max(t => t.Shot);
+        // Find the maximum shot number we've seen for non-voided takes with this Episode/Scene
+        int maxShot = nonVoidedTakes.Max(t => t.Shot);
         continuity.NextShotNumber = maxShot + 1;
 
-        // Inherit camera setup from the most recent take with this Episode/Scene
+        // Inherit camera setup from the most recent non-voided take with this Episode/Scene
         continuity.InheritedCameraData = continuity.LastReferenceTake.CameraData;
 
         return continuity;
@@ -124,16 +127,19 @@ public class ContinuityService
     {
         var takes = await _databaseService.GetTakesForEpisodeSceneAsync(projectId, episode, scene);
 
+        // For stats, only count non-voided takes
+        var nonVoidedTakes = takes.Where(t => !t.HasVoidedCameras).ToList();
+
         var stats = new EpisodeSceneStatistics
         {
             Episode = episode,
             Scene = scene,
-            TotalTakes = takes.Count,
-            MaxShotNumber = takes.Count > 0 ? takes.Max(t => t.Shot) : 0,
-            MinShotNumber = takes.Count > 0 ? takes.Min(t => t.Shot) : 0,
-            FirstRecordedDate = takes.Count > 0 ? takes.Last().CreatedAt : DateTime.UtcNow,
-            LastRecordedDate = takes.Count > 0 ? takes.First().CreatedAt : DateTime.UtcNow,
-            DaysWithThisScene = takes.Select(t => t.DayId).Distinct().Count()
+            TotalTakes = nonVoidedTakes.Count,
+            MaxShotNumber = nonVoidedTakes.Count > 0 ? nonVoidedTakes.Max(t => t.Shot) : 0,
+            MinShotNumber = nonVoidedTakes.Count > 0 ? nonVoidedTakes.Min(t => t.Shot) : 0,
+            FirstRecordedDate = nonVoidedTakes.Count > 0 ? nonVoidedTakes.Last().CreatedAt : DateTime.UtcNow,
+            LastRecordedDate = nonVoidedTakes.Count > 0 ? nonVoidedTakes.First().CreatedAt : DateTime.UtcNow,
+            DaysWithThisScene = nonVoidedTakes.Select(t => t.DayId).Distinct().Count()
         };
 
         return stats;

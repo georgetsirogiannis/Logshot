@@ -55,9 +55,9 @@
                   <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="{Binding CamARollNumber}" FontSize="10" TextDecorations="Underline" HorizontalAlignment="Center" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCamARollChangeMarked}"/>
                     <Grid Grid.Row="1">
-                      <Panel IsVisible="{Binding !HasVoidedCameras}">
+                      <Panel>
                         <TextBlock Text="{Binding CamARoll}" IsVisible="{Binding ShowCamARoll}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                        <TextBox Text="{Binding CamARoll}" VerticalContentAlignment="Center" TextAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap" Watermark="..." HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent">
+                        <TextBox Text="{Binding CamARoll}" VerticalContentAlignment="Center" TextAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap" Watermark="..." HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent" IsReadOnly="{Binding IsCamAVoided}">
                           <FlyoutBase.AttachedFlyout>
                             <Flyout Placement="Bottom">
                               <StackPanel Spacing="6" Width="160">
@@ -95,9 +95,9 @@
                   <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="{Binding CamBRollNumber}" FontSize="10" TextDecorations="Underline" HorizontalAlignment="Center" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCamBRollChangeMarked}"/>
                     <Grid Grid.Row="1">
-                      <Panel IsVisible="{Binding !HasVoidedCameras}">
+                      <Panel>
                         <TextBlock Text="{Binding CamBRoll}" IsVisible="{Binding ShowCamBRoll}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                        <TextBox Text="{Binding CamBRoll}" VerticalContentAlignment="Center" TextAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap" Watermark="..." HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent">
+                        <TextBox Text="{Binding CamBRoll}" VerticalContentAlignment="Center" TextAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap" Watermark="..." HorizontalAlignment="Stretch" BorderThickness="0" Background="Transparent" IsReadOnly="{Binding IsCamBVoided}">
                           <FlyoutBase.AttachedFlyout>
                             <Flyout Placement="Bottom">
                               <StackPanel Spacing="6" Width="160">
@@ -139,7 +139,7 @@
                         <StackPanel Width="82" Orientation="Vertical">
                           <TextBlock Text="{Binding RollNumber}" FontSize="9" TextDecorations="Underline" HorizontalAlignment="Center" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsRollChangeMarked}"/>
                           <Grid>
-                            <TextBox Text="{Binding Roll}" VerticalContentAlignment="Center" TextAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap" Watermark="..." BorderThickness="0" Background="Transparent" IsVisible="{Binding !ShowCrossed}">
+                            <TextBox Text="{Binding Roll}" VerticalContentAlignment="Center" TextAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap" Watermark="..." BorderThickness="0" Background="Transparent" IsReadOnly="{Binding IsVoided}">
                               <FlyoutBase.AttachedFlyout>
                                 <Flyout Placement="Bottom">
                                   <StackPanel Spacing="6" Width="160">

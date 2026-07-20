@@ -50,7 +50,7 @@
             <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Text="CAM A:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
               <Grid Width="80" Height="18">
-                <TextBox Text="{Binding CamARoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsCamAVoided}">
+                <TextBox Text="{Binding CamARoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamAVoided}">
                   <FlyoutBase.AttachedFlyout>
                     <Flyout Placement="Bottom">
                       <StackPanel Spacing="6" Width="160">
@@ -84,7 +84,7 @@
             <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Text="CAM B:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
               <Grid Width="80" Height="18">
-                <TextBox Text="{Binding CamBRoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsCamBVoided}">
+                <TextBox Text="{Binding CamBRoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBVoided}">
                   <FlyoutBase.AttachedFlyout>
                     <Flyout Placement="Bottom">
                       <StackPanel Spacing="6" Width="160">
@@ -120,7 +120,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,4">
                   <TextBlock Text="{Binding Label, StringFormat={}{0}:}" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                   <Grid>
-                    <TextBox Text="{Binding Roll}" Watermark="Shot..." Width="70" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !IsVoided}">
+                    <TextBox Text="{Binding Roll}" Watermark="Shot..." Width="70" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsVoided}">
                       <FlyoutBase.AttachedFlyout>
                         <Flyout Placement="Bottom">
                           <StackPanel Spacing="6" Width="160">
