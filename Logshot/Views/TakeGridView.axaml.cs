@@ -22,8 +22,10 @@ public partial class TakeGridView : UserControl
     private async void AddCamera_Click(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not DayViewModel dayVm) return;
+
         var textBox = this.FindControl<TextBox>("NewCameraLabelBox");
         var label = textBox?.Text?.Trim();
+
         if (string.IsNullOrWhiteSpace(label)) return;
 
         await dayVm.AddCameraCommand.ExecuteAsync(label);
@@ -33,6 +35,7 @@ public partial class TakeGridView : UserControl
     private void Row_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (sender is not Border border) return;
+
         _dragStartPoint = e.GetPosition(border);
         _draggedTake = border.Tag as TakeViewModel;
         _isDragging = false;
@@ -42,6 +45,7 @@ public partial class TakeGridView : UserControl
     {
         if (_draggedTake is null || sender is not Border border) return;
         if (!e.GetCurrentPoint(border).Properties.IsLeftButtonPressed) return;
+
         var currentPoint = e.GetPosition(border);
         var delta = currentPoint - _dragStartPoint;
 
@@ -79,19 +83,19 @@ public partial class TakeGridView : UserControl
         _isDragging = false;
     }
 
+    // Opens the hidden Flyout when Context Menu option is clicked
     private void ChangeRollMenuItem_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem menuItem)
+        if (sender is MenuItem menuItem && menuItem.CommandParameter is Control target)
         {
-            var parent = menuItem.Parent;
-            while (parent != null && !(parent is ContextMenu))
-                parent = parent.Parent;
+            _currentFlyoutTarget = target;
 
-            if (parent is ContextMenu contextMenu && contextMenu.PlacementTarget is Control target)
+            // Delay the flyout opening slightly so the ContextMenu has time to close.
+            // This prevents the two popups from fighting for window focus.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                _currentFlyoutTarget = target;
                 FlyoutBase.ShowAttachedFlyout(target);
-            }
+            });
         }
     }
 
@@ -100,7 +104,15 @@ public partial class TakeGridView : UserControl
     {
         if (_currentFlyoutTarget != null)
         {
-            FlyoutBase.GetAttachedFlyout(_currentFlyoutTarget)?.Hide();
+            var target = _currentFlyoutTarget;
+
+            // Defer hiding the flyout so the Command has time to execute
+            // and the TextBox has time to push its value on LostFocus.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                FlyoutBase.GetAttachedFlyout(target)?.Hide();
+            });
+
             _currentFlyoutTarget = null;
         }
     }

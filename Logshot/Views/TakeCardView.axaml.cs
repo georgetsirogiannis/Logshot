@@ -12,7 +12,6 @@ public partial class TakeCardView : UserControl
 {
     private const double DrawerWidth = 190;
     private const double SwipeThreshold = 40;
-
     private Point _dragStartPoint;
     private bool _isDragging;
     private bool _isOpen;
@@ -59,6 +58,7 @@ public partial class TakeCardView : UserControl
     private void Card_PointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (sender is Border border) e.Pointer.Capture(null);
+
         if (!_isDragging || _cardTransform is null)
         {
             _isDragging = false;
@@ -70,19 +70,19 @@ public partial class TakeCardView : UserControl
         _isDragging = false;
     }
 
+    // Opens the hidden Flyout when Context Menu option is clicked
     private void ChangeRollMenuItem_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem menuItem)
+        if (sender is MenuItem menuItem && menuItem.CommandParameter is Control target)
         {
-            var parent = menuItem.Parent;
-            while (parent != null && !(parent is ContextMenu))
-                parent = parent.Parent;
+            _currentFlyoutTarget = target;
 
-            if (parent is ContextMenu contextMenu && contextMenu.PlacementTarget is Control target)
+            // Delay the flyout opening slightly so the ContextMenu has time to close.
+            // This prevents the two popups from fighting for window focus.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                _currentFlyoutTarget = target;
                 FlyoutBase.ShowAttachedFlyout(target);
-            }
+            });
         }
     }
 
@@ -90,7 +90,15 @@ public partial class TakeCardView : UserControl
     {
         if (_currentFlyoutTarget != null)
         {
-            FlyoutBase.GetAttachedFlyout(_currentFlyoutTarget)?.Hide();
+            var target = _currentFlyoutTarget;
+
+            // Defer hiding the flyout so the Command has time to execute
+            // and the TextBox has time to push its value on LostFocus.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                FlyoutBase.GetAttachedFlyout(target)?.Hide();
+            });
+
             _currentFlyoutTarget = null;
         }
     }

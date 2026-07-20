@@ -75,7 +75,9 @@
                               <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A"/>
                               <MenuItem Header="No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A"/>
                               <Separator/>
-                              <MenuItem Header="Set / Edit Roll Change..." Click="ChangeRollMenuItem_Click"/>
+                              <MenuItem Header="Set / Edit Roll Change..." 
+          Click="ChangeRollMenuItem_Click" 
+          CommandParameter="{Binding $parent[TextBox]}"/>
                             </ContextMenu>
                           </TextBox.ContextMenu>
                           <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
@@ -113,7 +115,9 @@
                               <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B"/>
                               <MenuItem Header="No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B"/>
                               <Separator/>
-                              <MenuItem Header="Set / Edit Roll Change..." Click="ChangeRollMenuItem_Click"/>
+                              <MenuItem Header="Set / Edit Roll Change..." 
+          Click="ChangeRollMenuItem_Click" 
+          CommandParameter="{Binding $parent[TextBox]}"/>
                             </ContextMenu>
                           </TextBox.ContextMenu>
                           <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
@@ -156,7 +160,9 @@
                                   <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCommand}"/>
                                   <MenuItem Header="No Roll" Command="{Binding ToggleNoRollCommand}"/>
                                   <Separator/>
-                                  <MenuItem Header="Set / Edit Roll Change..." Click="ChangeRollMenuItem_Click"/>
+                                  <MenuItem Header="Set / Edit Roll Change..." 
+          Click="ChangeRollMenuItem_Click" 
+          CommandParameter="{Binding $parent[TextBox]}"/>
                                 </ContextMenu>
                               </TextBox.ContextMenu>
                             </TextBox>
