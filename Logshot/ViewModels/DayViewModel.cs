@@ -368,6 +368,39 @@ public partial class DayViewModel : ViewModelBase
         BuildHierarchicalGroups();
     }
 
+    // --- Take Deletion Safety Modal State ---
+    [ObservableProperty]
+    private bool _isTakeDeleteConfirmationOpen = false;
+
+    [ObservableProperty]
+    private TakeViewModel? _takeToDelete;
+
+    [RelayCommand]
+    public void PromptDeleteTake(TakeViewModel? take)
+    {
+        if (take is null) return;
+        TakeToDelete = take;
+        IsTakeDeleteConfirmationOpen = true;
+    }
+
+    [RelayCommand]
+    public async Task ConfirmDeleteTake()
+    {
+        if (TakeToDelete != null)
+        {
+            await DeleteTake(TakeToDelete);
+        }
+        IsTakeDeleteConfirmationOpen = false;
+        TakeToDelete = null;
+    }
+
+    [RelayCommand]
+    public void CancelDeleteTake()
+    {
+        IsTakeDeleteConfirmationOpen = false;
+        TakeToDelete = null;
+    }
+
     [RelayCommand]
     public async Task ReorderTakes()
     {

@@ -118,7 +118,7 @@
                     <Border Grid.Column="0" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Width="60">
                       <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
                         <TextBlock Text="⋮⋮" Cursor="Hand" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" Name="DragHandle"/>
-                        <Button Content="✕" Padding="4,0" FontSize="10" Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).DeleteTakeCommand}" CommandParameter="{Binding}"/>
+                        <Button Content="✕" Padding="4,0" FontSize="10" Command="{Binding $parent[UserControl].DataContext.PromptDeleteTakeCommand}" CommandParameter="{Binding}"/>
                       </StackPanel>
                     </Border>
 

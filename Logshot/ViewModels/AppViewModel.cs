@@ -115,6 +115,45 @@ public partial class AppViewModel : ViewModelBase
         IsAddScenePopupOpen = false;
     }
 
+    // --- Take Deletion Safety Modal State (Delegated to CurrentDay safely) ---
+    public bool IsTakeDeleteConfirmationOpen => CurrentDay?.IsTakeDeleteConfirmationOpen ?? false;
+
+    partial void OnCurrentDayChanged(DayViewModel? oldValue, DayViewModel? newValue)
+    {
+        if (oldValue != null)
+        {
+            oldValue.PropertyChanged -= CurrentDay_PropertyChanged;
+        }
+        if (newValue != null)
+        {
+            newValue.PropertyChanged += CurrentDay_PropertyChanged;
+        }
+        OnPropertyChanged(nameof(IsTakeDeleteConfirmationOpen));
+    }
+
+    private void CurrentDay_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DayViewModel.IsTakeDeleteConfirmationOpen))
+        {
+            OnPropertyChanged(nameof(IsTakeDeleteConfirmationOpen));
+        }
+    }
+
+    [RelayCommand]
+    public async Task ConfirmDeleteTake()
+    {
+        if (CurrentDay != null)
+        {
+            await CurrentDay.ConfirmDeleteTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    [RelayCommand]
+    public void CancelDeleteTake()
+    {
+        CurrentDay?.CancelDeleteTakeCommand.Execute(null);
+    }
+
     /// <summary>
     /// Initialize the app by loading all projects
     /// </summary>

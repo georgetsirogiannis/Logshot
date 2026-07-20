@@ -12,7 +12,7 @@
 * **Current Status:** The header workspace currently only provides `+ ADD SHOT` and `+ ADD TAKE` actions without an explicit scene-creation workflow.
 
 
-3. **Section 4.2.2: Row Deletion Safety Modal Confirmation**
+3. **Section 4.2.2: Row Deletion Safety Modal Confirmation** [ **COMPLETED** ]
 * **Master Spec:** Deleting a take row triggers a native modal confirmation dialog (matching the fail-safe pattern used for projects and days).
 * **Current Status:** Clicking the delete "✕" button on a take row immediately deletes the take via `DeleteTakeCommand` without any confirmation prompt.
 
