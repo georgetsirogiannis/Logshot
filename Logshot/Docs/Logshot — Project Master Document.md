@@ -1,8 +1,10 @@
 # **Logshot — Project Master Document**
 
+CAUTION: ~~THIS IS AN OUTDATED MASTER SPECIFICATION~~ **UPDATED MASTER SPECIFICATION**
+
 **Target Platforms:** Windows Desktop (Avalonia UI / .NET) & Android Mobile (Avalonia UI / Android SDK)  
-**.NET Version:** 10.0  
-**Avalonia Version:** 12.1.0  
+**.NET Version:** ~~10.0~~ **.NET 10**  
+**Avalonia Version:** ~~12.1.0~~ **Avalonia 12.1.0**  
 **Architecture:** Local-First, Offline-Capable, Outbox Syncing Pattern  
 **Backend & Database:** SQLite (Local) & Supabase PostgreSQL (Cloud Sync)  
 **Export Engine:** QuestPDF (C\# Portrait Fluent Layout)  
@@ -24,10 +26,9 @@ Every cell in the data grid—both within the desktop editing workspace, and the
 ### **2.2 Portrait Proportions & Default Sizing**
 
 * **Standard Page Geometry:** The final output and desktop canvas are oriented to **A4 Portrait** (595 x 842 points layout budget).  
-* **Strict 12-Row Target Budget:** Standard table rows are locked to a baseline height of **42 points**. This vertical spacing is mathematically balanced to fit exactly **12 rows of takes** per page while leaving perfect margins for metadata headers, top margin scribbles, and footers.  
+* **Strict 12-Row Target Budget:** Standard table rows are locked to a baseline height of ~~**42 points**~~ **30 points (collapsible to 16 points for voided rows)**. This vertical spacing is mathematically balanced to fit exactly **12 rows of takes** per page while leaving perfect margins for metadata headers, top margin scribbles, and footers.  
 * **Text Wrapping & Auto-Expansion:** Text wrapping is globally enabled on all text columns. If observations in the notes column exceed the default row height budget, the row height will automatically expand downward to prevent any data cropping.  
 * **Roboto Condensed Typeface:** This specific condensed sans-serif is bundled into the application's assets. Its narrow character width maximizes horizontal cell limits, allowing more text on a single line before wrapping.  
-* 
 
 ## **3\. Relational Database Schema (The Foundation)**
 
@@ -41,6 +42,7 @@ Each project must be self-contained, i.e. we need to make sure that searching fo
 * director (VARCHAR)  
 * dop (VARCHAR)  
 * production\_company (VARCHAR)  
+* script_supervisor (VARCHAR)  
 * created\_at (TIMESTAMP)
 
 ### **3.2 Days**
@@ -62,8 +64,8 @@ Each project must be self-contained, i.e. we need to make sure that searching fo
 * episode (VARCHAR, e.g., "7", "10-11". String type allows continuous multi-scene or multi-episode setups)  
 * scene (VARCHAR, e.g., "32", "28-29". String type allows split scenes, pickup slates, and continuous takes)  
 * shot (INTEGER, ΠΛΑΝΟ)  
-* take (INTEGER, ΛΗΨΗ)  
-* camera\_data (TEXT, JSON mapping of active camera labels to setup text, e.g., {"A": "KONTINO LOUKA", "B": "-//-"})  
+* take\_number (INTEGER, ΛΗΨΗ)  
+* camera\_data (TEXT, ~~JSON mapping of active camera labels to setup text, e.g., {"A": "KONTINO LOUKA", "B": "-//-"})~~ **Dictionary-backed `CameraDataStructure` JSON mapping camera labels to `CameraState` (status, notes, rollChangeMarker, noRoll, rollNumber)**  
 * sound\_notes (VARCHAR, e.g., "MUTE", "OFF ΧΑΡΗ 9/53")  
 * take\_notes (TEXT, raw observations)  
 * false\_start\_count (INTEGER, default 0. Increments: 0 \= none, 1 \= FS, 2 \= FS x2)  
@@ -75,7 +77,6 @@ Each project must be self-contained, i.e. we need to make sure that searching fo
 * void\_camera\_labels (TEXT, JSON array of strings, e.g., \["A"\]. Stores camera column labels that suffered a false clip on that take)  
 * created\_at (TIMESTAMP)
 
-
 ## **4\. UI/UX Workflow & Responsive Layouts**
 
 ### **4.1 Screen A: Project Dashboard & History (Unified)**
@@ -84,7 +85,6 @@ Each project must be self-contained, i.e. we need to make sure that searching fo
 * **Day Browser:** A chronological vertical listing of shooting days.  
 * **Targeted Search Functionality:** A global search bar designed **strictly for Episode (ΕΠ) and Scene (ΣΚ) inputs**. It entirely bypasses shot and take numbers to eliminate search noise.  
 * **Start New Day Button:** Stamps today's date and auto-increments the day number identifier string.
-
 
 ### **4.2 Screen B: The Shot Report Workspace (Current Day)**
 
@@ -108,8 +108,8 @@ Each project must be self-contained, i.e. we need to make sure that searching fo
   * ΠΑΡΑΤΗΡΗΣΕΙΣ **(48%)**  
 * **Dynamic Camera Expansion:** App starts with CAM A and CAM B columns by default. A \+ button in the header adds columns dynamically. If a camera is added when a day’s report has already started and is filled with previous takes, all the new camera’s cells for previously recorded takes are striked-through, meaning the newly added camera wasn’t recording until now.  
 * **Continuous Visual Flow:** The workspace displays a clean, continuous grid without simulated physical page separators. It allows you to scroll freely and edit takes inline.  
-* **Drag-and-Drop Reordering:** Drag handles on the left of each row allow instant manual reordering of takes.  
-* **Deletion Safety:** Deleting a row triggers a native modal confirmation.  
+* **Drag-and-Drop Reordering:** Drag handles on the left of each row - NOT YET IMPLEMENTED. 
+* **Deletion Safety:** Deleting a row triggers a native modal confirmation - NOT YET IMPLEMENTED.  
 * **Two-Way Finalize / Reopen System:**  
   * When the day is complete, tap **"Finalize Day & Sign Off"**. This locks standard row inputs and automatically triggers the cross-hatched "END DAY" pattern in the PDF generator.  
   * An **"Undo Finalize / Reopen Day"** button is immediately available to restore edit access.
@@ -122,9 +122,7 @@ When the screen width drops below 720 pixels, the viewport adapts into a vertica
 * **Dual Setup-Incremental Controls:** To respect the Shot → Take hierarchy, the subheader card features two explicit quick-action buttons:  
   1. \[ \+ SHOT \] **Button:** Closes the current shot setup. Automatically queries the highest shot number recorded within this Episode-Scene group, increments the Shot (ΠΛΑΝΟ) number by 1, and initializes **Take 1** for this new setup.  
   2. \[ \+ TAKE \] **Button:** Logs a subsequent take for the active setup. Duplicates the active Shot (ΠΛΑΝΟ) number and increments the Take (ΛΗΨΗ) number by 1\.  
-* **Floating Setup Button:** A prominent \[ \+ New EP-Scene \] button floating in the bottom corner prompts you for a new Episode and Scene string to begin an entirely fresh setup group.  
-* 
-
+  3. **CURRENTLY MISSING:** \[ \+ SCENE \] **Button:** Closes the current scene setup. The user can input a new episode-scene combination, and the program initializes **Shot 1, Take 1** for this new setup, except if the new scene has been previously shot on a different day, in which case the app queries the global database and prompts the user to continue with the next shot number.
 ## **5\. Core Logging Gestures & Visual Shorthands**
 
 ### **5.1 Single-Tap on Take (ΛΗΨΗ)**
@@ -133,23 +131,23 @@ Toggles **Circled Take** status. The take number is rendered inside a prominent,
 
 ### **5.2 Double-Tap on Take (ΛΗΨΗ)**
 
-Toggles **Failed/Bad Take** status. The row text opacity drops to 50%, and a clean, centered red strike-through line is drawn across the entire take record.
+Toggles **Failed/Bad Take** status. A red X-style cross line is drawn across the take number.
 
 ### **5.3 Pickup (PU) Modifier**
 
-A fast, dedicated \[PU\] mini-toggle sits immediately adjacent to the Take number field (on both desktop inline edit and mobile card view). Tapping it flags the record as a Pickup, rendering a clean superscript "PU" next to the take digit.
+A modifier state in the take's context menu. A PU text sits immediately adjacent to the Take number field (on both desktop inline edit and mobile card view).
 
 ### **5.4 Blooper Checkbox**
 
-When checked, a narrow, vertical orange badge reading **"BLOOPER"** is appended directly inside the far-right edge of that take's observations cell.
+Triggered through the context menu of the Description cell. When enabled, a narrow, vertical orange badge reading **"BLOOPER"** is appended directly inside the far-right edge of that take's observations cell.
 
 ### **5.5 ΑΚΥΡΟ CLIP Toggle (Camera Specific)**
 
-Triggered from a row or cell options menu. Prompts you to choose which active cameras suffered a false clip.
+Triggered from  right-click desktop context menus or touch flyouts. Prompts you to choose which active cameras suffered a false clip.
 
-* **Height Adjustment:** The row height collapses to a shallow **16 points**.  
+* **Height Adjustment:** The row height collapses to a shallow **16 points (`RowMinHeight`)**.  
 * **Offending Cell(s):** Selected camera cells display **"ΑΚΥΡΟ CLIP".** All other cells are overlaid with a tight, repeating **"XXXXXXX"** cross-stitch pattern.  
-* **Whole-Row Safety Constraint:** All other cells across the entire row are automatically filled with the same tight **"XXXXXXX"** cross-stitch pattern, completely crossing out the line to explicitly mark it as unusable media.
+* **Whole-Row Safety Constraint:** All other cells across the entire row are automatically filled with the same tight ~~**"XXXXXXX"**~~ **`CrossStitchPattern` ("XXXXXXXXXXXXXXXXXXXX")** cross-stitch pattern, completely crossing out the line to explicitly mark it as unusable media.
 
 ### **5.6 Diagonal Camera Slashes**
 
@@ -161,25 +159,22 @@ When typing observations inside the notes cell, a quick-bar of tap-and-go button
 
 * \[FS\] **Chip:** Tap once to prepend \[FS\] to your notes. Once prepended, tap a small \+ icon to increment to \[FS x2\], or tap a \- icon to remove or decrease by one.  
 * \[LS\] **Chip:** Tap once to prepend \[LS\] (Long Start).  
-* **Row Swiping (Mobile Quick Drawer):** Swiping right on any take card slides out a quick-action drawer containing thumb-friendly buttons for \[FS\], \[LS\], and \[ΑΚΥΡΟ\].  
-* 
+* **Row Swiping (Mobile Quick Drawer):** Swiping right on any take card slides out a quick-action drawer containing thumb-friendly buttons for ~~\[FS\]~~ **FS**, ~~\[LS\]~~ **LS**, and ~~\[ΑΚΥΡΟ\]~~ **AKYRO**.  
 
 ### **5.8 Change Camera Roll**
 
 During a shooting day, camera assistants may swap out camera rolls. A dedicated **"Change Roll"** button is available in the row options menu. Tapping it prompts you to select a new roll number for that camera, and the change is reflected immediately in the database and UI. The new camera roll number shows directly above its first clip in a separate short row. For example, when the camera roll for CAM A changes from A110 to A111, a small "A111" underlined text must appear on the CAM A column, directly above the first take's row of the new roll.
 
-IMPORTANT ΝΟΤΕ/UPDATE: The camera-specific and take-specific actions (Void Clip, No Roll, Change Camera Roll, Circled Take, Crossed-out/bad take) have now been moved to a context menu, accessible on desktop via right-click. Mobile implementation TBD, but likely a long-press gesture on the cell.
-
+IMPORTANT ΝΟΤΕ/UPDATE: The camera-specific and take-specific actions (Void Clip, No Roll, Change Camera Roll, Circled Take, Crossed-out/bad take) have now been moved to a context menu, accessible on desktop via right-click. Mobile implementation TBD.
 
 ## **6\. Cross-Day Scene Continuity & Shot Memory**
 
-1. **Automatic Database Query:** The moment you enter or create an Episode and Scene combination within the active project, the app queries the global database for previous takes of that exact setup across all days of the active project.  
-2. **Continuity Prompt:** If historical takes are found, the app halts and displays a high-visibility continuity notification:  
-   * *"Ep 10 \- Scene 40 was previously shot on Day 53\. Last recorded setup was SHOT 3 TAKE 2."*  
+1. **Automatic Database Query:** The moment you enter or create an Episode and Scene combination within the active project, the app queries the global database for previous takes of that exact setup across all days of the active project via `ContinuityService`.  
+2. **Continuity Prompt:** If historical takes are found, the app halts and displays a high-visibility continuity notification: *"Ep 10 \- Scene 40 was previously shot on Day 53\. Last recorded setup was SHOT 3 TAKE 2."* 
 3. **Action Pathways:**  
-   * \[ Continue with SHOT 4 \] **(Default/Recommended):** Automatically sets the new record to Shot 4, copies the active camera roll numbers, camera descriptions, and sound rolls from the last known take of that scene.  
-   * \[ Start over from SHOT 1 \]**:** Overrides continuity logic and initializes a fresh sequence.  
-   * \[ Custom Shot Number... \]**:** Allows manual alphanumeric entry.
+   * \[ ADD A NEW SHOT \] (the program increments the shot number from 3 to 4).
+   * \[ Continue with SHOT 3 TAKE 3 \] (remain on the same shot but increment take).
+Option #1 will be the most usual so needs to be more prominent.
 
 ## **7\. Local-First Syncing & Battery Optimization**
 
@@ -193,7 +188,7 @@ IMPORTANT ΝΟΤΕ/UPDATE: The camera-specific and take-specific actions (Void C
 
 ## **8\. Emergency AirDrop / Local Share Backup**
 
-* A prominent **"Local Database Backup"** button sits in the mobile app settings.  
+* ~~A prominent **"Local Database Backup"** button sits in the mobile app settings.~~ **Bundles the local SQLite database file (`logshot.db`) via file access capabilities.**  
 * Bundles your active project's local SQLite database file (logshot.db) and lets you share it directly via Bluetooth, Android Quick Share, or local USB transfer to your laptop.  
 * Ensures 100% data safety regardless of cloud connectivity on deep soundstages or remote locations.
 
@@ -215,4 +210,3 @@ IMPORTANT ΝΟΤΕ/UPDATE: The camera-specific and take-specific actions (Void C
   * **Quick-Tags:** Rendered as clean, thin-bordered rectangular badges (\[FS\], \[LS\]) at the start of the notes text.  
   * **Diagonal No-Roll Slashes:** Rendered as a clean diagonal line crossing out any unused camera setup cells from top-right to bottom-left.  
   * **END DAY Unused Space Filler:** On the final page of a finalized day, calculates remaining unused row slots and replaces them with a massive repeating diagonal cross-hatch pattern, stamping **"END DAY \[Day Identifier\]"** cleanly in the center.
-

@@ -1,11 +1,11 @@
 # Logshot Architecture & Current State
 
-CAUTION: THIS IS AN OUTDATED REPORT
+CAUTION: ~~THIS IS AN OUTDATED REPORT~~ **UPDATED REPORT**
 
-**Last Updated:** Phase 2 Complete (All Core Business Logic)  
+**Last Updated:** ~~Phase 2 Complete (All Core Business Logic)~~ **Phase 5 Complete (Desktop & Mobile UI, Gestures & Shorthands)**  
 **Project Target:** .NET 10  
 **UI Framework:** Avalonia (cross-platform desktop, Android, iOS, browser)  
-**Current Status:** Transitioning to Phase 3 (Desktop UI Development)
+**Current Status:** ~~Transitioning to Phase 3 (Desktop UI Development)~~ **Transitioning to Phase 6 (PDF Export Engine - QuestPDF)**
 
 ---
 
@@ -24,29 +24,30 @@ CAUTION: THIS IS AN OUTDATED REPORT
 
 ## High-Level Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                    UI Layer (Views)                     │
-│         MainView.axaml, MainWindow.axaml, etc.         │
+│         ~~MainView.axaml, MainWindow.axaml, etc.~~      │
+│         MainView, TakeGridView, MobileTakeListView,     │
+│         TakeCardView, MainWindow, etc.                  │
 └──────────────────┬──────────────────────────────────────┘
-				   │
+│
 ┌──────────────────▼──────────────────────────────────────┐
 │              ViewModel Layer (MVVM)                     │
 │  AppViewModel, ProjectViewModel, DayViewModel,         │
-│  TakeViewModel, MainViewModel                          │
+│  TakeViewModel, MainViewModel, ~~etc.~~                 │
+│  SetupGroupViewModel                                    │
 └──────────────────┬──────────────────────────────────────┘
-				   │
+│
 ┌──────────────────▼──────────────────────────────────────┐
 │              Service Layer                              │
 │  DatabaseService, CameraDataManager,                   │
 │  ContinuityService, SupabaseService                    │
 └──────────────────┬──────────────────────────────────────┘
-				   │
+│
 ┌──────────────────▼──────────────────────────────────────┐
 │           Data Layer (Models & Storage)                 │
 │  Project, Day, Take (SQLite database)                  │
 └─────────────────────────────────────────────────────────┘
-```
 
 The app follows **MVVM (Model-View-ViewModel)** architecture:
 - **Models** define the database schema and data structures
@@ -66,15 +67,13 @@ Represents a single film/TV project within Logshot.
 public class Project
 {
 	public string Id { get; set; }                    // Unique identifier (GUID)
-	public string Title { get; set; }                 // Project name (e.g., "Season 1 - Episode 5")
-	public string ProductionCompany { get; set; }     // Production house name
+	public string ~~Title~~ Name { get; set; }                 // Project name (e.g., "Ghosts")
 	public string Director { get; set; }              // Director's name
-	public string DP { get; set; }                    // Director of Photography
-	public string Producer { get; set; }              // Producer's name
-	public string GeneralNotes { get; set; }          // Project-wide notes/metadata
+	public string ~~DP~~ Dop { get; set; }                    // Director of Photography
+	public string ProductionCompany { get; set; }     // Production house name
+	public string ScriptSupervisor { get; set; }      // Script supervisor name (Added)
 	public DateTime CreatedAt { get; set; }           // Timestamp of project creation
 }
-```
 
 **Purpose:** Container for all Days and Takes within a single production.
 
@@ -89,7 +88,7 @@ public class Day
 {
 	public string Id { get; set; }                    // Unique identifier (GUID)
 	public string ProjectId { get; set; }             // Foreign key to Project
-	public string ShootDayNumber { get; set; }        // "Day 1", "Day 2", etc.
+	public string ShootDayNumber { get; set; }        // "Day 1", "Day 2", etc. (Supports alphanumeric strings like "54B")
 	public DateTime CalendarDate { get; set; }        // The actual calendar date (e.g., 2024-01-15)
 	public string GeneralNotes { get; set; }          // Day-level production notes
 	public string TopScribbleNotes { get; set; }      // Quick handwritten-style notes
@@ -133,7 +132,7 @@ public class Take
 	public bool IsBlooper { get; set; }               // Blooper/outtake
 
 	// False Clip Tracking
-	public string VoidCameraLabels { get; set; } = "[]"; // JSON array of cameras with void/no-roll
+	public string VoidCameraLabels { get; set; } = "[]"; // JSON array of ~~cameras with void/no-roll~~ specific voided cameras
 
 	public DateTime CreatedAt { get; set; }           // Timestamp of take creation
 }

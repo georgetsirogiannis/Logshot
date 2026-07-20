@@ -339,10 +339,12 @@
                         <ContextMenu>
                           <MenuItem Header="Mark Circled" Command="{Binding MarkCircledCommand}"/>
                           <MenuItem Header="Mark Failed" Command="{Binding MarkFailedCommand}"/>
+                          <MenuItem Header="Toggle Pickup (PU)" Command="{Binding TogglePickupCommand}"/>
                         </ContextMenu>
                       </TextBox.ContextMenu>
                     </TextBox>
                     <Line StartPoint="0,13" EndPoint="52,13" Stroke="{StaticResource FailRed}" StrokeThickness="2" IsVisible="{Binding ShowFailedActive}"/>
+                    <TextBlock Text="PU" FontSize="9" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2" IsVisible="{Binding IsPickup}"/>
                     <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="10" TextWrapping="Wrap" Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowRowCrossed}"/>
                   </Grid>
                 </Border>

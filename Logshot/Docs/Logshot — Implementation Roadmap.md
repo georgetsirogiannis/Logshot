@@ -1,9 +1,9 @@
 # **Logshot — Implementation Roadmap**
 
-CAUTION: THIS IS AN OUTDATED REPORT.
+CAUTION: ~~THIS IS AN OUTDATED REPORT.~~ **UPDATED REPORT.**
 
-**Last Updated:** Phase 5 completion pass  
-**Current Phase:** Phase 6 (The PDF Export Engine)  
+**Last Updated:** ~~Phase 5 completion pass~~ **Phase 5 Complete**  
+**Current Phase:** ~~Phase 6 (The PDF Export Engine)~~ **Phase 6 (The PDF Export Engine)**  
 **Overall Progress:** 5/7 phases complete (71%)
 
 ---
@@ -76,7 +76,7 @@ CAUTION: THIS IS AN OUTDATED REPORT.
 2. **Camera-Specific ΑΚΥΡΟ:** Implement the logic that collapses the row height to 16pt, identifies the voided cameras, and renders the "XXXXXXX" cross-stitch pattern.  ✅ **COMPLETED**
    - **Details:** `TakeViewModel.VoidCameraLabels` now tracks a per-camera list (`ToggleVoidCameraCommand`), exposing `HasVoidedCameras`/`RowMinHeight` (16pt collapse) plus per-camera `IsCamAVoided`/`ShowCamACrossed` (and `CameraRollCell.IsVoided`/`ShowCrossed` for extra cameras). Offending cells show "ΑΚΥΡΟ CLIP"; all other cells across the row render the `CrossStitchPattern` overlay in both `TakeGridView` and `TakeCardView`. A row context menu (desktop) exposes the per-camera toggle.
 3. **Quick-Tag Chips:** Add the tap-to-increment [FS] and [LS] badges inside the mobile notes cell. Add something for the desktop version too.  ✅ **COMPLETED**
-   - **Details:** Added `TakeViewModel.DecrementFalseStartsCommand` alongside the existing increment/long-start commands. Both `TakeCardView` (mobile) and `TakeGridView` (desktop) render an [FS xN] chip with +/- buttons and an [LS] toggle chip directly above the notes field.
+   - **Details:** Added `TakeViewModel.DecrementFalseStartsCommand` alongside the existing increment/long-start commands. Both `TakeCardView` (mobile) and `TakeGridView` (desktop) render an [FS xN] chip with +/- controls and an [LS] toggle chip directly above the notes field.
 4. **Diagonal Slashes:** Apply the tap/swipe mechanism to render "No Roll" camera slashes.  Add something for the desktop version too.  ✅ **COMPLETED**
    - **Details:** `CameraDataManager.CameraState.NoRoll` flag plus `TakeViewModel.ToggleCameraNoRollCommand` (per camera). Rendered as a diagonal `Path` (`M0,0 L1,1`, `Stretch="Fill"`) across the roll cell in both `TakeGridView` and `TakeCardView`, toggled via a small inline button (mobile) or the row context menu (desktop).
 5. **Camera Roll Change:** Write the logic that enables the user to log a camera roll change as per described in the Project Master Document.  ✅ **COMPLETED**
