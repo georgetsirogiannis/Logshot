@@ -347,7 +347,8 @@
                             </ContextMenu>
                           </TextBox.ContextMenu>
                         </TextBox>
-                        <Line EndPoint="52,13" IsVisible="{Binding ShowFailedActive}" StartPoint="0,13" Stroke="{StaticResource FailRed}" StrokeThickness="2"/>
+                        <!-- CLEAR RED X OVER TAKE NUMBER -->
+                        <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
                         <TextBlock FontSize="9" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Right" IsVisible="{Binding IsPickup}" Margin="2" Text="PU" VerticalAlignment="Top"/>
                         <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
                       </Grid>
