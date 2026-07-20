@@ -126,6 +126,12 @@ public partial class DayViewModel : ViewModelBase
             }
         }
 
+        // Ensure newly created subsequent takes do not inherit a roll change marker
+        foreach (var kvp in cameraData.Cameras)
+        {
+            kvp.Value.RollChangeMarker = false;
+        }
+
         return _cameraDataManager.SerializeCameraData(cameraData);
     }
 
@@ -536,6 +542,17 @@ public partial class DayViewModel : ViewModelBase
         // Get continuity data for this Episode/Scene
         var continuityData = await _continuityService.GetContinuityDataAsync(ProjectId, episode, scene);
 
+        // Parse inherited camera data, but clear out shot-specific camera cell notes/descriptions
+        // so that a brand new shot starts with empty camera cells ready for new information.
+        var cameraData = _cameraDataManager.ParseCameraData(continuityData.InheritedCameraData);
+        foreach (var kvp in cameraData.Cameras)
+        {
+            kvp.Value.Notes = string.Empty; // Clear camera text/descriptions for the new shot
+            kvp.Value.NoRoll = false;
+            kvp.Value.RollChangeMarker = false;
+        }
+        var cleanedCameraDataJson = _cameraDataManager.SerializeCameraData(cameraData);
+
         // Create the new take
         var newTake = new Take
         {
@@ -546,8 +563,8 @@ public partial class DayViewModel : ViewModelBase
             Shot = continuityData.NextShotNumber,
             TakeNumber = 1,
 
-            // 1. DATA FIX: Synchronize historical continuity data with the Day's active cameras
-            CameraData = SyncCameraDataWithActiveCameras(continuityData.InheritedCameraData),
+            // Synchronize with active cameras while using the cleaned camera setup
+            CameraData = SyncCameraDataWithActiveCameras(cleanedCameraDataJson),
 
             CreatedAt = DateTime.UtcNow
         };
@@ -560,7 +577,6 @@ public partial class DayViewModel : ViewModelBase
         await takeVM.SaveTakeCommand.ExecuteAsync(null);
         Takes.Add(takeVM);
 
-        // 2. UI FIX: These three lines tell Avalonia to draw the cells for CAM C and group everything correctly
         RefreshAllExtraCameraRolls();
         await UpdateTotalTakesCommand.ExecuteAsync(null);
         BuildHierarchicalGroups();
