@@ -39,9 +39,8 @@
 2. `[ Continue with SHOT X TAKE Y ]` (increments the last take of the preexisting shot by one)
 
 
-* **Current Status:** `ContinuityService` and `CreateTakeWithContinuity` handle continuity logic in the background, but the UI silently auto-applies it without displaying an interactive prompt dialog with these specific pathways.
 
-8. **Multiple scenes intelligence:**
+8. **Multiple scenes intelligence:** [ **COMPLETED** ]
 * **Master Spec:** Sometimes a shot may contain action from multiple scenes. The app should be able to understand that and log the shot/take(s) under all of the multiple scenes.
 * Example: The director decides to shoot two continuous scenes (let's say scene 13 and 14 of episode 1) in one continuous shot. The script supervisor is obliged to write this as "Episode 1 - Scenes 13-14".
   * On the app, the script supervisor can enter multiple scenes in the scene field, separated by a line break. The app should understand that this is a single shot that belongs to multiple scenes, and log the shot/take(s) under all of the multiple scenes.
@@ -52,8 +51,11 @@
   * This way, the app will always suggest the correct number for a shot, even if the previous shot was logged under multiple scenes.
   * Always remember that a "scene" is actually a combination of episode and scene. The app shouldn't compare episode 2 scenes 13-14 to episode 5 scenes 13-14. These are two different couples of scenes.
 
-8. **Section 4.1: Targeted Episode & Scene Search Bar**
+9. **Section 4.1: Targeted Episode & Scene Search Bar**
 * **Master Spec:** A global search bar designed **strictly for Episode (ΕΠ) and Scene (ΣΚ) inputs** to quickly filter or locate setups, bypassing shot and take numbers.
+* This gives the ability to the user to quickly see when a scene was shot, and what takes were logged for that scene.
+* The results should be presented in a clear and concise manner, allowing the user to easily navigate to the desired setup and read the information that was logged.
+* We should decide if we will have separate fields for episode and scene, or if the app will have a "smart search bar" that will recognize a single input with a separator (most commonly episode/scene or episode.scene; the dash-separated or space-separated input might confuse the user because dashes and spaces are already used elsewhere in the app to mark multiple scenes instead of creating an episode-scene combination, so we must avoid dash and space separation). The app should be able to understand the separator and split the input into episode and scene. We should choose the option that makes the most sense for the code and the user experience.
 * **Current Status:** Not present in `MainView.axaml` or `AppViewModel`.
 
 
@@ -62,6 +64,6 @@
 
 #### **Low Priority**
 
-9. **Section 4.2.2: Desktop Drag-and-Drop Row Reordering**
+10. **Section 4.2.2: Desktop Drag-and-Drop Row Reordering**
 * **Master Spec:** Drag handles on the left of each row (`⋮⋮`) allow instant manual drag-and-drop reordering of takes in the desktop grid.
 * **Current Status:** The visual drag handle exists in `TakeGridView.axaml`, but `TakeGridView.axaml.cs` only contains stubbed pointer event handlers (`Row_PointerPressed`/`Moved`/`Released`) that do not perform actual collection reordering.

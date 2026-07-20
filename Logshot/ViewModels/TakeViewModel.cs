@@ -173,29 +173,13 @@ public partial class TakeViewModel : ViewModelBase
 
     partial void OnEpisodeChanged(string value)
     {
-        if (!string.IsNullOrEmpty(value))
-        {
-            var topLine = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
-            if (topLine != value)
-            {
-                Episode = topLine;
-                return;
-            }
-        }
+        // Line break stripping removed to allow Multiple Scenes Intelligence
         OnPropertyChanged(nameof(DisplayEpisode));
     }
 
     partial void OnSceneChanged(string value)
     {
-        if (!string.IsNullOrEmpty(value))
-        {
-            var topLine = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
-            if (topLine != value)
-            {
-                Scene = topLine;
-                return;
-            }
-        }
+        // Line break stripping removed to allow Multiple Scenes Intelligence
         OnPropertyChanged(nameof(DisplayScene));
     }
 

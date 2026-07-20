@@ -29,10 +29,9 @@
 	  <Button Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddCamera_Click"/>
 
       <!-- New Scene Inputs & Button -->
-      <TextBox Name="NewEpisodeBox" Watermark="EP" Width="40" FontSize="11" VerticalAlignment="Center"/>
-      <TextBox Name="NewSceneBox" Watermark="SC" Width="40" FontSize="11" VerticalAlignment="Center"/>
-      <Button Content="+ SCENE" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddScene_Click"/>
-	</StackPanel>
+      <TextBox Name="NewEpisodeBox" Watermark="EP" Width="40" FontSize="11" VerticalAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap"/>
+      <TextBox Name="NewSceneBox" Watermark="SC" Width="40" FontSize="11" VerticalAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap"/>
+      <Button Content="+ SCENE" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddScene_Click"/>	</StackPanel>
 
 	<ScrollViewer Name="MobileScrollViewer">
 	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}">

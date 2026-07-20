@@ -104,17 +104,43 @@ public class DatabaseService
         return takes.OrderBy(t => t.CreatedAt).ToList();
     }
 
+   
+   
+    /// Helper to tokenize episode or scene strings by line breaks, spaces, commas, or hyphens.
+    /// </summary>
+    public static List<string> GetTokens(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return new List<string>();
+        char[] separators = new[] { '\r', '\n', ' ', ',', '-' };
+        return input.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToList();
+    }
+
     /// <summary>
-    /// Get all takes for a specific Episode/Scene combination across a project
+    /// Get all takes for a specific Episode/Scene combination across a project.
+    /// Supports "Multiple Scenes Intelligence" by matching overlapping scene tokens.
     /// </summary>
     public async Task<List<Take>> GetTakesForEpisodeSceneAsync(string projectId, string episode, string scene)
     {
         await InitAsync();
-
         var allProjectTakes = await GetTakesForProjectAsync(projectId);
 
+        var queryEpisodes = GetTokens(episode);
+        var queryScenes = GetTokens(scene);
+
         return allProjectTakes
-            .Where(t => t.Episode == episode && t.Scene == scene)
+            .Where(t =>
+            {
+                var takeEpisodes = GetTokens(t.Episode);
+                var takeScenes = GetTokens(t.Scene);
+
+                bool episodeMatch = !queryEpisodes.Any() || !takeEpisodes.Any() || takeEpisodes.Intersect(queryEpisodes, StringComparer.OrdinalIgnoreCase).Any();
+                bool sceneMatch = !queryScenes.Any() || !takeScenes.Any() || takeScenes.Intersect(queryScenes, StringComparer.OrdinalIgnoreCase).Any();
+
+                return episodeMatch && sceneMatch;
+            })
             .OrderByDescending(t => t.CreatedAt)
             .ToList();
     }

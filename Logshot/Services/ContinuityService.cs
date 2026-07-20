@@ -85,36 +85,59 @@ public class ContinuityService
     }
 
     /// <summary>
-    /// Look up continuity data for a specific Episode/Scene combination within a project
+    /// Look up continuity data for a specific Episode/Scene combination within a project.
+    /// Uses smallest-unused-positive-integer logic across overlapping scene tokens.
     /// </summary>
     public async Task<ContinuityData> GetContinuityDataAsync(string projectId, string episode, string scene)
     {
         var continuity = new ContinuityData();
 
-        // Get all takes with this Episode/Scene combination across the project
-        var historicalTakes = await _databaseService.GetTakesForEpisodeSceneAsync(projectId, episode, scene);
-
-        // Filter out voided takes and sound-only rows (only count valid camera takes for continuity)
-        var nonVoidedTakes = historicalTakes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t)).ToList();
+        var allProjectTakes = await _databaseService.GetTakesForProjectAsync(projectId);
+        var nonVoidedTakes = allProjectTakes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t)).ToList();
 
         if (nonVoidedTakes.Count == 0)
         {
-            // No valid history - start fresh with shot 1
             continuity.NextShotNumber = 1;
             continuity.HasHistory = false;
             return continuity;
         }
 
-        // We have valid history - use the most recent valid take as reference
+        var queryEpisodes = DatabaseService.GetTokens(episode);
+        var queryScenes = DatabaseService.GetTokens(scene);
+
+        // Find all historical takes that overlap with any of the queried episodes and scenes
+        var matchingTakes = nonVoidedTakes.Where(t =>
+        {
+            var takeEpisodes = DatabaseService.GetTokens(t.Episode);
+            var takeScenes = DatabaseService.GetTokens(t.Scene);
+
+            bool episodeMatch = !queryEpisodes.Any() || !takeEpisodes.Any() || takeEpisodes.Intersect(queryEpisodes, StringComparer.OrdinalIgnoreCase).Any();
+            bool sceneMatch = !queryScenes.Any() || !takeScenes.Any() || takeScenes.Intersect(queryScenes, StringComparer.OrdinalIgnoreCase).Any();
+
+            return episodeMatch && sceneMatch;
+        }).OrderByDescending(t => t.CreatedAt).ToList();
+
+        if (matchingTakes.Count == 0)
+        {
+            continuity.NextShotNumber = 1;
+            continuity.HasHistory = false;
+            return continuity;
+        }
+
         continuity.HasHistory = true;
-        continuity.LastReferenceTake = nonVoidedTakes.First(); // Already ordered descending by date
-
-        // Find the maximum shot number we've seen for valid takes with this Episode/Scene
-        int maxShot = nonVoidedTakes.Max(t => t.Shot);
-        continuity.NextShotNumber = maxShot + 1;
-
-        // Inherit camera setup from the most recent valid take with this Episode/Scene
+        continuity.LastReferenceTake = matchingTakes.First();
         continuity.InheritedCameraData = continuity.LastReferenceTake.CameraData;
+
+        // Collect all shot numbers already used by these scene(s)
+        var usedShots = matchingTakes.Select(t => t.Shot).Where(s => s > 0).ToHashSet();
+
+        // Find the smallest positive integer not present in usedShots
+        int nextShot = 1;
+        while (usedShots.Contains(nextShot))
+        {
+            nextShot++;
+        }
+        continuity.NextShotNumber = nextShot;
 
         return continuity;
     }

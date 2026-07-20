@@ -310,12 +310,12 @@
 
           <StackPanel Spacing="4">
             <TextBlock Text="Episode (ΕΠ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-            <TextBox Text="{Binding AppViewModel.PopupNewEpisode}" Watermark="e.g. 1 or 10"/>
+            <TextBox Text="{Binding AppViewModel.PopupNewEpisode}" Watermark="e.g. 1 or 10" AcceptsReturn="True" TextWrapping="Wrap"/>
           </StackPanel>
 
           <StackPanel Spacing="4">
             <TextBlock Text="Scene (ΣΚ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-            <TextBox Text="{Binding AppViewModel.PopupNewScene}" Watermark="e.g. 32 or 28-29"/>
+            <TextBox Text="{Binding AppViewModel.PopupNewScene}" Watermark="e.g. 32 or 28-29" AcceptsReturn="True" TextWrapping="Wrap"/>
           </StackPanel>
 
           <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">

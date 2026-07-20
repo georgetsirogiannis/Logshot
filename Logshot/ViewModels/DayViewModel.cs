@@ -633,6 +633,17 @@ public partial class DayViewModel : ViewModelBase
     }
 
     // === START NEW CONTINUITY PROMPT LOGIC ===
+    private string FormatSceneString(string rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue)) return string.Empty;
+        char[] separators = new[] { '\r', '\n', ' ', ',' };
+        var parts = rawValue.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .Where(s => !string.IsNullOrEmpty(s))
+                            .ToList();
+        return string.Join("-", parts);
+    }
+
     public async Task CheckContinuityAndPromptAsync(string episode, string scene)
     {
         if (string.IsNullOrWhiteSpace(episode) || string.IsNullOrWhiteSpace(scene)) return;
@@ -681,8 +692,12 @@ public partial class DayViewModel : ViewModelBase
         _pendingScene = scene;
         _pendingContinuityData = continuityData;
 
-        // Build the prompt text with the dynamic days string
-        ContinuityMessage = $"Scene {episode}/{scene} already has recorded shots on {daysString}. How would you like to continue?";
+        // Format episode and scene with consistent dashes
+        string formattedEp = FormatSceneString(episode);
+        string formattedSc = FormatSceneString(scene);
+
+        // Build the prompt text with the dynamic days string and dash-formatted scenes
+        ContinuityMessage = $"Scene {formattedEp}/{formattedSc} already has recorded shots on {daysString}. How would you like to continue?";
 
         int nextShot = continuityData.NextShotNumber;
         ContinuityOption1Text = $"[ ADD A NEW SHOT ]";
