@@ -15,8 +15,8 @@
       <Button Name="VoidButton" Content="AKYRO" Width="70" HorizontalContentAlignment="Center" Background="{StaticResource FailRed}" Command="{Binding ToggleVoidPrimaryCameraCommand}"/>
     </StackPanel>
     
-    <!-- Main Card Surface -->
-    <Border Name="CardSurface" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,0,1" Padding="12,8" MinHeight="{Binding RowMinHeight}" PointerPressed="Card_PointerPressed" PointerMoved="Card_PointerMoved" PointerReleased="Card_PointerReleased">
+  <!-- Main Card Surface -->
+    <Border Name="CardSurface" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,0,1" Padding="12,8" MinHeight="{Binding RowMinHeight}" IsHitTestVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized, Converter={x:Static BoolConverters.Not}}" PointerPressed="Card_PointerPressed" PointerMoved="Card_PointerMoved" PointerReleased="Card_PointerReleased">
       <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
       <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
         

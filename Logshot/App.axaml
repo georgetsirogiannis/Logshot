@@ -11,7 +11,6 @@
 
     <Application.Resources>
         <!-- 1. Global Typography -->
-        <!-- This points exactly to the folder you just created -->
         <FontFamily x:Key="RobotoCondensed">avares://Logshot/Assets/Fonts#Roboto Condensed</FontFamily>
 
         <!-- 2. Dark Mode Color Palette -->
@@ -28,7 +27,7 @@
         <SolidColorBrush x:Key="GridLineColor">#333333</SolidColorBrush>
         <SolidColorBrush x:Key="BorderColor">#3F3F46</SolidColorBrush>
 
-        <!-- Semantic Colors (Prepared for Phase 5 gestures & shorthands) -->
+        <!-- Semantic Colors -->
         <SolidColorBrush x:Key="FailRed">#F44336</SolidColorBrush>
         <SolidColorBrush x:Key="BlooperOrange">#FF9800</SolidColorBrush>
         <SolidColorBrush x:Key="ActionAccent">#4FC3F7</SolidColorBrush>
@@ -53,6 +52,11 @@
         </Style>
         <Style Selector="Button">
             <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+        </Style>
+
+        <!-- Prevent disabled controls from fading or dimming in appearance -->
+        <Style Selector="Control:disabled">
+            <Setter Property="Opacity" Value="1.0" />
         </Style>
     </Application.Styles>
 </Application>

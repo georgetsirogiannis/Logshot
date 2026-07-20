@@ -39,6 +39,13 @@ public partial class DayViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isFinalized = false;
 
+    partial void OnIsFinalizedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsNotFinalized));
+    }
+
+    public bool IsNotFinalized => !IsFinalized;
+
     [ObservableProperty]
     private DateTime _createdAt = DateTime.UtcNow;
 
@@ -449,6 +456,8 @@ public partial class DayViewModel : ViewModelBase
         IsFinalized = true;
         await SaveDayCommand.ExecuteAsync(null);
     }
+
+
 
     /// <summary>
     /// Reopens a finalized day, allowing edits to resume.

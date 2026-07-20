@@ -183,6 +183,11 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayScene));
     }
 
+    partial void OnTakeNotesChanged(string value)
+    {
+        _ = SaveTakeCommand.ExecuteAsync(null);
+    }
+
     partial void OnSoundNotesChanged(string value)
     {
         if (!string.IsNullOrEmpty(value))

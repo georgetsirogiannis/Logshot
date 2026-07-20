@@ -5,6 +5,20 @@
     <Style Selector="Border.row-border">
       <Setter Property="BorderThickness" Value="0,0,0,1"/>
       <Setter Property="BorderBrush" Value="{StaticResource GridLineColor}"/>
+      <Setter Property="IsHitTestVisible" Value="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized, Converter={x:Static BoolConverters.Not}}" />
+    </Style>
+    <!-- Make all textboxes read-only and non-interactive when finalized -->
+    <Style Selector="TextBox">
+      <Setter Property="IsReadOnly" Value="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
+      <Setter Property="IsHitTestVisible" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
+    </Style>
+    <!-- Disable buttons when finalized -->
+    <Style Selector="Button">
+      <Setter Property="IsEnabled" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
+    </Style>
+    <!-- Disable toggle buttons (FS, LS, BL) when finalized -->
+    <Style Selector="ToggleButton">
+      <Setter Property="IsEnabled" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
     </Style>
   </UserControl.Styles>
 

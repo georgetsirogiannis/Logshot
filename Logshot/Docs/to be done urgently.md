@@ -51,7 +51,7 @@
   * This way, the app will always suggest the correct number for a shot, even if the previous shot was logged under multiple scenes.
   * Always remember that a "scene" is actually a combination of episode and scene. The app shouldn't compare episode 2 scenes 13-14 to episode 5 scenes 13-14. These are two different couples of scenes.
 
-9. **Section 4.1: Targeted Episode & Scene Search Bar**
+9. **Section 4.1: Targeted Episode & Scene Search Bar** [ **COMPLETED** ]
 * **Master Spec:** A global search bar designed **strictly for Episode (ΕΠ) and Scene (ΣΚ) inputs** to quickly filter or locate setups, bypassing shot and take numbers.
 * This gives the ability to the user to quickly see when a scene was shot, and what takes were logged for that scene.
 * The results should be presented in a clear and concise manner, allowing the user to easily navigate to the desired setup and read the information that was logged.

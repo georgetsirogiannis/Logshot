@@ -28,6 +28,122 @@ public partial class AppViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoading = false;
 
+    // --- Targeted Episode & Scene Search State ---
+    [ObservableProperty]
+    private string _searchQuery = string.Empty;
+
+    [ObservableProperty]
+    private bool _isSearchActive = false;
+
+    [ObservableProperty]
+    private bool _hasNoSearchResults = false;
+
+    [ObservableProperty]
+    private ObservableCollection<DaySearchResultGroupViewModel> _searchResultGroups = new();
+
+    partial void OnSearchQueryChanged(string value)
+    {
+        _ = ExecuteSearchAsync(value);
+    }
+
+    public async Task ExecuteSearchAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query) || CurrentProject == null)
+        {
+            IsSearchActive = false;
+            HasNoSearchResults = false;
+            SearchResultGroups.Clear();
+            return;
+        }
+
+        string queryTrimmed = query.Trim();
+        char separator = '\0';
+        if (queryTrimmed.Contains('/')) separator = '/';
+        else if (queryTrimmed.Contains('.')) separator = '.';
+
+        if (separator == '\0')
+        {
+            IsSearchActive = true;
+            HasNoSearchResults = true;
+            SearchResultGroups.Clear();
+            return;
+        }
+
+        var parts = queryTrimmed.Split(separator, 2, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2)
+        {
+            IsSearchActive = true;
+            HasNoSearchResults = true;
+            SearchResultGroups.Clear();
+            return;
+        }
+
+        string episode = parts[0].Trim();
+        string scene = parts[1].Trim();
+
+        if (string.IsNullOrEmpty(episode) || string.IsNullOrEmpty(scene))
+        {
+            IsSearchActive = true;
+            HasNoSearchResults = true;
+            SearchResultGroups.Clear();
+            return;
+        }
+
+        IsSearchActive = true;
+
+        var matchingTakes = await _databaseService.GetTakesForEpisodeSceneAsync(CurrentProject.Id, episode, scene);
+
+        SearchResultGroups.Clear();
+
+        if (matchingTakes.Count == 0)
+        {
+            HasNoSearchResults = true;
+            return;
+        }
+
+        var takesByDay = matchingTakes.GroupBy(t => t.DayId).ToDictionary(g => g.Key, g => g.ToList());
+        var projectDays = await _databaseService.GetDaysForProjectAsync(CurrentProject.Id);
+
+        // Sort days chronologically: earliest calendar date to latest
+        var sortedDays = projectDays
+            .Where(d => takesByDay.ContainsKey(d.Id))
+            .OrderBy(d => d.CalendarDate)
+            .ThenBy(d => int.TryParse(d.ShootDayNumber, out int n) ? n : 0);
+
+        foreach (var dayModel in sortedDays)
+        {
+            var groupVM = new DaySearchResultGroupViewModel(_databaseService);
+            groupVM.LoadFromModel(dayModel);
+            groupVM.Takes.Clear();
+
+            foreach (var take in takesByDay[dayModel.Id].OrderBy(t => t.SequenceOrder))
+            {
+                var takeVM = new TakeViewModel(_databaseService);
+                takeVM.LoadFromModel(take);
+                await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
+                groupVM.Takes.Add(takeVM);
+            }
+
+            SearchResultGroups.Add(groupVM);
+        }
+
+        HasNoSearchResults = SearchResultGroups.Count == 0;
+    }
+
+    [RelayCommand]
+    public void ClearSearch()
+    {
+        SearchQuery = string.Empty;
+        IsSearchActive = false;
+        HasNoSearchResults = false;
+        SearchResultGroups.Clear();
+    }
+
+    partial void OnCurrentProjectChanged(ProjectViewModel? oldValue, ProjectViewModel? newValue)
+    {
+        ClearSearch();
+    }
+
     // --- Project Dialog & Deletion State ---
     [ObservableProperty]
     private bool _isProjectPopupOpen = false;
@@ -114,14 +230,10 @@ public partial class AppViewModel : ViewModelBase
         var ep = PopupNewEpisode.Trim();
         var sc = PopupNewScene.Trim();
 
-        // Close the initial "New Scene" dialog
         IsAddScenePopupOpen = false;
-
-        // Pass it to the DayViewModel to check history and prompt if needed
         await CurrentDay.CheckContinuityAndPromptAsync(ep, sc);
     }
 
-    // --- Take Deletion Safety Modal State (Delegated to CurrentDay safely) ---
     public bool IsTakeDeleteConfirmationOpen => CurrentDay?.IsTakeDeleteConfirmationOpen ?? false;
 
     partial void OnCurrentDayChanged(DayViewModel? oldValue, DayViewModel? newValue)
@@ -160,9 +272,6 @@ public partial class AppViewModel : ViewModelBase
         CurrentDay?.CancelDeleteTakeCommand.Execute(null);
     }
 
-    /// <summary>
-    /// Initialize the app by loading all projects
-    /// </summary>
     [RelayCommand]
     public async Task InitializeApp()
     {
@@ -177,9 +286,6 @@ public partial class AppViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Load all projects from the database
-    /// </summary>
     [RelayCommand]
     public async Task LoadAllProjects()
     {
@@ -203,9 +309,6 @@ public partial class AppViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Opens the popup to create a new project
-    /// </summary>
     [RelayCommand]
     public void OpenCreateProjectDialog()
     {
@@ -218,9 +321,6 @@ public partial class AppViewModel : ViewModelBase
         IsProjectPopupOpen = true;
     }
 
-    /// <summary>
-    /// Opens the popup to edit the currently selected project
-    /// </summary>
     [RelayCommand]
     public void OpenEditProjectDialog()
     {
@@ -235,9 +335,6 @@ public partial class AppViewModel : ViewModelBase
         IsProjectPopupOpen = true;
     }
 
-    /// <summary>
-    /// Saves the project from the popup dialog (Create or Update)
-    /// </summary>
     [RelayCommand]
     public async Task SaveProjectDialog()
     {
@@ -280,9 +377,6 @@ public partial class AppViewModel : ViewModelBase
         IsProjectPopupOpen = false;
     }
 
-    /// <summary>
-    /// Prompts fail-safe confirmation before deleting a project
-    /// </summary>
     [RelayCommand]
     public void PromptDeleteProject(ProjectViewModel? project)
     {
@@ -311,9 +405,6 @@ public partial class AppViewModel : ViewModelBase
         ProjectToDelete = null;
     }
 
-    /// <summary>
-    /// Delete a project
-    /// </summary>
     [RelayCommand]
     public async Task DeleteProject(ProjectViewModel project)
     {
@@ -330,20 +421,14 @@ public partial class AppViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Select a project as current and load its days
-    /// </summary>
     [RelayCommand]
     public async Task SelectProject(ProjectViewModel project)
     {
         CurrentProject = project;
         await CurrentProject.LoadDaysCommand.ExecuteAsync(null);
-        CurrentDay = null; // Clear day selection when switching projects
+        CurrentDay = null;
     }
 
-    /// <summary>
-    /// Opens the popup to edit a shoot day's number and date
-    /// </summary>
     [RelayCommand]
     public void OpenEditDayDialog(DayViewModel day)
     {
@@ -355,9 +440,6 @@ public partial class AppViewModel : ViewModelBase
         IsDayPopupOpen = true;
     }
 
-    /// <summary>
-    /// Saves the edited shoot day details
-    /// </summary>
     [RelayCommand]
     public async Task SaveDayDialog()
     {
@@ -379,9 +461,6 @@ public partial class AppViewModel : ViewModelBase
         DayBeingEdited = null;
     }
 
-    /// <summary>
-    /// Prompts fail-safe confirmation before deleting a shoot day
-    /// </summary>
     [RelayCommand]
     public void PromptDeleteDay(DayViewModel day)
     {
@@ -409,9 +488,6 @@ public partial class AppViewModel : ViewModelBase
         DayToDelete = null;
     }
 
-    /// <summary>
-    /// Create a new day in the current project, auto-incrementing the day number and using today's date
-    /// </summary>
     [RelayCommand]
     public async Task CreateDay()
     {
@@ -446,9 +522,6 @@ public partial class AppViewModel : ViewModelBase
         CurrentDay = dayVM;
     }
 
-    /// <summary>
-    /// Delete a day from the current project
-    /// </summary>
     [RelayCommand]
     public async Task DeleteDay(DayViewModel day)
     {
@@ -463,19 +536,14 @@ public partial class AppViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Select a day as current and load its takes
-    /// </summary>
     [RelayCommand]
     public async Task SelectDay(DayViewModel day)
     {
+        ClearSearch();
         CurrentDay = day;
         await CurrentDay.LoadTakesCommand.ExecuteAsync(null);
     }
 
-    /// <summary>
-    /// Create a new take in the current day
-    /// </summary>
     [RelayCommand]
     public async Task CreateTake()
     {
@@ -496,9 +564,6 @@ public partial class AppViewModel : ViewModelBase
         await CurrentDay.UpdateTotalTakesCommand.ExecuteAsync(null);
     }
 
-    /// <summary>
-    /// Delete a take from the current day
-    /// </summary>
     [RelayCommand]
     public async Task DeleteTake(TakeViewModel take)
     {
@@ -509,9 +574,6 @@ public partial class AppViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Export the current day to PDF
-    /// </summary>
     [RelayCommand]
     public async Task ExportDayToPdf()
     {
@@ -519,9 +581,6 @@ public partial class AppViewModel : ViewModelBase
             return;
     }
 
-    /// <summary>
-    /// Sync changes to Supabase
-    /// </summary>
     [RelayCommand]
     public async Task SyncToSupabase()
     {

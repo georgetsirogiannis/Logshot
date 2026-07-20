@@ -32,13 +32,13 @@
               BorderThickness="0,0,1,0"
               Padding="20"
               IsVisible="{Binding IsSidebarOpen}">
-        <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, Auto">
+        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *, Auto">
 
           <!-- App Brand -->
           <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,25">
             <TextBlock Grid.Column="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold"
                        Foreground="{StaticResource ActionAccent}"/>
-            <!-- Mobile-only close button so the drawer can be dismissed without a hamburger toggle -->
+            <!-- Mobile-only close button -->
             <Button Grid.Column="1" Content="&#10005;" FontSize="14" Padding="6,2"
                     IsVisible="{Binding IsMobileLayout}"
                     Command="{Binding ToggleSidebarCommand}"/>
@@ -57,7 +57,7 @@
                     Margin="0,0,0,8"/>
 
           <!-- Project Edit & Delete Buttons -->
-          <Grid Grid.Row="3" ColumnDefinitions="*,*" Margin="0,0,0,25">
+          <Grid Grid.Row="3" ColumnDefinitions="*,*" Margin="0,0,0,20">
             <Button Grid.Column="0" Content="EDIT PROJECT" FontSize="11" Padding="4,6" Margin="0,0,3,0"
                     Command="{Binding AppViewModel.OpenEditProjectDialogCommand}"
                     IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
@@ -70,12 +70,25 @@
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
           </Grid>
 
+          <!-- Targeted Episode & Scene Search Bar -->
+          <TextBlock Grid.Row="4" Text="EP/SC SEARCH (e.g. 1/5)" FontSize="12" 
+                     Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+          <Grid Grid.Row="5" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+            <TextBox Grid.Column="0" Text="{Binding AppViewModel.SearchQuery}" Watermark="e.g. 1/5 or 10.32" 
+                     VerticalAlignment="Center"
+                     IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+            <Button Grid.Column="1" Content="✕" Margin="4,0,0,0" 
+                    Command="{Binding AppViewModel.ClearSearchCommand}"
+                    IsVisible="{Binding AppViewModel.IsSearchActive}"
+                    VerticalAlignment="Center"/>
+          </Grid>
+
           <!-- Shoot Days List -->
-          <TextBlock Grid.Row="4" Text="SHOOT DAYS" FontSize="12" 
+          <TextBlock Grid.Row="6" Text="SHOOT DAYS" FontSize="12" 
                      Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5" 
                      VerticalAlignment="Top"/>
           
-          <ListBox Grid.Row="4" 
+          <ListBox Grid.Row="6" 
                    ItemsSource="{Binding AppViewModel.CurrentProject.Days}" 
                    SelectedItem="{Binding AppViewModel.CurrentDay}"
                    Background="Transparent"
@@ -89,7 +102,6 @@
                   <TextBlock Grid.Column="1" Text="{Binding CalendarDate, StringFormat='{}{0:MMM dd, yyyy}'}" 
                              Foreground="{StaticResource TextSecondary}"/>
 
-                  <!-- Right-click Context Menu for Day Management -->
                   <Grid.ContextMenu>
                     <ContextMenu>
                       <MenuItem Header="Edit Day Details..." 
@@ -107,7 +119,7 @@
           </ListBox>
 
           <!-- Action Buttons -->
-          <StackPanel Grid.Row="5" Spacing="10" Margin="0,15,0,0">
+          <StackPanel Grid.Row="7" Spacing="10" Margin="0,15,0,0">
             <Button Content="+ NEW PROJECT" 
                     Command="{Binding AppViewModel.OpenCreateProjectDialogCommand}" 
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
@@ -125,17 +137,80 @@
       <!-- ========================================== -->
       <Grid Grid.Column="1" Background="{StaticResource WorkspaceBackground}">
         
+        <!-- State 0: Search Results Active -->
+        <Grid RowDefinitions="Auto, *" Margin="30"
+              IsVisible="{Binding AppViewModel.IsSearchActive}">
+          
+          <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+            <StackPanel Orientation="Vertical">
+              <TextBlock Text="EPISODE &amp; SCENE SEARCH RESULTS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+              <TextBlock Text="{Binding AppViewModel.SearchQuery, StringFormat='Filtering project for Episode/Scene: {0}'}" 
+                         FontSize="13" Foreground="{StaticResource TextSecondary}"/>
+            </StackPanel>
+            <Button Grid.Column="1" Content="CLEAR SEARCH" 
+                    Command="{Binding AppViewModel.ClearSearchCommand}"
+                    VerticalAlignment="Center"/>
+          </Grid>
+
+          <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="20">
+              <TextBlock Text="No matching takes found across project for this Episode/Scene combination."
+                         Foreground="{StaticResource TextSecondary}" FontSize="16"
+                         IsVisible="{Binding AppViewModel.HasNoSearchResults}"
+                         HorizontalAlignment="Center" Margin="0,40,0,0"/>
+
+              <ItemsControl ItemsSource="{Binding AppViewModel.SearchResultGroups}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DaySearchResultGroupViewModel">
+                    <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
+                            BorderThickness="1" CornerRadius="6" Padding="16">
+                      <StackPanel Spacing="12">
+                        <!-- Day Header & Lock Status -->
+                        <Grid ColumnDefinitions="*, Auto">
+                          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="🔒" FontSize="14" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}" 
+                                       ToolTip.Tip="Day is Finalized (Locked)"/>
+                            <TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+                            <TextBlock Text="(Finalized - Read Only)" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}"/>
+                          </StackPanel>
+                        </Grid>
+
+                        <!-- Full Table Grid View -->
+                        <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
+                                CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True" Height="340">
+                          <views:TakeGridView />
+                        </Border>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+
         <!-- State 1: No Day Selected -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" 
                     IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNull}}">
+          <StackPanel.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNull}"/>
+              <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
+            </MultiBinding>
+          </StackPanel.IsVisible>
           <TextBlock Text="Select a shoot day or create a new one to begin." 
                      Foreground="{StaticResource TextSecondary}" FontSize="18" 
                      HorizontalAlignment="Center"/>
         </StackPanel>
 
         <!-- State 2: Day Selected (The A4 Workspace) -->
-        <Grid RowDefinitions="Auto, *" Margin="30"
-              IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid RowDefinitions="Auto, *" Margin="30">
+          <Grid.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+              <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
+            </MultiBinding>
+          </Grid.IsVisible>
           
           <!-- Header Metadata -->
           <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,20">
@@ -144,8 +219,12 @@
                     IsVisible="{Binding IsMobileLayout}"
                     Command="{Binding ToggleSidebarCommand}"/>
 
-            <TextBlock Grid.Column="1" Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
-                       FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+              <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
+                         ToolTip.Tip="Day is Finalized (Locked)"/>
+              <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
+                         FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+           </StackPanel>
 
            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
               <Button Content="+ SCENE"
@@ -345,7 +424,7 @@
       </Border>
     </Grid>
 
-      <!-- ========================================== -->
+    <!-- ========================================== -->
     <!-- OVERLAY POPUP: Continuity Prompt Dialog    -->
     <!-- ========================================== -->
     <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.CurrentDay.IsContinuityPopupOpen, FallbackValue=False}" ZIndex="250"
@@ -360,14 +439,12 @@
           </StackPanel>
           
           <StackPanel Spacing="12" Margin="0,10,0,0">
-            <!-- Option 1: Prominent Accent Button -->
             <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption1Text}" 
                     Command="{Binding AppViewModel.CurrentDay.ConfirmContinuityNewShotCommand}" 
                     Background="{StaticResource ActionAccent}" Foreground="#121212" 
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
                     FontWeight="Bold" FontSize="14" Padding="12"/>
                     
-            <!-- Option 2: Outlined Outline Button -->
             <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption2Text}" 
                     Command="{Binding AppViewModel.CurrentDay.ConfirmContinuitySameShotCommand}" 
                     Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"
