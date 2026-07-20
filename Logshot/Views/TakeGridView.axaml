@@ -126,7 +126,6 @@
                     <!-- Row Controls Column (Drag Handle & Delete Button) -->
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="0" Width="60">
                       <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                        <TextBlock Cursor="Hand" Foreground="{StaticResource TextSecondary}" Name="DragHandle" Text="⋮⋮" VerticalAlignment="Center"/>
                         <Button Command="{Binding $parent[UserControl].DataContext.PromptDeleteTakeCommand}" CommandParameter="{Binding}" Content="✕" FontSize="10" Padding="4,0"/>
                       </StackPanel>
                     </Border>
