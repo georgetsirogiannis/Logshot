@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Logshot.Models;
@@ -85,6 +86,31 @@ public partial class DayViewModel : ViewModelBase
     private ObservableCollection<string> _activeCameras = new(CameraDataManager.DEFAULT_CAMERAS);
 
     /// <summary>
+    /// Extra camera columns are dynamically added to the grid based on how many cameras are active.
+    /// </summary>
+    public GridLength ExtraCam1Width => ActiveCameras.Count > 2 ? new GridLength(10, GridUnitType.Star) : new GridLength(0);
+    public GridLength ExtraCam2Width => ActiveCameras.Count > 3 ? new GridLength(10, GridUnitType.Star) : new GridLength(0);
+    public GridLength ExtraCam3Width => ActiveCameras.Count > 4 ? new GridLength(10, GridUnitType.Star) : new GridLength(0);
+
+    public bool IsExtraCam1Visible => ActiveCameras.Count > 2;
+    public bool IsExtraCam2Visible => ActiveCameras.Count > 3;
+    public bool IsExtraCam3Visible => ActiveCameras.Count > 4;
+
+    public string ExtraCamera1Label => ActiveCameras.ElementAtOrDefault(2) ?? string.Empty;
+    public string ExtraCamera2Label => ActiveCameras.ElementAtOrDefault(3) ?? string.Empty;
+    public string ExtraCamera3Label => ActiveCameras.ElementAtOrDefault(4) ?? string.Empty;
+
+    public GridLength NotesWidth
+    {
+        get
+        {
+            int extraCount = Math.Max(0, ActiveCameras.Count - 2);
+            int notesStars = Math.Max(12, 48 - (10 * extraCount));
+            return new GridLength(notesStars, GridUnitType.Star);
+        }
+    }
+
+    /// <summary>
     /// Cameras beyond the two defaults (CAM A / CAM B), used to populate any
     /// dynamically added camera columns in the header (positioned before SOUND ROLL).
     /// </summary>
@@ -119,7 +145,21 @@ public partial class DayViewModel : ViewModelBase
 
     private void SubscribeActiveCameras(ObservableCollection<string> cameras)
     {
-        cameras.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ExtraActiveCameras));
+        cameras.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(ExtraActiveCameras));
+            OnPropertyChanged(nameof(ExtraCam1Width));
+            OnPropertyChanged(nameof(ExtraCam2Width));
+            OnPropertyChanged(nameof(ExtraCam3Width));
+            OnPropertyChanged(nameof(IsExtraCam1Visible));
+            OnPropertyChanged(nameof(IsExtraCam2Visible));
+            OnPropertyChanged(nameof(IsExtraCam3Visible));
+            OnPropertyChanged(nameof(ExtraCamera1Label));
+            OnPropertyChanged(nameof(ExtraCamera2Label));
+            OnPropertyChanged(nameof(ExtraCamera3Label));
+            OnPropertyChanged(nameof(NotesWidth));
+            OnPropertyChanged(nameof(ExtraActiveCameras));
+        };
     }
 
     partial void OnActiveCamerasChanged(ObservableCollection<string> oldValue, ObservableCollection<string> newValue)

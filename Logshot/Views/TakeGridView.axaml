@@ -1,42 +1,104 @@
 <UserControl d:DesignHeight="500" d:DesignWidth="1100" mc:Ignorable="d" x:Class="Logshot.Views.TakeGridView" x:DataType="vm:DayViewModel" xmlns="https://github.com/avaloniaui" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:vm="using:Logshot.ViewModels" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
   <UserControl.Styles>
-    <!-- Standard row border (bottom grey line for every row) -->
     <Style Selector="Border.row-border">
       <Setter Property="BorderThickness" Value="0,0,0,1"/>
       <Setter Property="BorderBrush" Value="{StaticResource GridLineColor}"/>
       <Setter Property="IsHitTestVisible" Value="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized, Converter={x:Static BoolConverters.Not}}" />
     </Style>
-    <!-- Make all textboxes read-only and non-interactive when finalized -->
     <Style Selector="TextBox">
       <Setter Property="IsReadOnly" Value="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
       <Setter Property="IsHitTestVisible" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
     </Style>
-    <!-- Disable buttons when finalized -->
     <Style Selector="Button">
       <Setter Property="IsEnabled" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
     </Style>
-    <!-- Disable toggle buttons (FS, LS, BL) when finalized -->
     <Style Selector="ToggleButton">
       <Setter Property="IsEnabled" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
     </Style>
   </UserControl.Styles>
 
+  <UserControl.DataTemplates>
+    <DataTemplate x:DataType="vm:CameraRollCell">
+      <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Padding="4" VerticalAlignment="Stretch">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsRollChangeMarked}" Text="{Binding RollNumber}" TextDecorations="Underline"/>
+          <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Center">
+            <Grid.ContextMenu>
+              <ContextMenu>
+                <MenuItem Command="{Binding ToggleVoidCommand}" Header="ΑΚΥΡΟ CLIP"/>
+                <MenuItem Command="{Binding ToggleNoRollCommand}" Header="No Roll"/>
+                <Separator/>
+                <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+              </ContextMenu>
+            </Grid.ContextMenu>
+            <FlyoutBase.AttachedFlyout>
+              <Flyout Placement="Bottom">
+                <StackPanel Spacing="6" Width="160">
+                  <StackPanel Orientation="Horizontal" Spacing="2">
+                    <TextBlock FontSize="11" FontWeight="Bold" Text="{Binding Label}"/>
+                    <TextBlock FontSize="11" FontWeight="Bold" Text=" Roll #"/>
+                  </StackPanel>
+                  <TextBox AcceptsReturn="False" Text="{Binding RollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
+                  <Grid ColumnDefinitions="*,*">
+                    <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
+                    <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
+                  </Grid>
+                </StackPanel>
+              </Flyout>
+            </FlyoutBase.AttachedFlyout>
+            <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
+              <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+              <TextBlock HorizontalAlignment="Center" IsVisible="{Binding !ShowRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+              <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsNotEditable}" Text="{Binding Roll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
+                <TextBox.Styles>
+                  <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                  <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                </TextBox.Styles>
+                <TextBox.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Command="{Binding ToggleVoidCommand}" Header="ΑΚΥΡΟ CLIP"/>
+                    <MenuItem Command="{Binding ToggleNoRollCommand}" Header="No Roll"/>
+                    <Separator/>
+                    <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                  </ContextMenu>
+                </TextBox.ContextMenu>
+              </TextBox>
+            </Panel>
+            <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
+            <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+            <Path Data="M1,0 L0,1" IsVisible="{Binding IsNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
+          </Grid>
+        </Grid>
+      </Border>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
   <Grid RowDefinitions="Auto,Auto,*">
 
-    <!-- ========================================================================= -->
-    <!-- SECTION 1: TOP ACTION BAR (Add Extra Camera Input & Button)               -->
-    <!-- ========================================================================= -->
+    <!-- TOP ACTION BAR -->
     <StackPanel Grid.Row="0" HorizontalAlignment="Right" Margin="0,10,16,10" Orientation="Horizontal" Spacing="6">
       <TextBox FontSize="11" Name="NewCameraLabelBox" VerticalAlignment="Center" PlaceholderText="e.g. CAM C" Width="80"/>
       <Button Click="AddCamera_Click" Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center"/>
     </StackPanel>
 
-    <!-- ========================================================================= -->
-    <!-- SECTION 2: STICKY TABLE HEADER ROW                                        -->
-    <!-- ========================================================================= -->
+    <!-- STICKY TABLE HEADER ROW -->
     <Border Grid.Row="1" Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1" ZIndex="10">
-      <Grid ColumnDefinitions="Auto,10*,10*,Auto,6*,4*,4*,5*,5*,48*" MinHeight="34">
+      <Grid MinHeight="34">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="10*" />
+          <ColumnDefinition Width="10*" />
+          <ColumnDefinition Width="{Binding ExtraCam1Width}" />
+          <ColumnDefinition Width="{Binding ExtraCam2Width}" />
+          <ColumnDefinition Width="{Binding ExtraCam3Width}" />
+          <ColumnDefinition Width="6*" />
+          <ColumnDefinition Width="4*" />
+          <ColumnDefinition Width="4*" />
+          <ColumnDefinition Width="5*" />
+          <ColumnDefinition Width="5*" />
+          <ColumnDefinition Width="{Binding NotesWidth}" />
+        </Grid.ColumnDefinitions>
         
         <!-- Drag Handle / Row Delete Column Header -->
         <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="0" Width="60"/>
@@ -50,89 +112,125 @@
         <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="2" Padding="4">
           <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Text="CAM B" VerticalAlignment="Center"/>
         </Border>
-        
-        <!-- Extra Cameras Headers (Dynamically generated with a Delete "✕" button & confirmation flyout) -->
-        <ItemsControl Grid.Column="3" ItemsSource="{Binding ExtraActiveCameras}">
-          <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Padding="4" Width="90">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Grid.Column="0" HorizontalAlignment="Center" Text="{Binding}" VerticalAlignment="Center"/>
-                  <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
-                    <Button.Flyout>
-                      <Flyout>
-                        <StackPanel Spacing="10">
-                          <TextBlock FontSize="12" Text="{Binding StringFormat='Remove {0} from all takes?'}"/>
-                          <Button Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).RemoveCameraCommand}" CommandParameter="{Binding}" Content="Yes, Remove" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-                        </StackPanel>
-                      </Flyout>
-                    </Button.Flyout>
-                  </Button>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+
+        <!-- Extra Camera 1 Header (CAM C) -->
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="3" Padding="4" IsVisible="{Binding IsExtraCam1Visible}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Grid.Column="0" HorizontalAlignment="Center" Text="{Binding ExtraCamera1Label}" VerticalAlignment="Center"/>
+            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
+              <Button.Flyout>
+                <Flyout>
+                  <StackPanel Spacing="10">
+                    <TextBlock FontSize="12" Text="{Binding ExtraCamera1Label, StringFormat='Remove {0} from all takes?'}"/>
+                    <Button Command="{Binding RemoveCameraCommand}" CommandParameter="{Binding ExtraCamera1Label}" Content="Yes, Remove" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- Extra Camera 2 Header (CAM D) -->
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="4" Padding="4" IsVisible="{Binding IsExtraCam2Visible}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Grid.Column="0" HorizontalAlignment="Center" Text="{Binding ExtraCamera2Label}" VerticalAlignment="Center"/>
+            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
+              <Button.Flyout>
+                <Flyout>
+                  <StackPanel Spacing="10">
+                    <TextBlock FontSize="12" Text="{Binding ExtraCamera2Label, StringFormat='Remove {0} from all takes?'}"/>
+                    <Button Command="{Binding RemoveCameraCommand}" CommandParameter="{Binding ExtraCamera2Label}" Content="Yes, Remove" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- Extra Camera 3 Header (CAM E) -->
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="5" Padding="4" IsVisible="{Binding IsExtraCam3Visible}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Grid.Column="0" HorizontalAlignment="Center" Text="{Binding ExtraCamera3Label}" VerticalAlignment="Center"/>
+            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
+              <Button.Flyout>
+                <Flyout>
+                  <StackPanel Spacing="10">
+                    <TextBlock FontSize="12" Text="{Binding ExtraCamera3Label, StringFormat='Remove {0} from all takes?'}"/>
+                    <Button Command="{Binding RemoveCameraCommand}" CommandParameter="{Binding ExtraCamera3Label}" Content="Yes, Remove" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+          </Grid>
+        </Border>
         
         <!-- SOUND ROLL Header -->
-        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="4" Padding="4">
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4">
           <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Text="SOUND ROLL" VerticalAlignment="Center"/>
         </Border>
         
-        <!-- EP (Episode) Header -->
-        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="5" Padding="4">
+        <!-- EP Header -->
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4">
           <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Text="ΕΠ" VerticalAlignment="Center"/>
         </Border>
         
-        <!-- SC (Scene) Header -->
-        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4">
+        <!-- SC Header -->
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4">
           <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Text="ΣΚ" VerticalAlignment="Center"/>
         </Border>
         
         <!-- SHOT Header -->
-        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4">
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="9" Padding="4">
           <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Text="ΠΛΑΝΟ" VerticalAlignment="Center"/>
         </Border>
         
         <!-- TAKE Header -->
-        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4">
+        <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="10" Padding="4">
           <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Text="ΛΗΨΗ" VerticalAlignment="Center"/>
         </Border>
         
         <!-- NOTES Header -->
-        <Border Grid.Column="9" Padding="12,4,4,4">
+        <Border Grid.Column="11" Padding="12,4,4,4">
           <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Left" Text="ΠΑΡΑΤΗΡΗΣΕΙΣ" VerticalAlignment="Center"/>
         </Border>
         
       </Grid>
     </Border>
 
-    <!-- ========================================================================= -->
-    <!-- SECTION 3: SCROLLABLE TAKES ROWS WORKSPACE                                -->
-    <!-- ========================================================================= -->
+    <!-- SCROLLABLE TAKES ROWS WORKSPACE -->
     <ScrollViewer Grid.Row="2" Name="TakesScrollViewer" VerticalScrollBarVisibility="Visible">
       <StackPanel Orientation="Vertical">
 
-        <!-- TAKES ROWS WORKSPACE -->
         <ItemsControl ItemsSource="{Binding Takes}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:TakeViewModel">
               <Border Background="{StaticResource CardBackground}" Classes="row-border" PointerMoved="Row_PointerMoved" PointerPressed="Row_PointerPressed" PointerReleased="Row_PointerReleased" Tag="{Binding}">
                 <Grid>
                   <!-- Main Row Content Grid -->
-                  <Grid ColumnDefinitions="Auto,10*,10*,Auto,6*,4*,4*,5*,5*,48*" MinHeight="{Binding RowMinHeight}">
+                  <Grid MinHeight="{Binding RowMinHeight}">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="10*" />
+                      <ColumnDefinition Width="10*" />
+                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam1Width}" />
+                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam2Width}" />
+                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam3Width}" />
+                      <ColumnDefinition Width="6*" />
+                      <ColumnDefinition Width="4*" />
+                      <ColumnDefinition Width="4*" />
+                      <ColumnDefinition Width="5*" />
+                      <ColumnDefinition Width="5*" />
+                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).NotesWidth}" />
+                    </Grid.ColumnDefinitions>
                     
-                    <!-- Row Controls Column (Drag Handle & Delete Button) -->
+                    <!-- Row Controls Column -->
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="0" Width="60">
                       <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                         <Button Command="{Binding $parent[UserControl].DataContext.PromptDeleteTakeCommand}" CommandParameter="{Binding}" Content="✕" FontSize="10" Padding="4,0"/>
                       </StackPanel>
                     </Border>
 
-                    <!-- ================================================= -->
-                    <!-- CAM A COLUMN                                      -->
-                    <!-- ================================================= -->
+                    <!-- CAM A -->
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="1" Padding="4">
                       <Grid RowDefinitions="Auto,*">
                         <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamARollChangeMarked}" Text="{Binding CamARollNumber}" TextDecorations="Underline"/>
@@ -182,9 +280,7 @@
                       </Grid>
                     </Border>
 
-                    <!-- ================================================= -->
-                    <!-- CAM B COLUMN                                      -->
-                    <!-- ================================================= -->
+                    <!-- CAM B -->
                     <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="2" Padding="4">
                       <Grid RowDefinitions="Auto,*">
                         <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamBRollChangeMarked}" Text="{Binding CamBRollNumber}" TextDecorations="Underline"/>
@@ -234,72 +330,17 @@
                       </Grid>
                     </Border>
 
-                    <!-- ================================================= -->
-                    <!-- EXTRA CAMERAS COLUMNS                             -->
-                    <!-- ================================================= -->
-                    <ItemsControl Grid.Column="3" ItemsSource="{Binding ExtraCameraRolls}">
-                      <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:CameraRollCell">
-                          <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Padding="4" Width="90">
-                            <Grid RowDefinitions="Auto,*">
-                              <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsRollChangeMarked}" Text="{Binding RollNumber}" TextDecorations="Underline"/>
-                              <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Center">
-                                <Grid.ContextMenu>
-                                  <ContextMenu>
-                                    <MenuItem Command="{Binding ToggleVoidCommand}" Header="ΑΚΥΡΟ CLIP"/>
-                                    <MenuItem Command="{Binding ToggleNoRollCommand}" Header="No Roll"/>
-                                    <Separator/>
-                                    <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
-                                  </ContextMenu>
-                                </Grid.ContextMenu>
-                                <FlyoutBase.AttachedFlyout>
-                                  <Flyout Placement="Bottom">
-                                    <StackPanel Spacing="6" Width="160">
-                                      <StackPanel Orientation="Horizontal" Spacing="2">
-                                        <TextBlock FontSize="11" FontWeight="Bold" Text="{Binding Label}"/>
-                                        <TextBlock FontSize="11" FontWeight="Bold" Text=" Roll #"/>
-                                      </StackPanel>
-                                      <TextBox AcceptsReturn="False" Text="{Binding RollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
-                                      <Grid ColumnDefinitions="*,*">
-                                        <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
-                                        <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
-                                      </Grid>
-                                    </StackPanel>
-                                  </Flyout>
-                                </FlyoutBase.AttachedFlyout>
-                                <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
-                                  <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                  <TextBlock HorizontalAlignment="Center" IsVisible="{Binding !ShowRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-                                  <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsNotEditable}" Text="{Binding Roll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
-                                    <TextBox.Styles>
-                                      <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
-                                      <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
-                                    </TextBox.Styles>
-                                    <TextBox.ContextMenu>
-                                      <ContextMenu>
-                                        <MenuItem Command="{Binding ToggleVoidCommand}" Header="ΑΚΥΡΟ CLIP"/>
-                                        <MenuItem Command="{Binding ToggleNoRollCommand}" Header="No Roll"/>
-                                        <Separator/>
-                                        <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
-                                      </ContextMenu>
-                                    </TextBox.ContextMenu>
-                                  </TextBox>
-                                </Panel>
-                                <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
-                                <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
-                                <Path Data="M1,0 L0,1" IsVisible="{Binding IsNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
-                              </Grid>
-                            </Grid>
-                          </Border>
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <!-- Extra Camera 1 (Col 3) -->
+                    <ContentControl Grid.Column="3" Content="{Binding ExtraCell1}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam1Visible}"/>
 
-                    <!-- ================================================= -->
-                    <!-- SOUND ROLL COLUMN                                 -->
-                    <!-- ================================================= -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="4" Padding="4">
+                    <!-- Extra Camera 2 (Col 4) -->
+                    <ContentControl Grid.Column="4" Content="{Binding ExtraCell2}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam2Visible}"/>
+
+                    <!-- Extra Camera 3 (Col 5) -->
+                    <ContentControl Grid.Column="5" Content="{Binding ExtraCell3}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam3Visible}"/>
+
+                    <!-- SOUND ROLL -->
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4">
                       <Grid Background="Transparent" VerticalAlignment="Center">
                         <Grid.ContextMenu>
                           <ContextMenu>
@@ -326,10 +367,8 @@
                       </Grid>
                     </Border>
                     
-                    <!-- ================================================= -->
-                    <!-- EPISODE COLUMN                                    -->
-                    <!-- ================================================= -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="5" Padding="4">
+                    <!-- EP -->
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4">
                       <Grid VerticalAlignment="Center">
                         <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                           <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowEpisode}" Text="{Binding DisplayEpisode}" VerticalAlignment="Center" TextWrapping="Wrap"/>
@@ -339,10 +378,8 @@
                       </Grid>
                     </Border>
                     
-                    <!-- ================================================= -->
-                    <!-- SCENE COLUMN                                      -->
-                    <!-- ================================================= -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4">
+                    <!-- SC -->
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4">
                       <Grid VerticalAlignment="Center">
                         <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                           <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowScene}" Text="{Binding DisplayScene}" VerticalAlignment="Center" TextWrapping="Wrap"/>
@@ -352,10 +389,8 @@
                       </Grid>
                     </Border>
                     
-                    <!-- ================================================= -->
-                    <!-- SHOT COLUMN (ΠΛΑΝΟ)                               -->
-                    <!-- ================================================= -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4">
+                    <!-- SHOT -->
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="9" Padding="4">
                       <Grid VerticalAlignment="Center">
                         <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                           <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowShot}" Text="{Binding DisplayShot}" VerticalAlignment="Center" TextWrapping="Wrap"/>
@@ -365,10 +400,8 @@
                       </Grid>
                     </Border>
 
-                    <!-- ================================================= -->
-                    <!-- TAKE COLUMN (ΛΗΨΗ)                                -->
-                    <!-- ================================================= -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4">
+                    <!-- TAKE -->
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="10" Padding="4">
                       <Grid VerticalAlignment="Center">
                         <Border BorderBrush="{StaticResource ActionAccent}" BorderThickness="2" CornerRadius="13" Height="26" HorizontalAlignment="Center" IsVisible="{Binding ShowCircledActive}" VerticalAlignment="Center" Width="26"/>
                         <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
@@ -386,10 +419,8 @@
                       </Grid>
                     </Border>
 
-                    <!-- ================================================= -->
-                    <!-- NOTES COLUMN (ΠΑΡΑΤΗΡΗΣΕΙΣ)                         -->
-                    <!-- ================================================= -->
-                    <Border Grid.Column="9" Padding="12,4,4,4" Background="Transparent" VerticalAlignment="Stretch">
+                    <!-- NOTES -->
+                    <Border Grid.Column="11" Padding="12,4,4,4" Background="Transparent" VerticalAlignment="Stretch">
                       <Border.ContextMenu>
                         <ContextMenu>
                           <MenuItem Command="{Binding ToggleBlooperCommand}" Header="Toggle Blooper"/>
@@ -401,12 +432,10 @@
                           <!-- Chips & Board Text Row -->
                           <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,4">
                             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                              <!-- False Start Chip -->
                               <Button Command="{Binding IncrementFalseStartsCommand}" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" IsVisible="{Binding FalseStartCount}" Padding="4,1" Background="{StaticResource FalseStartBlue}" Foreground="#121212" FontWeight="Bold"/>
                               <Button Command="{Binding IncrementFalseStartsCommand}" Content="+" FontSize="10" Padding="4,0"/>
                               <Button Command="{Binding DecrementFalseStartsCommand}" Content="-" FontSize="10" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
                               
-                              <!-- Long Start ToggleButton -->
                               <ToggleButton Content="LS" FontSize="10" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="4,0">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
@@ -428,7 +457,6 @@
                                 </ToggleButton.Styles>
                               </ToggleButton>
                               
-                              <!-- Blooper ToggleButton -->
                               <ToggleButton Content="BL" FontSize="10" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
@@ -450,10 +478,8 @@
                                 </ToggleButton.Styles>
                               </ToggleButton>
 
-                              <!-- Separator -->
                               <TextBlock Text="|" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="2,0"/>
 
-                              <!-- No Board (NB) ToggleButton -->
                               <ToggleButton Content="NB" FontSize="10" Padding="4,0" IsChecked="{Binding IsNoBoard, Mode=TwoWay}">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
@@ -475,7 +501,6 @@
                                 </ToggleButton.Styles>
                               </ToggleButton>
 
-                              <!-- End Board (EB) ToggleButton -->
                               <ToggleButton Content="EB" FontSize="10" Padding="4,0" IsChecked="{Binding IsEndBoard, Mode=TwoWay}">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
@@ -498,7 +523,6 @@
                               </ToggleButton>
                             </StackPanel>
 
-                            <!-- Far-Right Side Board Indicator Text -->
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,10,0">
                               <TextBlock Text="ΧΩΡΙΣ ΚΛΑΚΕΤΑ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NoBoardTeal}" IsVisible="{Binding IsNoBoard}"/>
                               <TextBlock Text="ΚΛΑΚΕΤΑ ΤΕΛΟΥΣ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource EndBoardAmber}" IsVisible="{Binding IsEndBoard}"/>
@@ -508,9 +532,7 @@
                           <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Margin="0,0,10,0" Text="{Binding TakeNotes}" TextAlignment="Left" TextWrapping="Wrap" VerticalContentAlignment="Top"/>
                         </StackPanel>
                         
-                        <!-- Vertical Orange Indicator Line at Far Right -->
                         <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="4"/>
-
                         <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
                       </Grid>
                     </Border>
