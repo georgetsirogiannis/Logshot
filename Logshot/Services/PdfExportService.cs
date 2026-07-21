@@ -38,8 +38,8 @@ public class PdfExportService
 
     private const string FailedTakeSvg =
         "<svg viewBox='0 0 36 36' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-        "<line x1='8' y1='8' x2='28' y2='28' stroke='#666666' stroke-width='1.5'/>" +
-        "<line x1='28' y1='8' x2='8' y2='28' stroke='#666666' stroke-width='1.5'/>" +
+        "<line x1='8' y1='8' x2='28' y2='28' stroke='#B3B3B3' stroke-width='1.5'/>" +
+        "<line x1='28' y1='8' x2='8' y2='28' stroke='#B3B3B3' stroke-width='1.5'/>" +
         "</svg>";
 
     public PdfExportService(ProjectViewModel project, DayViewModel day)
@@ -474,9 +474,9 @@ public class PdfExportService
             return;
         }
 
-        cell.PaddingHorizontal(4).AlignMiddle().Row(row =>
+        cell.Row(row =>
         {
-            row.RelativeItem().AlignMiddle().Row(innerRow =>
+            row.RelativeItem().PaddingLeft(4).PaddingRight(take.IsBlooper ? 0 : 4).AlignMiddle().Row(innerRow =>
             {
                 if (take.FalseStartCount > 0 || take.IsLongStart)
                 {
