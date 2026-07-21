@@ -29,6 +29,10 @@
             
             <Grid Width="26" Height="26" VerticalAlignment="Center">
               <Border Width="26" Height="26" CornerRadius="13" BorderThickness="2" BorderBrush="{StaticResource ActionAccent}" IsVisible="{Binding ShowCircledActive}"/>
+              
+              <!-- RED X BEHIND TAKE NUMBER -->
+              <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
+              
               <TextBox Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" Width="26" Height="26" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource ActionAccent}" IsReadOnly="{Binding IsSoundOnlyRow}">
                 <TextBox.ContextMenu>
                   <ContextMenu>
@@ -38,9 +42,6 @@
                   </ContextMenu>
                 </TextBox.ContextMenu>
               </TextBox>
-              
-              <!-- CLEAR RED X OVER TAKE NUMBER -->
-              <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
             </Grid>
             
             <TextBlock Text="PU" FontSize="9" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Top" Margin="2,0,0,0" IsVisible="{Binding IsPickup}"/>
