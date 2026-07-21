@@ -64,8 +64,8 @@
 
 #### **Low Priority**
 
-10. General Day Notes
-* **Master Spec:** A global notes field for the day, accessible from the main right-side view, allowing users to log notes about a specific day, such as notes about a scene that is shot during that day.
+10. **General Day Notes** [ **COMPLETED** ]
+* **Master Spec:** A global notes field for the day, accessible from the header of the main right-side view, allowing users to log notes about a specific day, such as notes about a scene that is shot during that day.
 * This field should be saved with the day, and should be accessible when the user navigates to that day in the future.
-* Basic formatting (bold, italics, underline) should be supported in this notes field.
+* The General Day Notes should be a unified field, tied to the day. No need for a separate Scribble field (if there is under-the-hood code for a separate Scribble field, it should be removed). The General Day Notes should be a single field that is accessible from the header of the main right-side view, and should be saved with the day.
 * The General Day Notes should be printed in the PDF report (not yet implemented) for the day in the header section, above the list of shots and takes.

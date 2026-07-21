@@ -33,8 +33,10 @@ public partial class DayViewModel : ViewModelBase
     [ObservableProperty]
     private string _generalNotes = string.Empty;
 
-    [ObservableProperty]
-    private string _topScribbleNotes = string.Empty;
+    partial void OnGeneralNotesChanged(string value)
+    {
+        _ = SaveDayCommand.ExecuteAsync(null);
+    }
 
     [ObservableProperty]
     private bool _isFinalized = false;
@@ -244,7 +246,6 @@ public partial class DayViewModel : ViewModelBase
         ShootDayNumber = day.ShootDayNumber;
         CalendarDate = day.CalendarDate;
         GeneralNotes = day.GeneralNotes;
-        TopScribbleNotes = day.TopScribbleNotes;
         IsFinalized = day.IsFinalized;
         CreatedAt = day.CreatedAt;
     }
@@ -261,7 +262,6 @@ public partial class DayViewModel : ViewModelBase
             ShootDayNumber = ShootDayNumber,
             CalendarDate = CalendarDate,
             GeneralNotes = GeneralNotes,
-            TopScribbleNotes = TopScribbleNotes,
             IsFinalized = IsFinalized,
             CreatedAt = CreatedAt
         };

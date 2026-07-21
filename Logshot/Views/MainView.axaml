@@ -212,41 +212,77 @@
             </MultiBinding>
           </Grid.IsVisible>
           
-          <!-- Header Metadata -->
-          <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,20">
-            <Button Grid.Column="0" Content="&#9776;" FontSize="16" Padding="8,4" Margin="0,0,10,0"
-                    VerticalAlignment="Center"
-                    IsVisible="{Binding IsMobileLayout}"
-                    Command="{Binding ToggleSidebarCommand}"/>
+         <!-- Header Metadata -->
+          <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Margin="0,0,0,20">
+            
+            <!-- Top Header Row: Title & Actions -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,12">
+              <Button Grid.Column="0" Content="&#9776;" FontSize="16" Padding="8,4" Margin="0,0,10,0"
+                      VerticalAlignment="Center"
+                      IsVisible="{Binding IsMobileLayout}"
+                      Command="{Binding ToggleSidebarCommand}"/>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-              <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
-                         ToolTip.Tip="Day is Finalized (Locked)"/>
-              <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
-                         FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
-           </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
+                           ToolTip.Tip="Day is Finalized (Locked)"/>
+                <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
+                           FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+              </StackPanel>
 
-           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-              <Button Content="+ SCENE"
-                      Command="{Binding AppViewModel.OpenAddSceneDialogCommand}"
-                      IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Button Content="+ SCENE"
+                        Command="{Binding AppViewModel.OpenAddSceneDialogCommand}"
+                        IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
 
-              <Button Content="+ SHOT"
-                      Command="{Binding AppViewModel.CurrentDay.AddShotCommand}"
-                      IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+                <Button Content="+ SHOT"
+                        Command="{Binding AppViewModel.CurrentDay.AddShotCommand}"
+                        IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
 
-              <Button Content="+ TAKE"
-                      Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}"
-                      IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+                <Button Content="+ TAKE"
+                        Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}"
+                        IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
 
-              <Button Content="FINALIZE DAY"
-                      Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
-                      IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+                <Button Content="FINALIZE DAY"
+                        Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
+                        IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
 
-              <Button Content="REOPEN DAY"
-                      Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
-                      IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
-            </StackPanel>
+                <Button Content="REOPEN DAY"
+                        Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
+                        IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Bottom Header Row: General Day Notes (Collapsible Expander) -->
+            <Expander Grid.Row="1" 
+                      HorizontalAlignment="Stretch" 
+                      IsExpanded="False"
+                      Background="{StaticResource CardBackground}" 
+                      BorderBrush="{StaticResource BorderColor}" 
+                      BorderThickness="1" 
+                      CornerRadius="4">
+              <Expander.Header>
+                <TextBlock Text="GENERAL DAY NOTES" 
+                           FontWeight="Bold" 
+                           FontSize="12" 
+                           Foreground="{StaticResource ActionAccent}" />
+              </Expander.Header>
+
+              <TextBox Text="{Binding AppViewModel.CurrentDay.GeneralNotes}" 
+                       PlaceholderText="General Day Notes (e.g., weather, global scene observations)..." 
+                       AcceptsReturn="True" 
+                       TextWrapping="Wrap" 
+                       MinHeight="60" 
+                       MaxHeight="150"
+                       ScrollViewer.VerticalScrollBarVisibility="Auto"
+                       Background="{StaticResource CardBackground}" 
+                       BorderBrush="{StaticResource BorderColor}" 
+                       BorderThickness="1" 
+                       Padding="12,8" 
+                       FontSize="13" 
+                       Foreground="{StaticResource TextPrimary}"
+                       IsReadOnly="{Binding AppViewModel.CurrentDay.IsFinalized}" />
+            </Expander>
+
           </Grid>
 
           <!-- The 14/48 Grid Architecture (Desktop) -->
