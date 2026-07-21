@@ -219,20 +219,12 @@ public partial class TakeViewModel : ViewModelBase
 
     partial void OnSoundNotesChanged(string value)
     {
-        if (!string.IsNullOrEmpty(value))
-        {
-            var topLine = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
-            if (topLine != value)
-            {
-                SoundNotes = topLine;
-                return;
-            }
-        }
         OnPropertyChanged(nameof(IsSoundOnlyRow));
         OnPropertyChanged(nameof(DisplayEpisode));
         OnPropertyChanged(nameof(DisplayScene));
         OnPropertyChanged(nameof(DisplayShot));
         OnPropertyChanged(nameof(DisplayTakeNumber));
+        _ = SaveTakeCommand.ExecuteAsync(null);
     }
 
     partial void OnIsSoundNoRollChanged(bool value)
@@ -611,11 +603,6 @@ public partial class TakeViewModel : ViewModelBase
 
     internal void SetCameraRoll(string cameraLabel, string value)
     {
-        if (!string.IsNullOrEmpty(value))
-        {
-            value = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
-        }
-
         var data = _cameraDataManager.ParseCameraData(CameraData);
         if (!data.Cameras.ContainsKey(cameraLabel))
         {

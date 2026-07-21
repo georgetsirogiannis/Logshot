@@ -24,7 +24,7 @@
         <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
           <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
             <TextBlock Text="SHOT" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-            <TextBox Text="{Binding DisplayShot}" Width="50" FontWeight="Bold" FontSize="15" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
+            <TextBox Text="{Binding DisplayShot}" Width="50" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
             <TextBlock Text="TAKE" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
             
             <Grid Width="26" Height="26" VerticalAlignment="Center">
@@ -33,7 +33,7 @@
               <!-- RED X BEHIND TAKE NUMBER -->
               <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
               
-              <TextBox Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" Width="26" Height="26" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource ActionAccent}" IsReadOnly="{Binding IsSoundOnlyRow}">
+              <TextBox Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" Width="26" Height="26" FontWeight="Bold" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource ActionAccent}" IsReadOnly="{Binding IsSoundOnlyRow}">
                 <TextBox.ContextMenu>
                   <ContextMenu>
                     <MenuItem Header="Mark Circled" Command="{Binding MarkCircledCommand}"/>
@@ -54,11 +54,11 @@
           <StackPanel Orientation="Horizontal" Spacing="16" IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Text="EP:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-              <TextBox Text="{Binding Episode}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}" AcceptsReturn="True" TextWrapping="Wrap"/>
+              <TextBox Text="{Binding Episode}" Width="50" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}" AcceptsReturn="True" TextWrapping="Wrap"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Text="SC:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
-              <TextBox Text="{Binding Scene}" Width="50" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}" AcceptsReturn="True" TextWrapping="Wrap"/>
+              <TextBox Text="{Binding Scene}" Width="50" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundOnlyRow}" AcceptsReturn="True" TextWrapping="Wrap"/>
             </StackPanel>
           </StackPanel>
           <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
@@ -97,10 +97,10 @@
                 </FlyoutBase.AttachedFlyout>
                 
                 <!-- The Editable Text Box -->
-               <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
-                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
-                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowCamARoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                  <TextBox Text="{Binding CamARoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamANotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
+                  <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                  <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamARoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                  <TextBox Text="{Binding CamARoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamANotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
                     <TextBox.Styles>
                       <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                       <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
@@ -155,9 +155,9 @@
 
                 <!-- The Editable Text Box -->
                 <Panel IsVisible="{Binding ShowCamBNormal}" VerticalAlignment="Center">
-                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
-                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowCamBRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                  <TextBox Text="{Binding CamBRoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                  <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                  <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamBRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                  <TextBox Text="{Binding CamBRoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
                     <TextBox.Styles>
                       <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                       <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
@@ -219,9 +219,9 @@
 
                       <!-- The Editable Text Box -->
                       <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
-                        <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
-                        <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                        <TextBox Text="{Binding Roll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                        <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                        <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                        <TextBox Text="{Binding Roll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
                           <TextBox.Styles>
                             <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                             <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
@@ -258,9 +258,9 @@
                 </ContextMenu>
               </Grid.ContextMenu>
               <Panel IsVisible="{Binding ShowSoundNormal}" VerticalAlignment="Center">
-                <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowSoundNotes}" Text="{Binding SoundNotes}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
-                <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowSoundNotes}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                <TextBox Text="{Binding SoundNotes}" PlaceholderText="..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundNoRoll}" AcceptsReturn="True" TextWrapping="Wrap">
+                <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowSoundNotes}" Text="{Binding SoundNotes}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowSoundNotes}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                <TextBox Text="{Binding SoundNotes}" PlaceholderText="..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundNoRoll}" AcceptsReturn="True" TextWrapping="Wrap">
                   <TextBox.Styles>
                     <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                     <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
