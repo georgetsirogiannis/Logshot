@@ -64,6 +64,8 @@
 
 #### **Low Priority**
 
-10. **Section 4.2.2: Desktop Drag-and-Drop Row Reordering**
-* **Master Spec:** Drag handles on the left of each row (`⋮⋮`) allow instant manual drag-and-drop reordering of takes in the desktop grid.
-* **Current Status:** The visual drag handle exists in `TakeGridView.axaml`, but `TakeGridView.axaml.cs` only contains stubbed pointer event handlers (`Row_PointerPressed`/`Moved`/`Released`) that do not perform actual collection reordering.
+10. General Day Notes
+* **Master Spec:** A global notes field for the day, accessible from the main right-side view, allowing users to log notes about a specific day, such as notes about a scene that is shot during that day.
+* This field should be saved with the day, and should be accessible when the user navigates to that day in the future.
+* Basic formatting (bold, italics, underline) should be supported in this notes field.
+* The General Day Notes should be printed in the PDF report (not yet implemented) for the day in the header section, above the list of shots and takes.

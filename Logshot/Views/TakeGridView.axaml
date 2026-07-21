@@ -28,7 +28,7 @@
     <!-- SECTION 1: TOP ACTION BAR (Add Extra Camera Input & Button)               -->
     <!-- ========================================================================= -->
     <StackPanel Grid.Row="0" HorizontalAlignment="Right" Margin="0,10,16,10" Orientation="Horizontal" Spacing="6">
-      <TextBox FontSize="11" Name="NewCameraLabelBox" VerticalAlignment="Center" Watermark="e.g. CAM C" Width="80"/>
+      <TextBox FontSize="11" Name="NewCameraLabelBox" VerticalAlignment="Center" PlaceholderText="e.g. CAM C" Width="80"/>
       <Button Click="AddCamera_Click" Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center"/>
     </StackPanel>
 
@@ -149,7 +149,7 @@
                             <Flyout Placement="Bottom">
                               <StackPanel Spacing="6" Width="160">
                                 <TextBlock FontSize="11" FontWeight="Bold" Text="CAM A Roll #"/>
-                                <TextBox AcceptsReturn="False" Text="{Binding CamARollNumber}" TextWrapping="NoWrap" Watermark="Enter roll number..."/>
+                                <TextBox AcceptsReturn="False" Text="{Binding CamARollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
                                 <Grid ColumnDefinitions="*,*">
                                   <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM A" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
                                   <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM A" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
@@ -159,7 +159,7 @@
                           </FlyoutBase.AttachedFlyout>
                           <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
                             <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsCamANotEditable}" Text="{Binding CamARoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" Watermark="...">
+                            <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsCamANotEditable}" Text="{Binding CamARoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
                               <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
                               <TextBox.ContextMenu>
                                 <ContextMenu>
@@ -197,7 +197,7 @@
                             <Flyout Placement="Bottom">
                               <StackPanel Spacing="6" Width="160">
                                 <TextBlock FontSize="11" FontWeight="Bold" Text="CAM B Roll #"/>
-                                <TextBox AcceptsReturn="False" Text="{Binding CamBRollNumber}" TextWrapping="NoWrap" Watermark="Enter roll number..."/>
+                                <TextBox AcceptsReturn="False" Text="{Binding CamBRollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
                                 <Grid ColumnDefinitions="*,*">
                                   <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM B" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
                                   <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM B" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
@@ -207,7 +207,7 @@
                           </FlyoutBase.AttachedFlyout>
                           <Panel IsVisible="{Binding ShowCamBNormal}" VerticalAlignment="Center">
                             <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsCamBNotEditable}" Text="{Binding CamBRoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" Watermark="...">
+                            <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsCamBNotEditable}" Text="{Binding CamBRoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
                               <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
                               <TextBox.ContextMenu>
                                 <ContextMenu>
@@ -252,7 +252,7 @@
                                         <TextBlock FontSize="11" FontWeight="Bold" Text="{Binding Label}"/>
                                         <TextBlock FontSize="11" FontWeight="Bold" Text=" Roll #"/>
                                       </StackPanel>
-                                      <TextBox AcceptsReturn="False" Text="{Binding RollNumber}" TextWrapping="NoWrap" Watermark="Enter roll number..."/>
+                                      <TextBox AcceptsReturn="False" Text="{Binding RollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
                                       <Grid ColumnDefinitions="*,*">
                                         <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
                                         <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
@@ -262,7 +262,7 @@
                                 </FlyoutBase.AttachedFlyout>
                                 <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
                                   <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                  <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsNotEditable}" Text="{Binding Roll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" Watermark="...">
+                                  <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsNotEditable}" Text="{Binding Roll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
                                     <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
                                     <TextBox.ContextMenu>
                                       <ContextMenu>

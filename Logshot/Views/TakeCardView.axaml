@@ -86,7 +86,7 @@
                   <Flyout Placement="Bottom">
                     <StackPanel Spacing="6" Width="160">
                       <TextBlock Text="CAM A Roll #" FontWeight="Bold" FontSize="11"/>
-                      <TextBox Text="{Binding CamARollNumber}" Watermark="Enter roll number..." AcceptsReturn="True" TextWrapping="Wrap"/>
+                      <TextBox Text="{Binding CamARollNumber}" PlaceholderText="Enter roll number..." AcceptsReturn="True" TextWrapping="Wrap"/>
                       <Grid ColumnDefinitions="*,*">
                         <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM A" Click="CloseFlyout_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="0,0,2,0"/>
                         <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM A" Click="CloseFlyout_Click" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="2,0,0,0"/>
@@ -97,7 +97,7 @@
                 
                 <!-- The Editable Text Box -->
                 <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
-                  <TextBox Text="{Binding CamARoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamANotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                  <TextBox Text="{Binding CamARoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamANotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
                     <!-- Cake Menu -->
                     <TextBox.ContextMenu>
                       <ContextMenu>
@@ -137,7 +137,7 @@
                   <Flyout Placement="Bottom">
                     <StackPanel Spacing="6" Width="160">
                       <TextBlock Text="CAM B Roll #" FontWeight="Bold" FontSize="11"/>
-                      <TextBox Text="{Binding CamBRollNumber}" Watermark="Enter roll number..." AcceptsReturn="True" TextWrapping="Wrap"/>
+                      <TextBox Text="{Binding CamBRollNumber}" PlaceholderText="Enter roll number..." AcceptsReturn="True" TextWrapping="Wrap"/>
                       <Grid ColumnDefinitions="*,*">
                         <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM B" Click="CloseFlyout_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="0,0,2,0"/>
                         <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM B" Click="CloseFlyout_Click" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="2,0,0,0"/>
@@ -148,7 +148,7 @@
 
                 <!-- The Editable Text Box -->
                 <Panel IsVisible="{Binding ShowCamBNormal}" VerticalAlignment="Center">
-                  <TextBox Text="{Binding CamBRoll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                  <TextBox Text="{Binding CamBRoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
                     <!-- Cake Menu -->
                     <TextBox.ContextMenu>
                       <ContextMenu>
@@ -195,7 +195,7 @@
                               <TextBlock Text="{Binding Label}" FontWeight="Bold" FontSize="11"/>
                               <TextBlock Text=" Roll #" FontWeight="Bold" FontSize="11"/>
                             </StackPanel>
-                            <TextBox Text="{Binding RollNumber}" Watermark="Enter roll number..." AcceptsReturn="True" TextWrapping="Wrap"/>
+                            <TextBox Text="{Binding RollNumber}" PlaceholderText="Enter roll number..." AcceptsReturn="True" TextWrapping="Wrap"/>
                             <Grid ColumnDefinitions="*,*">
                               <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyRollChangeCommand}" Click="CloseFlyout_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="0,0,2,0"/>
                               <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveRollChangeCommand}" Click="CloseFlyout_Click" Foreground="{StaticResource FailRed}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="10" Margin="2,0,0,0"/>
@@ -206,7 +206,7 @@
 
                       <!-- The Editable Text Box -->
                       <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
-                        <TextBox Text="{Binding Roll}" Watermark="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                        <TextBox Text="{Binding Roll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
                           <!-- Cake Menu -->
                           <TextBox.ContextMenu>
                             <ContextMenu>
@@ -293,7 +293,7 @@
             </ContextMenu>
           </Grid.ContextMenu>
           <Grid Background="Transparent">
-            <TextBox Text="{Binding TakeNotes}" Watermark="Notes..." AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" IsVisible="{Binding !ShowRowCrossed}" Margin="0,0,10,0" VerticalContentAlignment="Top"/>
+            <TextBox Text="{Binding TakeNotes}" PlaceholderText="Notes..." AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" IsVisible="{Binding !ShowRowCrossed}" Margin="0,0,10,0" VerticalContentAlignment="Top"/>
             
             <!-- Vertical Orange Indicator Line at Far Right -->
             <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="4"/>
