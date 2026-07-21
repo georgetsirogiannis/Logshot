@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Logshot.Models;
 using Logshot.ViewModels;
 using QuestPDF.Fluent;
@@ -28,16 +29,6 @@ public class PdfExportService
         "</pattern>" +
         "</defs>" +
         "<rect width='100%' height='100%' fill='url(#hatch)'/>" +
-        "</svg>";
-
-    private const string CrossStitchSvg =
-        "<svg viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
-        "<line x1='0' y1='0' x2='100' y2='100' stroke='#888888' stroke-width='1'/>" +
-        "<line x1='100' y1='0' x2='0' y2='100' stroke='#888888' stroke-width='1'/>" +
-        "<line x1='0' y1='50' x2='50' y2='100' stroke='#888888' stroke-width='1'/>" +
-        "<line x1='50' y1='0' x2='100' y2='50' stroke='#888888' stroke-width='1'/>" +
-        "<line x1='0' y1='50' x2='50' y2='0' stroke='#888888' stroke-width='1'/>" +
-        "<line x1='50' y1='100' x2='100' y2='50' stroke='#888888' stroke-width='1'/>" +
         "</svg>";
 
     private const string CircledTakeSvg =
@@ -288,13 +279,65 @@ public class PdfExportService
         return c.MinHeight(36f).Padding(2);
     }
 
+    private static void RenderCrossStitchCell(IContainer cell)
+    {
+        cell.Svg(size =>
+        {
+            if (float.IsNaN(size.Width) || float.IsInfinity(size.Width) || size.Width <= 0.1f ||
+                float.IsNaN(size.Height) || float.IsInfinity(size.Height) || size.Height <= 0.1f)
+            {
+                return "<svg viewBox='0 0 1 1' xmlns='http://www.w3.org/2000/svg'></svg>";
+            }
+
+            float w = size.Width;
+            float h = size.Height;
+            float step = 8f;
+
+            var sb = new StringBuilder();
+            sb.Append($"<svg viewBox='0 0 {w.ToString(CultureInfo.InvariantCulture)} {h.ToString(CultureInfo.InvariantCulture)}' xmlns='http://www.w3.org/2000/svg'>");
+
+            // 1. Top-left to bottom-right lines (\): x - y = C
+            for (float c = -h; c <= w; c += step)
+            {
+                float x1 = c >= 0 ? c : 0;
+                float y1 = c >= 0 ? 0 : -c;
+
+                float x2 = (c + h) <= w ? (c + h) : w;
+                float y2 = (c + h) <= w ? h : (w - c);
+
+                if (x2 > x1 && y2 > y1)
+                {
+                    sb.Append($"<line x1='{x1.ToString(CultureInfo.InvariantCulture)}' y1='{y1.ToString(CultureInfo.InvariantCulture)}' x2='{x2.ToString(CultureInfo.InvariantCulture)}' y2='{y2.ToString(CultureInfo.InvariantCulture)}' stroke='#888888' stroke-width='0.5'/>");
+                }
+            }
+
+            // 2. Top-right to bottom-left lines (/): x + y = C
+            for (float c = 0; c <= w + h; c += step)
+            {
+                float x1 = c <= w ? c : w;
+                float y1 = c <= w ? 0 : (c - w);
+
+                float x2 = (c - h) >= 0 ? (c - h) : 0;
+                float y2 = (c - h) >= 0 ? h : c;
+
+                if (x1 > x2 && y2 > y1)
+                {
+                    sb.Append($"<line x1='{x1.ToString(CultureInfo.InvariantCulture)}' y1='{y1.ToString(CultureInfo.InvariantCulture)}' x2='{x2.ToString(CultureInfo.InvariantCulture)}' y2='{y2.ToString(CultureInfo.InvariantCulture)}' stroke='#888888' stroke-width='0.5'/>");
+                }
+            }
+
+            sb.Append("</svg>");
+            return sb.ToString();
+        });
+    }
+
     private void RenderCameraCell(IContainer cell, TakeViewModel take, bool showRoll, string rollVal, bool isNoRoll, bool isVoided, bool isRollChangeMarked, string rollNumber)
     {
         if (take.HasVoidedCameras)
         {
             if (isVoided)
             {
-                cell.AlignCenter().AlignMiddle().Text("ΑΚΥΡΟ CLIP").Bold().FontSize(8f).FontColor(Colors.Red.Medium);
+                cell.Padding(2).AlignCenter().AlignMiddle().Text("ΑΚΥΡΟ CLIP").Bold().FontSize(8f).FontColor(Colors.Red.Medium);
             }
             else if (isNoRoll)
             {
@@ -302,7 +345,7 @@ public class PdfExportService
             }
             else
             {
-                cell.Svg(CrossStitchSvg);
+                RenderCrossStitchCell(cell);
             }
             return;
         }
@@ -335,7 +378,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.Svg(CrossStitchSvg);
+            RenderCrossStitchCell(cell);
             return;
         }
 
@@ -355,7 +398,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.Svg(CrossStitchSvg);
+            RenderCrossStitchCell(cell);
             return;
         }
 
@@ -367,7 +410,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.Svg(CrossStitchSvg);
+            RenderCrossStitchCell(cell);
             return;
         }
 
@@ -379,7 +422,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.Svg(CrossStitchSvg);
+            RenderCrossStitchCell(cell);
             return;
         }
 
@@ -392,7 +435,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.Svg(CrossStitchSvg);
+            RenderCrossStitchCell(cell);
             return;
         }
 
@@ -427,7 +470,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.Svg(CrossStitchSvg);
+            RenderCrossStitchCell(cell);
             return;
         }
 
