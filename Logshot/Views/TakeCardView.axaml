@@ -280,55 +280,112 @@
         
         <!-- ROW 3: TAGS -->
         <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,6,0,0">
-          <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
-            <!-- Updated FS Chip -->
-            <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" Padding="4,1" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}" Background="{StaticResource FalseStartBlue}" Foreground="#121212" FontWeight="Bold"/>
-            <Button Content="+FS" FontSize="10" Padding="4,0" Command="{Binding IncrementFalseStartsCommand}"/>
-            <Button Content="-FS" FontSize="10" Padding="4,0" IsVisible="{Binding FalseStartCount}" Command="{Binding DecrementFalseStartsCommand}"/>
+          <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
             
-            <!-- Updated LS ToggleButton -->
-            <ToggleButton Content="LS" FontSize="10" Padding="4,0" IsChecked="{Binding IsLongStart, Mode=TwoWay}">
-              <ToggleButton.Styles>
-                <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
-                  <Setter Property="Foreground" Value="#121212"/>
-                </Style>
-                <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
-                  <Setter Property="Foreground" Value="#121212"/>
-                </Style>
-                <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
-                  <Setter Property="Foreground" Value="#121212"/>
-                  <Setter Property="Opacity" Value="0.8"/>
-                </Style>
-                <Style Selector="ToggleButton:checked">
-                  <Setter Property="FontWeight" Value="Bold"/>
-                </Style>
-              </ToggleButton.Styles>
-            </ToggleButton>
-            
-            <ToggleButton Content="BL" FontSize="10" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
-              <ToggleButton.Styles>
-                <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
-                  <Setter Property="Foreground" Value="#121212"/>
-                </Style>
-                <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
-                  <Setter Property="Foreground" Value="#121212"/>
-                </Style>
-                <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
-                  <Setter Property="Foreground" Value="#121212"/>
-                  <Setter Property="Opacity" Value="0.8"/>
-                </Style>
-                <Style Selector="ToggleButton:checked">
-                  <Setter Property="FontWeight" Value="Bold"/>
-                </Style>
-              </ToggleButton.Styles>
-            </ToggleButton>
-          </StackPanel>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+              <!-- Updated FS Chip -->
+              <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" Padding="4,1" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}" Background="{StaticResource FalseStartBlue}" Foreground="#121212" FontWeight="Bold"/>
+              <Button Content="+FS" FontSize="10" Padding="4,0" Command="{Binding IncrementFalseStartsCommand}"/>
+              <Button Content="-FS" FontSize="10" Padding="4,0" IsVisible="{Binding FalseStartCount}" Command="{Binding DecrementFalseStartsCommand}"/>
+              
+              <!-- Updated LS ToggleButton -->
+              <ToggleButton Content="LS" FontSize="10" Padding="4,0" IsChecked="{Binding IsLongStart, Mode=TwoWay}">
+                <ToggleButton.Styles>
+                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                    <Setter Property="Opacity" Value="0.8"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                  </Style>
+                </ToggleButton.Styles>
+              </ToggleButton>
+              
+              <ToggleButton Content="BL" FontSize="10" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
+                <ToggleButton.Styles>
+                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                    <Setter Property="Opacity" Value="0.8"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                  </Style>
+                </ToggleButton.Styles>
+              </ToggleButton>
+
+              <!-- Separator -->
+              <TextBlock Text="|" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="2,0"/>
+
+              <!-- NB ToggleButton -->
+              <ToggleButton Content="NB" FontSize="10" Padding="4,0" IsChecked="{Binding IsNoBoard, Mode=TwoWay}">
+                <ToggleButton.Styles>
+                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                    <Setter Property="Opacity" Value="0.8"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                  </Style>
+                </ToggleButton.Styles>
+              </ToggleButton>
+
+              <!-- EB ToggleButton -->
+              <ToggleButton Content="EB" FontSize="10" Padding="4,0" IsChecked="{Binding IsEndBoard, Mode=TwoWay}">
+                <ToggleButton.Styles>
+                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
+                    <Setter Property="Foreground" Value="#121212"/>
+                    <Setter Property="Opacity" Value="0.8"/>
+                  </Style>
+                  <Style Selector="ToggleButton:checked">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                  </Style>
+                </ToggleButton.Styles>
+              </ToggleButton>
+            </StackPanel>
+
+            <!-- Far-Right Side Board Indicator Text -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+              <TextBlock Text="ΧΩΡΙΣ ΚΛΑΚΕΤΑ" FontSize="10" FontWeight="Bold" Foreground="{StaticResource NoBoardTeal}" IsVisible="{Binding IsNoBoard}"/>
+              <TextBlock Text="ΚΛΑΚΕΤΑ ΤΕΛΟΥΣ" FontSize="10" FontWeight="Bold" Foreground="{StaticResource EndBoardAmber}" IsVisible="{Binding IsEndBoard}"/>
+            </StackPanel>
+
+          </Grid>
           <TextBlock Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" FontSize="12" Opacity="0.6" VerticalAlignment="Center" IsVisible="{Binding ShowRowCrossed}"/>
         </Grid>
         

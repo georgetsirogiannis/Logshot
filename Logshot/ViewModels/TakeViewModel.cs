@@ -93,6 +93,24 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isBlooper = false;
 
+    [ObservableProperty]
+    private bool _isNoBoard = false;
+
+    partial void OnIsNoBoardChanged(bool value)
+    {
+        if (value) IsEndBoard = false;
+        _ = SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    [ObservableProperty]
+    private bool _isEndBoard = false;
+
+    partial void OnIsEndBoardChanged(bool value)
+    {
+        if (value) IsNoBoard = false;
+        _ = SaveTakeCommand.ExecuteAsync(null);
+    }
+
     // False Clip Tracking
     [ObservableProperty]
     private string _voidCameraLabels = "[]";
@@ -248,6 +266,8 @@ public partial class TakeViewModel : ViewModelBase
         IsFailed = take.IsFailed;
         IsPickup = take.IsPickup;
         IsBlooper = take.IsBlooper;
+        IsNoBoard = take.IsNoBoard;
+        IsEndBoard = take.IsEndBoard;
         VoidCameraLabels = take.VoidCameraLabels;
         CreatedAt = take.CreatedAt;
     }
@@ -276,6 +296,8 @@ public partial class TakeViewModel : ViewModelBase
             IsFailed = IsFailed,
             IsPickup = IsPickup,
             IsBlooper = IsBlooper,
+            IsNoBoard = IsNoBoard,
+            IsEndBoard = IsEndBoard,
             VoidCameraLabels = VoidCameraLabels,
             CreatedAt = CreatedAt
         };

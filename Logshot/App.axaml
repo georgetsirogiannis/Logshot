@@ -32,6 +32,8 @@
         <SolidColorBrush x:Key="BlooperOrange">#FF9800</SolidColorBrush>
         <SolidColorBrush x:Key="FalseStartBlue">#2196F3</SolidColorBrush>
         <SolidColorBrush x:Key="LongStartPurple">#9C27B0</SolidColorBrush>
+        <SolidColorBrush x:Key="NoBoardTeal">#26A69A</SolidColorBrush>
+        <SolidColorBrush x:Key="EndBoardAmber">#FFB300</SolidColorBrush>
         <SolidColorBrush x:Key="ActionAccent">#4FC3F7</SolidColorBrush>
     </Application.Resources>
 
