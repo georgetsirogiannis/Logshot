@@ -30,6 +30,27 @@ public class PdfExportService
         "<rect width='100%' height='100%' fill='url(#hatch)'/>" +
         "</svg>";
 
+    private const string CrossStitchSvg =
+        "<svg viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
+        "<line x1='0' y1='0' x2='100' y2='100' stroke='#888888' stroke-width='1'/>" +
+        "<line x1='100' y1='0' x2='0' y2='100' stroke='#888888' stroke-width='1'/>" +
+        "<line x1='0' y1='50' x2='50' y2='100' stroke='#888888' stroke-width='1'/>" +
+        "<line x1='50' y1='0' x2='100' y2='50' stroke='#888888' stroke-width='1'/>" +
+        "<line x1='0' y1='50' x2='50' y2='0' stroke='#888888' stroke-width='1'/>" +
+        "<line x1='50' y1='100' x2='100' y2='50' stroke='#888888' stroke-width='1'/>" +
+        "</svg>";
+
+    private const string CircledTakeSvg =
+        "<svg viewBox='0 0 36 36' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
+        "<circle cx='18' cy='18' r='14' fill='none' stroke='black' stroke-width='1.5'/>" +
+        "</svg>";
+
+    private const string FailedTakeSvg =
+        "<svg viewBox='0 0 36 36' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
+        "<line x1='8' y1='8' x2='28' y2='28' stroke='#666666' stroke-width='1.5'/>" +
+        "<line x1='28' y1='8' x2='8' y2='28' stroke='#666666' stroke-width='1.5'/>" +
+        "</svg>";
+
     public PdfExportService(ProjectViewModel project, DayViewModel day)
     {
         _project = project;
@@ -253,13 +274,18 @@ public class PdfExportService
 
     private IContainer ApplyCellBorderStyle(IContainer container, TakeViewModel take)
     {
-        float minH = take.HasVoidedCameras ? 16f : 36f;
         var c = container.Border(0.5f).BorderColor(Colors.Black);
         if (take.IsGroupStart)
         {
             c = c.BorderTop(2f).BorderColor(Colors.Black);
         }
-        return c.MinHeight(minH).Padding(2);
+
+        if (take.HasVoidedCameras)
+        {
+            return c.Height(20f);
+        }
+
+        return c.MinHeight(36f).Padding(2);
     }
 
     private void RenderCameraCell(IContainer cell, TakeViewModel take, bool showRoll, string rollVal, bool isNoRoll, bool isVoided, bool isRollChangeMarked, string rollNumber)
@@ -276,7 +302,7 @@ public class PdfExportService
             }
             else
             {
-                cell.AlignCenter().AlignMiddle().Text("XXXXXXXXXXXXXXXXXXXX").FontSize(7f).FontColor(Colors.Grey.Darken1);
+                cell.Svg(CrossStitchSvg);
             }
             return;
         }
@@ -309,7 +335,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.AlignCenter().AlignMiddle().Text("XXXXXXXXXXXXXXXXXXXX").FontSize(7f).FontColor(Colors.Grey.Darken1);
+            cell.Svg(CrossStitchSvg);
             return;
         }
 
@@ -327,26 +353,50 @@ public class PdfExportService
 
     private void RenderEpisodeCell(IContainer cell, TakeViewModel take)
     {
-        if (take.HasVoidedCameras || take.IsSoundOnlyRow || !take.ShowEpisode) return;
+        if (take.HasVoidedCameras)
+        {
+            cell.Svg(CrossStitchSvg);
+            return;
+        }
+
+        if (take.IsSoundOnlyRow || !take.ShowEpisode) return;
         cell.AlignCenter().AlignMiddle().Text(take.Episode ?? "").FontSize(8.5f);
     }
 
     private void RenderSceneCell(IContainer cell, TakeViewModel take)
     {
-        if (take.HasVoidedCameras || take.IsSoundOnlyRow || !take.ShowScene) return;
+        if (take.HasVoidedCameras)
+        {
+            cell.Svg(CrossStitchSvg);
+            return;
+        }
+
+        if (take.IsSoundOnlyRow || !take.ShowScene) return;
         cell.AlignCenter().AlignMiddle().Text(take.Scene ?? "").FontSize(8.5f);
     }
 
     private void RenderShotCell(IContainer cell, TakeViewModel take)
     {
-        if (take.HasVoidedCameras || take.IsSoundOnlyRow || !take.ShowShot) return;
+        if (take.HasVoidedCameras)
+        {
+            cell.Svg(CrossStitchSvg);
+            return;
+        }
+
+        if (take.IsSoundOnlyRow || !take.ShowShot) return;
         string shotStr = take.Shot > 0 ? take.Shot.ToString() : "";
         cell.AlignCenter().AlignMiddle().Text(shotStr).FontSize(8.5f);
     }
 
     private void RenderTakeCell(IContainer cell, TakeViewModel take)
     {
-        if (take.HasVoidedCameras || take.IsSoundOnlyRow || take.TakeNumber <= 0) return;
+        if (take.HasVoidedCameras)
+        {
+            cell.Svg(CrossStitchSvg);
+            return;
+        }
+
+        if (take.IsSoundOnlyRow || take.TakeNumber <= 0) return;
 
         string takeText = take.TakeNumber.ToString();
         if (take.IsPickup) takeText += " PU";
@@ -355,17 +405,7 @@ public class PdfExportService
         {
             cell.Layers(layers =>
             {
-                layers.Layer().Extend().Svg(size =>
-                {
-                    float dim = Math.Min(size.Width, size.Height) * 0.9f;
-                    float radius = dim / 2f;
-                    float cx = size.Width / 2f;
-                    float cy = size.Height / 2f;
-
-                    return $"<svg viewBox='0 0 {size.Width.ToString(CultureInfo.InvariantCulture)} {size.Height.ToString(CultureInfo.InvariantCulture)}' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
-                           $"<circle cx='{cx.ToString(CultureInfo.InvariantCulture)}' cy='{cy.ToString(CultureInfo.InvariantCulture)}' r='{radius.ToString(CultureInfo.InvariantCulture)}' fill='none' stroke='black' stroke-width='1.5'/>" +
-                           $"</svg>";
-                });
+                layers.Layer().Extend().Svg(CircledTakeSvg);
                 layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
             });
         }
@@ -373,19 +413,7 @@ public class PdfExportService
         {
             cell.Layers(layers =>
             {
-                layers.Layer().Extend().Svg(size =>
-                {
-                    float dim = Math.Min(size.Width, size.Height) * 0.9f;
-                    float left = (size.Width - dim) / 2f;
-                    float top = (size.Height - dim) / 2f;
-                    float right = left + dim;
-                    float bottom = top + dim;
-
-                    return $"<svg viewBox='0 0 {size.Width.ToString(CultureInfo.InvariantCulture)} {size.Height.ToString(CultureInfo.InvariantCulture)}' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
-                           $"<line x1='{left.ToString(CultureInfo.InvariantCulture)}' y1='{top.ToString(CultureInfo.InvariantCulture)}' x2='{right.ToString(CultureInfo.InvariantCulture)}' y2='{bottom.ToString(CultureInfo.InvariantCulture)}' stroke='#666666' stroke-width='1.5'/>" +
-                           $"<line x1='{right.ToString(CultureInfo.InvariantCulture)}' y1='{top.ToString(CultureInfo.InvariantCulture)}' x2='{left.ToString(CultureInfo.InvariantCulture)}' y2='{bottom.ToString(CultureInfo.InvariantCulture)}' stroke='#666666' stroke-width='1.5'/>" +
-                           $"</svg>";
-                });
+                layers.Layer().Extend().Svg(FailedTakeSvg);
                 layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
             });
         }
@@ -399,7 +427,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            cell.AlignCenter().AlignMiddle().Text("XXXXXXXXXXXXXXXXXXXX").FontSize(7f).FontColor(Colors.Grey.Darken1);
+            cell.Svg(CrossStitchSvg);
             return;
         }
 
