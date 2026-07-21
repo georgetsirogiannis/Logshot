@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Logshot.Models;
@@ -352,23 +353,41 @@ public class PdfExportService
 
         if (take.IsCircled)
         {
-            string circledSvg =
-                $"<svg viewBox='0 0 36 36' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                $"<ellipse cx='18' cy='18' rx='16' ry='16' fill='none' stroke='black' stroke-width='1.5'/>" +
-                $"<text x='18' y='21.5' text-anchor='middle' font-family='Roboto Condensed' font-size='10' font-weight='500'>{takeText}</text>" +
-                $"</svg>";
-            cell.AlignCenter().AlignMiddle().Svg(circledSvg);
+            cell.Layers(layers =>
+            {
+                layers.Layer().Extend().Svg(size =>
+                {
+                    float dim = Math.Min(size.Width, size.Height) * 0.9f;
+                    float radius = dim / 2f;
+                    float cx = size.Width / 2f;
+                    float cy = size.Height / 2f;
+
+                    return $"<svg viewBox='0 0 {size.Width.ToString(CultureInfo.InvariantCulture)} {size.Height.ToString(CultureInfo.InvariantCulture)}' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
+                           $"<circle cx='{cx.ToString(CultureInfo.InvariantCulture)}' cy='{cy.ToString(CultureInfo.InvariantCulture)}' r='{radius.ToString(CultureInfo.InvariantCulture)}' fill='none' stroke='black' stroke-width='1.5'/>" +
+                           $"</svg>";
+                });
+                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
+            });
         }
         else if (take.IsFailed)
         {
-            // Grey X for failed take
-            string failedSvg =
-                $"<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                $"<line x1='6' y1='6' x2='24' y2='24' stroke='#666666' stroke-width='2'/>" +
-                $"<line x1='24' y1='6' x2='6' y2='24' stroke='#666666' stroke-width='2'/>" +
-                $"<text x='15' y='20.5' text-anchor='middle' font-family='Roboto Condensed' font-size='10' font-weight='500'>{takeText}</text>" +
-                $"</svg>";
-            cell.AlignCenter().AlignMiddle().Svg(failedSvg);
+            cell.Layers(layers =>
+            {
+                layers.Layer().Extend().Svg(size =>
+                {
+                    float dim = Math.Min(size.Width, size.Height) * 0.9f;
+                    float left = (size.Width - dim) / 2f;
+                    float top = (size.Height - dim) / 2f;
+                    float right = left + dim;
+                    float bottom = top + dim;
+
+                    return $"<svg viewBox='0 0 {size.Width.ToString(CultureInfo.InvariantCulture)} {size.Height.ToString(CultureInfo.InvariantCulture)}' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
+                           $"<line x1='{left.ToString(CultureInfo.InvariantCulture)}' y1='{top.ToString(CultureInfo.InvariantCulture)}' x2='{right.ToString(CultureInfo.InvariantCulture)}' y2='{bottom.ToString(CultureInfo.InvariantCulture)}' stroke='#666666' stroke-width='1.5'/>" +
+                           $"<line x1='{right.ToString(CultureInfo.InvariantCulture)}' y1='{top.ToString(CultureInfo.InvariantCulture)}' x2='{left.ToString(CultureInfo.InvariantCulture)}' y2='{bottom.ToString(CultureInfo.InvariantCulture)}' stroke='#666666' stroke-width='1.5'/>" +
+                           $"</svg>";
+                });
+                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
+            });
         }
         else
         {
