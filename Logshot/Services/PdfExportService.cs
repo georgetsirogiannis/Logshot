@@ -16,11 +16,6 @@ public class PdfExportService
     private readonly ProjectViewModel _project;
     private readonly DayViewModel _day;
 
-    private const string NoRollSlashSvg =
-        "<svg viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
-        "<line x1='100' y1='0' x2='0' y2='100' stroke='black' stroke-width='1.5'/>" +
-        "</svg>";
-
     private const string CrossHatchSvg =
         "<svg viewBox='0 0 400 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
         "<defs>" +
@@ -276,7 +271,7 @@ public class PdfExportService
             return c.Height(20f);
         }
 
-        return c.MinHeight(36f).Padding(2);
+        return c.MinHeight(40f).Padding(2);
     }
 
     private static void RenderCrossStitchCell(IContainer cell)
@@ -331,6 +326,25 @@ public class PdfExportService
         });
     }
 
+    private static void RenderNoRollCell(IContainer cell, float targetHeight)
+    {
+        cell.Height(targetHeight).Svg(size =>
+        {
+            if (float.IsNaN(size.Width) || float.IsInfinity(size.Width) || size.Width <= 0.1f ||
+                float.IsNaN(size.Height) || float.IsInfinity(size.Height) || size.Height <= 0.1f)
+            {
+                return "<svg viewBox='0 0 1 1' xmlns='http://www.w3.org/2000/svg'></svg>";
+            }
+
+            float w = size.Width;
+            float h = size.Height;
+
+            return $"<svg viewBox='0 0 {w.ToString(CultureInfo.InvariantCulture)} {h.ToString(CultureInfo.InvariantCulture)}' xmlns='http://www.w3.org/2000/svg'>" +
+                   $"<line x1='{w.ToString(CultureInfo.InvariantCulture)}' y1='0' x2='0' y2='{h.ToString(CultureInfo.InvariantCulture)}' stroke='black' stroke-width='1.5'/>" +
+                   "</svg>";
+        });
+    }
+
     private void RenderCameraCell(IContainer cell, TakeViewModel take, bool showRoll, string rollVal, bool isNoRoll, bool isVoided, bool isRollChangeMarked, string rollNumber)
     {
         if (take.HasVoidedCameras)
@@ -341,7 +355,7 @@ public class PdfExportService
             }
             else if (isNoRoll)
             {
-                cell.Svg(NoRollSlashSvg);
+                RenderNoRollCell(cell, 20f);
             }
             else
             {
@@ -352,7 +366,7 @@ public class PdfExportService
 
         if (isNoRoll)
         {
-            cell.Svg(NoRollSlashSvg);
+            RenderNoRollCell(cell, 40f);
             return;
         }
 
@@ -384,7 +398,7 @@ public class PdfExportService
 
         if (take.IsSoundNoRoll)
         {
-            cell.Svg(NoRollSlashSvg);
+            RenderNoRollCell(cell, 40f);
             return;
         }
 
