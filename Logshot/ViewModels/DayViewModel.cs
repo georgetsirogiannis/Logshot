@@ -852,6 +852,7 @@ public partial class DayViewModel : ViewModelBase
                 currentTake.ShowShot = true;
                 currentTake.ShowCamARoll = true;
                 currentTake.ShowCamBRoll = true;
+                currentTake.ShowSoundNotes = true;
 
                 foreach (var cell in currentTake.ExtraCameraRolls)
                 {
@@ -869,15 +870,20 @@ public partial class DayViewModel : ViewModelBase
                 // Show Scene if it's a group start or the scene itself changed
                 currentTake.ShowScene = currentTake.IsGroupStart || (currentTake.Scene != previousTake.Scene);
                 currentTake.ShowShot = currentTake.ShowScene || (currentTake.Shot != previousTake.Shot);
-                currentTake.ShowCamARoll = currentTake.CamARoll != previousTake.CamARoll;
-                currentTake.ShowCamBRoll = currentTake.CamBRoll != previousTake.CamBRoll;
+
+                // Camera descriptions show full text if empty, at a new group start, or if different from previous take
+                currentTake.ShowCamARoll = string.IsNullOrEmpty(currentTake.CamARoll) || currentTake.IsGroupStart || currentTake.CamARoll != previousTake.CamARoll;
+                currentTake.ShowCamBRoll = string.IsNullOrEmpty(currentTake.CamBRoll) || currentTake.IsGroupStart || currentTake.CamBRoll != previousTake.CamBRoll;
+
+                // Sound notes show full text if empty or different from previous take
+                currentTake.ShowSoundNotes = string.IsNullOrEmpty(currentTake.SoundNotes) || currentTake.SoundNotes != previousTake.SoundNotes;
 
                 foreach (var cell in currentTake.ExtraCameraRolls)
                 {
                     var prevCell = previousTake.ExtraCameraRolls.FirstOrDefault(c => c.Label == cell.Label);
                     if (prevCell != null)
                     {
-                        cell.ShowRoll = cell.Roll != prevCell.Roll;
+                        cell.ShowRoll = string.IsNullOrEmpty(cell.Roll) || currentTake.IsGroupStart || cell.Roll != prevCell.Roll;
                     }
                     else
                     {

@@ -159,8 +159,12 @@
                           </FlyoutBase.AttachedFlyout>
                           <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
                             <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            <TextBlock HorizontalAlignment="Center" IsVisible="{Binding !ShowCamARoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                             <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsCamANotEditable}" Text="{Binding CamARoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
-                              <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
+                              <TextBox.Styles>
+                                <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                                <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                              </TextBox.Styles>
                               <TextBox.ContextMenu>
                                 <ContextMenu>
                                   <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A" Header="ΑΚΥΡΟ CLIP"/>
@@ -207,8 +211,12 @@
                           </FlyoutBase.AttachedFlyout>
                           <Panel IsVisible="{Binding ShowCamBNormal}" VerticalAlignment="Center">
                             <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            <TextBlock HorizontalAlignment="Center" IsVisible="{Binding !ShowCamBRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                             <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsCamBNotEditable}" Text="{Binding CamBRoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
-                              <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
+                              <TextBox.Styles>
+                                <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                                <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                              </TextBox.Styles>
                               <TextBox.ContextMenu>
                                 <ContextMenu>
                                   <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B" Header="ΑΚΥΡΟ CLIP"/>
@@ -262,8 +270,12 @@
                                 </FlyoutBase.AttachedFlyout>
                                 <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
                                   <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                  <TextBlock HorizontalAlignment="Center" IsVisible="{Binding !ShowRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                   <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsNotEditable}" Text="{Binding Roll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
-                                    <TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles>
+                                    <TextBox.Styles>
+                                      <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                                      <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                                    </TextBox.Styles>
                                     <TextBox.ContextMenu>
                                       <ContextMenu>
                                         <MenuItem Command="{Binding ToggleVoidCommand}" Header="ΑΚΥΡΟ CLIP"/>
@@ -295,7 +307,13 @@
                           </ContextMenu>
                         </Grid.ContextMenu>
                         <Panel IsVisible="{Binding ShowSoundNormal}" VerticalAlignment="Center">
-                          <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsVisible="{Binding !ShowRowCrossed}" IsReadOnly="{Binding IsSoundNoRoll}" Text="{Binding SoundNotes}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center">
+                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowSoundNotes}" Text="{Binding SoundNotes}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                          <TextBlock HorizontalAlignment="Center" IsVisible="{Binding !ShowSoundNotes}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                          <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" IsReadOnly="{Binding IsSoundNoRoll}" Text="{Binding SoundNotes}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="...">
+                            <TextBox.Styles>
+                              <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                              <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                            </TextBox.Styles>
                             <TextBox.ContextMenu>
                               <ContextMenu>
                                 <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>

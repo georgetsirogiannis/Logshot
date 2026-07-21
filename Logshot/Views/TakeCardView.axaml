@@ -96,9 +96,15 @@
                 </FlyoutBase.AttachedFlyout>
                 
                 <!-- The Editable Text Box -->
-                <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
+               <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
+                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowCamARoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
                   <TextBox Text="{Binding CamARoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamANotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
-                    <!-- Cake Menu -->
+                    <TextBox.Styles>
+                      <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                      <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                    </TextBox.Styles>
+                      <!-- Cake Menu -->
                     <TextBox.ContextMenu>
                       <ContextMenu>
                         <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A"/>
@@ -148,8 +154,14 @@
 
                 <!-- The Editable Text Box -->
                 <Panel IsVisible="{Binding ShowCamBNormal}" VerticalAlignment="Center">
+                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                  <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowCamBRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
                   <TextBox Text="{Binding CamBRoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
-                    <!-- Cake Menu -->
+                    <TextBox.Styles>
+                      <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                      <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                    </TextBox.Styles>
+                <!-- Cake Menu -->
                     <TextBox.ContextMenu>
                       <ContextMenu>
                         <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B"/>
@@ -206,8 +218,14 @@
 
                       <!-- The Editable Text Box -->
                       <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
+                        <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                        <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
                         <TextBox Text="{Binding Roll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
-                          <!-- Cake Menu -->
+                          <TextBox.Styles>
+                            <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                            <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                          </TextBox.Styles>
+                      <!-- Cake Menu -->
                           <TextBox.ContextMenu>
                             <ContextMenu>
                               <MenuItem Header="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCommand}"/>
@@ -239,7 +257,13 @@
                 </ContextMenu>
               </Grid.ContextMenu>
               <Panel IsVisible="{Binding ShowSoundNormal}" VerticalAlignment="Center">
-                <TextBox Text="{Binding SoundNotes}" FontSize="12" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsVisible="{Binding !ShowRowCrossed}" IsReadOnly="{Binding IsSoundNoRoll}" AcceptsReturn="True" TextWrapping="Wrap">
+                <TextBlock HorizontalAlignment="Left" IsVisible="{Binding ShowSoundNotes}" Text="{Binding SoundNotes}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                <TextBlock HorizontalAlignment="Left" IsVisible="{Binding !ShowSoundNotes}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                <TextBox Text="{Binding SoundNotes}" PlaceholderText="..." FontSize="12" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundNoRoll}" AcceptsReturn="True" TextWrapping="Wrap">
+                  <TextBox.Styles>
+                    <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                    <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                  </TextBox.Styles>
                   <TextBox.ContextMenu>
                     <ContextMenu>
                       <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>

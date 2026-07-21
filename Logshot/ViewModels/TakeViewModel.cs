@@ -64,6 +64,9 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showCamBRoll = true;
 
+    [ObservableProperty]
+    private bool _showSoundNotes = true;
+
     // Setup group boundary flag for desktop thick borders
     [ObservableProperty]
     private bool _isGroupStart = false;
