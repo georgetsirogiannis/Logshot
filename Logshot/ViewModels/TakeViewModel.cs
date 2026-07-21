@@ -188,6 +188,16 @@ public partial class TakeViewModel : ViewModelBase
         _ = SaveTakeCommand.ExecuteAsync(null);
     }
 
+    partial void OnIsLongStartChanged(bool value)
+    {
+        _ = SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    partial void OnIsBlooperChanged(bool value)
+    {
+        _ = SaveTakeCommand.ExecuteAsync(null);
+    }
+
     partial void OnSoundNotesChanged(string value)
     {
         if (!string.IsNullOrEmpty(value))

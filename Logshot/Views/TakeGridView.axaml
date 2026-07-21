@@ -380,10 +380,33 @@
                       <Grid Background="Transparent">
                         <StackPanel IsVisible="{Binding !ShowRowCrossed}" Orientation="Vertical" VerticalAlignment="Center">
                           <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,0,4">
-                            <Button Command="{Binding IncrementFalseStartsCommand}" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" IsVisible="{Binding FalseStartCount}" Padding="4,1"/>
+                            <!-- Updated FS Chip -->
+                            <Button Command="{Binding IncrementFalseStartsCommand}" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" IsVisible="{Binding FalseStartCount}" Padding="4,1" Background="{StaticResource FalseStartBlue}" Foreground="#121212" FontWeight="Bold"/>
                             <Button Command="{Binding IncrementFalseStartsCommand}" Content="+" FontSize="10" Padding="4,0"/>
                             <Button Command="{Binding DecrementFalseStartsCommand}" Content="-" FontSize="10" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
-                            <ToggleButton Command="{Binding ToggleLongStartCommand}" Content="LS" FontSize="10" IsChecked="{Binding IsLongStart}" Padding="4,0"/>
+                            
+                            <!-- Updated LS ToggleButton -->
+                            <ToggleButton Content="LS" FontSize="10" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="4,0">
+                              <ToggleButton.Styles>
+                                <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                  <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                                  <Setter Property="Foreground" Value="#121212"/>
+                                </Style>
+                                <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                  <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                                  <Setter Property="Foreground" Value="#121212"/>
+                                </Style>
+                                <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                  <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                                  <Setter Property="Foreground" Value="#121212"/>
+                                  <Setter Property="Opacity" Value="0.8"/>
+                                </Style>
+                                <Style Selector="ToggleButton:checked">
+                                  <Setter Property="FontWeight" Value="Bold"/>
+                                </Style>
+                              </ToggleButton.Styles>
+                            </ToggleButton>
+                            
                             <ToggleButton Content="BL" FontSize="10" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
                               <ToggleButton.Styles>
                                 <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
