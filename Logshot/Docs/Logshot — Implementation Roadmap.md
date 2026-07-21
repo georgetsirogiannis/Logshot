@@ -87,12 +87,21 @@ CAUTION: ~~THIS IS AN OUTDATED REPORT.~~ **UPDATED REPORT.**
 ### **Phase 6: The PDF Export Engine (QuestPDF)** ⏳ **PENDING**
 
 **Dependency:** Phase 3, 5 (UI data complete) — satisfied
+**Important Note:** The PDF Export is a day-based operation. The PDF will only export the takes of a single day, not the entire project. So we need to design this feature with the understanding that the user will select a day and then export that day's takes to PDF.
 
-1. **A4 Portrait Canvas & Headers:** Set up the QuestPDF document, locking dimensions to A4 and building the repeating metadata header and top-margin scribble box (strictly white-label).  
-2. **Table Generation:** Map the database values to the PDF table, implementing dynamic column width calculations.  
-3. **Custom Shorthand Rendering:** Write the custom PDF drawing instructions for Circled takes, Failed takes, Blooper badges, and the shallow ΑΚΥΡΟ cross-stitch rows.  
-4. **"END DAY" Calculator:** Write the math that determines remaining page height on finalized days and draws the massive cross-hatch filler block.  
-
+1. **A4 Portrait Canvas & Headers:** Set up the QuestPDF document, locking dimensions to A4 portrait and building the repeating metadata header and top-margin Day Notes box (strictly white-label).
+2. **Header Content:** Populate the header with the project name top-center, then below it a smaller-font line for the Director ("ΣΚΗΝΟΘΕΣΙΑ:"), Production Company ("ΠΑΡΑΓΩΓΗ:") and DOP ("ΔΙΕΥΘΥΝΣΗ ΦΩΤΟΓΡΑΦΙΑΣ:"), then below that a line with the date ("ΗΜΕΡΟΜΗΝΙΑ:"), day number ("ΗΜΕΡΑ ΓΥΡΙΣΜΑΤΟΣ:"), and page count (in the format "ΣΕΛΙΔΑ: Χ/Υ"). The header should be repeated on every page of the PDF.
+3. **Table Generation:** Map the database values to the PDF table, implementing dynamic column width calculations. Every page should contain approximately 12 rows of takes.
+4. **Custom Shorthand Rendering:** Write the custom PDF drawing instructions for Circled takes, Failed takes, Blooper badges, End Board, No Board and the shallow ΑΚΥΡΟ cross-stitch rows.
+   * Circled takes and failed/bad takes should render the same visual shorthand as the UI, but in a PDF-friendly vector format. Same with PU.
+	* FS and LS should render as small text badges in the far-left side of the Notes cell.
+	* Blooper should render as a small outlined box containing the word "BLOOPER", rotated 90 degrees counter-clockwise (CCW), on the far-right side of the Notes cell.
+	* No Board ("ΧΩΡΙΣ ΚΛΑΚΕΤΑ") and End Board ("ΚΛΑΚΕΤΑ ΤΕΛΟΥΣ") should render as normal text that is aligned right in the Notes cell.
+	* None of the badges need to show up in the PDF for cells that are empty (i.e., no FS, LS, Blooper, No Board, or End Board).
+5. **"END DAY" Calculator:** Write the math that determines remaining page height on finalized days and draws the massive cross-hatch filler block on the remaining empty space of the last page of the day. On the center of the filled block, a large-font "END DAY [day number]" should be written to mark the end of this day's takes.  
+6. **PDF Export Button:** Add the button to the desktop header that triggers the PDF export, prompting the user to save the file to a folder of his choosing with a filename in the format "ProjectName_DAY XX.pdf" (where XX is the day number). A PDF generation progress bar would be a nice touch.
+   * The app's engine should check that the user has finalized the day before allowing the PDF export. If the day is not finalized, the app should prompt the user to finalize the day first before exporting to PDF.
+7. When the implementation is done, write the documentation explaining how I (the developer) can change how the PDF looks, including the header, table, and shorthand rendering. This should be a separate markdown file in the Docs folder.
 ---
 
 ### **Phase 7: Polish & Production** ⏳ **PENDING**
