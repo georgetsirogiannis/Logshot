@@ -91,5 +91,25 @@
         <Style Selector="Control:disabled">
             <Setter Property="Opacity" Value="1.0" />
         </Style>
+
+        <!-- FS Chip Styling (Maintains color when disabled/locked) -->
+        <Style Selector="Button.fs-chip">
+            <Setter Property="Background" Value="{StaticResource FalseStartBlue}" />
+            <Setter Property="Foreground" Value="#121212" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Button.fs-chip:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource FalseStartBlue}" />
+            <Setter Property="Foreground" Value="#121212" />
+        </Style>
+        <Style Selector="Button.fs-chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource FalseStartBlue}" />
+            <Setter Property="Foreground" Value="#121212" />
+        </Style>
+        <Style Selector="Button.fs-chip:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource FalseStartBlue}" />
+            <Setter Property="Foreground" Value="#121212" />
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
     </Application.Styles>
 </Application>

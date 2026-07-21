@@ -285,7 +285,7 @@
             
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
               <!-- Updated FS Chip -->
-              <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" Padding="4,1" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}" Background="{StaticResource FalseStartBlue}" Foreground="#121212" FontWeight="Bold"/>
+              <Button Classes="fs-chip" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" Padding="4,1" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}"/>
               <Button Content="+FS" FontSize="10" Padding="4,0" Command="{Binding IncrementFalseStartsCommand}"/>
               <Button Content="-FS" FontSize="10" Padding="4,0" IsVisible="{Binding FalseStartCount}" Command="{Binding DecrementFalseStartsCommand}"/>
               
