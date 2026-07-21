@@ -388,8 +388,8 @@ public partial class TakeViewModel : ViewModelBase
 
     public bool IsCamAVoided => IsCameraVoided("CAM A");
     public bool IsCamBVoided => IsCameraVoided("CAM B");
-    public bool ShowCamACrossed => HasVoidedCameras && !IsCamAVoided;
-    public bool ShowCamBCrossed => HasVoidedCameras && !IsCamBVoided;
+    public bool ShowCamACrossed => HasVoidedCameras && !IsCamAVoided && !IsCamANoRoll;
+    public bool ShowCamBCrossed => HasVoidedCameras && !IsCamBVoided && !IsCamBNoRoll;
 
     public bool IsCamANotEditable => IsCamAVoided || IsCamANoRoll || HasVoidedCameras;
     public bool IsCamBNotEditable => IsCamBVoided || IsCamBNoRoll || HasVoidedCameras;
@@ -448,13 +448,13 @@ public partial class TakeViewModel : ViewModelBase
     partial void OnVoidCameraLabelsChanged(string value)
     {
         OnPropertyChanged(nameof(HasVoidedCameras));
+        OnPropertyChanged(nameof(ShowRowCrossed));
         OnPropertyChanged(nameof(RowHeight));
         OnPropertyChanged(nameof(RowMinHeight));
         OnPropertyChanged(nameof(IsCamAVoided));
         OnPropertyChanged(nameof(IsCamBVoided));
         OnPropertyChanged(nameof(ShowCamACrossed));
         OnPropertyChanged(nameof(ShowCamBCrossed));
-        OnPropertyChanged(nameof(ShowRowCrossed));
         OnPropertyChanged(nameof(IsCamANotEditable));
         OnPropertyChanged(nameof(IsCamBNotEditable));
         OnPropertyChanged(nameof(ShowCamANormal));
@@ -771,10 +771,9 @@ public partial class CameraRollCell : ObservableObject
     }
 
     public bool IsVoided => _owner.IsCameraVoided(Label);
-    public bool ShowCrossed => _owner.HasVoidedCameras && !IsVoided;
-
-    // Render Mid-Day additions (strikethroughs) exactly like No-Rolls
     public bool IsNoRoll => _owner.GetCameraFlagPublic(Label, s => s.NoRoll) || _owner.IsCameraStrikethrough(Label);
+    public bool ShowCrossed => _owner.HasVoidedCameras && !IsVoided && !IsNoRoll;
+
     public bool IsNotEditable => IsVoided || IsNoRoll || _owner.HasVoidedCameras;
     public bool IsRollChangeMarked => _owner.GetCameraFlagPublic(Label, s => s.RollChangeMarker);
     public bool ShowNormal => !IsNoRoll && !_owner.HasVoidedCameras;

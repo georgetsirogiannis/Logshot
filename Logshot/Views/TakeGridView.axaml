@@ -23,7 +23,7 @@
       <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Padding="4" VerticalAlignment="Stretch">
         <Grid RowDefinitions="Auto,*">
           <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsRollChangeMarked}" Text="{Binding RollNumber}" TextDecorations="Underline"/>
-          <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Center">
+          <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Stretch">
             <Grid.ContextMenu>
               <ContextMenu>
                 <MenuItem Command="{Binding ToggleVoidCommand}" Header="ΑΚΥΡΟ CLIP"/>
@@ -66,7 +66,7 @@
               </TextBox>
             </Panel>
             <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
-            <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+            <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             <Path Data="M1,0 L0,1" IsVisible="{Binding IsNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
           </Grid>
         </Grid>
@@ -231,10 +231,10 @@
                     </Border>
 
                     <!-- CAM A -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="1" Padding="4">
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="1" Padding="4" VerticalAlignment="Stretch">
                       <Grid RowDefinitions="Auto,*">
                         <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamARollChangeMarked}" Text="{Binding CamARollNumber}" TextDecorations="Underline"/>
-                        <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Center">
+                        <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Stretch">
                           <Grid.ContextMenu>
                             <ContextMenu>
                               <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A" Header="ΑΚΥΡΟ CLIP"/>
@@ -274,17 +274,17 @@
                             </TextBox>
                           </Panel>
                           <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
-                          <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowCamACrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                          <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamACrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                           <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamANoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
                         </Grid>
                       </Grid>
                     </Border>
 
                     <!-- CAM B -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="2" Padding="4">
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="2" Padding="4" VerticalAlignment="Stretch">
                       <Grid RowDefinitions="Auto,*">
                         <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamBRollChangeMarked}" Text="{Binding CamBRollNumber}" TextDecorations="Underline"/>
-                        <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Center">
+                        <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Stretch">
                           <Grid.ContextMenu>
                             <ContextMenu>
                               <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B" Header="ΑΚΥΡΟ CLIP"/>
@@ -324,7 +324,7 @@
                             </TextBox>
                           </Panel>
                           <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
-                          <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowCamBCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                          <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamBCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                           <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamBNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
                         </Grid>
                       </Grid>
@@ -340,8 +340,8 @@
                     <ContentControl Grid.Column="5" Content="{Binding ExtraCell3}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam3Visible}"/>
 
                     <!-- SOUND ROLL -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4">
-                      <Grid Background="Transparent" VerticalAlignment="Center">
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4" VerticalAlignment="Stretch">
+                      <Grid Background="Transparent" VerticalAlignment="Stretch">
                         <Grid.ContextMenu>
                           <ContextMenu>
                             <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
@@ -363,46 +363,46 @@
                           </TextBox>
                         </Panel>
                         <Path Data="M1,0 L0,1" IsVisible="{Binding IsSoundNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
-                        <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       </Grid>
                     </Border>
                     
                     <!-- EP -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4">
-                      <Grid VerticalAlignment="Center">
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4" VerticalAlignment="Stretch">
+                      <Grid VerticalAlignment="Stretch">
                         <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                           <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowEpisode}" Text="{Binding DisplayEpisode}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                           <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Episode}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
                         </Panel>
-                        <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       </Grid>
                     </Border>
                     
                     <!-- SC -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4">
-                      <Grid VerticalAlignment="Center">
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4" VerticalAlignment="Stretch">
+                      <Grid VerticalAlignment="Stretch">
                         <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                           <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowScene}" Text="{Binding DisplayScene}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                           <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Scene}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
                         </Panel>
-                        <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       </Grid>
                     </Border>
                     
                     <!-- SHOT -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="9" Padding="4">
-                      <Grid VerticalAlignment="Center">
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="9" Padding="4" VerticalAlignment="Stretch">
+                      <Grid VerticalAlignment="Stretch">
                         <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                           <TextBlock HorizontalAlignment="Center" IsVisible="{Binding ShowShot}" Text="{Binding DisplayShot}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                           <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Shot}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
                         </Panel>
-                        <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       </Grid>
                     </Border>
 
                     <!-- TAKE -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="10" Padding="4">
-                      <Grid VerticalAlignment="Center">
+                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="10" Padding="4" VerticalAlignment="Stretch">
+                      <Grid VerticalAlignment="Stretch">
                         <Border BorderBrush="{StaticResource ActionAccent}" BorderThickness="2" CornerRadius="13" Height="26" HorizontalAlignment="Center" IsVisible="{Binding ShowCircledActive}" VerticalAlignment="Center" Width="26"/>
                         <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
                         <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding !ShowRowCrossed}" Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}">
@@ -415,7 +415,7 @@
                           </TextBox.ContextMenu>
                         </TextBox>
                         <TextBlock FontSize="9" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Right" IsVisible="{Binding IsPickup}" Margin="2" Text="PU" VerticalAlignment="Top"/>
-                        <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       </Grid>
                     </Border>
 
@@ -533,7 +533,7 @@
                         </StackPanel>
                         
                         <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="4"/>
-                        <TextBlock FontSize="10" HorizontalAlignment="Center" IsVisible="{Binding ShowRowCrossed}" Opacity="0.6" Text="{x:Static vm:TakeViewModel.CrossStitchPattern}" VerticalAlignment="Center"/>
+                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       </Grid>
                     </Border>
                     

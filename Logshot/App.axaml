@@ -35,6 +35,35 @@
         <SolidColorBrush x:Key="NoBoardTeal">#26A69A</SolidColorBrush>
         <SolidColorBrush x:Key="EndBoardAmber">#FFD54F</SolidColorBrush>
         <SolidColorBrush x:Key="ActionAccent">#4FC3F7</SolidColorBrush>
+
+        <!-- Cross-Stitch Pattern Brush for Voided/AKYRO Rows -->
+        <DrawingBrush x:Key="CrossStitchPatternBrush" TileMode="Tile" SourceRect="0,0 12,12" DestinationRect="0,0 12,12">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#1A000000">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0 12 12"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing>
+                        <GeometryDrawing.Pen>
+                            <Pen Brush="#55FFFFFF" Thickness="1"/>
+                        </GeometryDrawing.Pen>
+                        <GeometryDrawing.Geometry>
+                            <LineGeometry StartPoint="0,0" EndPoint="12,12"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing>
+                        <GeometryDrawing.Pen>
+                            <Pen Brush="#55FFFFFF" Thickness="1"/>
+                        </GeometryDrawing.Pen>
+                        <GeometryDrawing.Geometry>
+                            <LineGeometry StartPoint="12,0" EndPoint="0,12"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
     </Application.Resources>
 
     <Application.Styles>
