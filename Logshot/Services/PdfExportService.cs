@@ -45,14 +45,14 @@ public class PdfExportService
     {
         container.PaddingBottom(12).Column(column =>
         {
-            // 4. Header title centered on top: [Project Name] - ΔΕΛΤΙΟ ΛΗΨΕΩΝ
+            // Header title centered on top: [Project Name] - ΔΕΛΤΙΟ ΛΗΨΕΩΝ
             string projectName = _project.Name?.ToUpper() ?? "UNTITLED PROJECT";
             column.Item().AlignCenter().Text(text =>
             {
                 text.Span($"{projectName} - ΔΕΛΤΙΟ ΛΗΨΕΩΝ").FontSize(14).SemiBold();
             });
 
-            // 5. First Metadata Line: Director, Production Company, DOP
+            // First Metadata Line: Director, Production Company, DOP
             column.Item().PaddingTop(8).Row(row =>
             {
                 row.RelativeItem(3).Text(t =>
@@ -72,7 +72,7 @@ public class PdfExportService
                 });
             });
 
-            // 5. Second Metadata Line: Date, Shoot Day, Page
+            // Second Metadata Line: Date, Shoot Day, Page
             column.Item().PaddingTop(4).Row(row =>
             {
                 row.RelativeItem(3).Text(t =>
@@ -97,28 +97,57 @@ public class PdfExportService
     private void ComposeContent(IContainer container)
     {
         var extraCameras = _day.ExtraActiveCameras?.ToList() ?? new();
-        int totalColumnsCount = 2 + extraCameras.Count + 6; // CAM A, CAM B + Extras + Sound, ΕΠ, ΣΚ, ΠΛΑΝΟ, ΛΗΨΗ, ΠΑΡΑΤΗΡΗΣΕΙΣ
+        int extraCount = extraCameras.Count;
+        int totalColumnsCount = 2 + extraCount + 6; // CAM A, CAM B + Extras + Sound, ΕΠ, ΣΚ, ΠΛΑΝΟ, ΛΗΨΗ, ΠΑΡΑΤΗΡΗΣΕΙΣ
 
         container.Table(table =>
         {
-            // 2. Exact column widths reflecting the desktop app order: CAM A, CAM B, [Extras], Sound, ΕΠ, ΣΚ, ΠΛΑΝΟ, ΛΗΨΗ, ΠΑΡΑΤΗΡΗΣΕΙΣ
+            // Dynamic column widths using RelativeColumn to span the full page width between margins
             table.ColumnsDefinition(columns =>
             {
-                columns.ConstantColumn(45); // CAM A
-                columns.ConstantColumn(45); // CAM B
-                foreach (var _ in extraCameras)
+                if (extraCount == 0)
                 {
-                    columns.ConstantColumn(45); // Dynamic Extra Cameras
+                    columns.RelativeColumn(12.5f); // CAM A
+                    columns.RelativeColumn(12.5f); // CAM B
+                    columns.RelativeColumn(11.0f); // SOUND ROLL
+                    columns.RelativeColumn(4.5f);  // ΕΠ
+                    columns.RelativeColumn(6.25f); // ΣΚ
+                    columns.RelativeColumn(6.25f); // ΠΛΑΝΟ
+                    columns.RelativeColumn(6.25f); // ΛΗΨΗ
+                    columns.RelativeColumn(40.75f);// ΠΑΡΑΤΗΡΗΣΕΙΣ
                 }
-                columns.ConstantColumn(50); // SOUND ROLL
-                columns.ConstantColumn(22); // ΕΠ
-                columns.ConstantColumn(22); // ΣΚ
-                columns.ConstantColumn(35); // ΠΛΑΝΟ
-                columns.ConstantColumn(30); // ΛΗΨΗ
-                columns.RelativeColumn();   // ΠΑΡΑΤΗΡΗΣΕΙΣ (Fills remaining space)
+                else if (extraCount == 1)
+                {
+                    columns.RelativeColumn(11.11f); // CAM A
+                    columns.RelativeColumn(11.11f); // CAM B
+                    columns.RelativeColumn(11.11f); // CAM C
+                    columns.RelativeColumn(9.78f);  // SOUND ROLL
+                    columns.RelativeColumn(4.00f);  // ΕΠ
+                    columns.RelativeColumn(5.56f);  // ΣΚ
+                    columns.RelativeColumn(5.56f);  // ΠΛΑΝΟ
+                    columns.RelativeColumn(5.56f);  // ΛΗΨΗ
+                    columns.RelativeColumn(36.22f); // ΠΑΡΑΤΗΡΗΣΕΙΣ
+                }
+                else
+                {
+                    float totalUnits = 8f + extraCount;
+                    float camWeight = 1.0f / totalUnits * 100f;
+                    columns.RelativeColumn(camWeight); // CAM A
+                    columns.RelativeColumn(camWeight); // CAM B
+                    foreach (var _ in extraCameras)
+                    {
+                        columns.RelativeColumn(camWeight);
+                    }
+                    columns.RelativeColumn(0.88f / totalUnits * 100f); // SOUND ROLL
+                    columns.RelativeColumn(0.36f / totalUnits * 100f); // ΕΠ
+                    columns.RelativeColumn(0.50f / totalUnits * 100f); // ΣΚ
+                    columns.RelativeColumn(0.50f / totalUnits * 100f); // ΠΛΑΝΟ
+                    columns.RelativeColumn(0.50f / totalUnits * 100f); // ΛΗΨΗ
+                    columns.RelativeColumn(3.26f / totalUnits * 100f); // ΠΑΡΑΤΗΡΗΣΕΙΣ
+                }
             });
 
-            // 2 & 4. Table Header matching desktop and Greek labels
+            // Table Header matching desktop, centered except Notes
             table.Header(header =>
             {
                 header.Cell().Element(HeaderStyle).Text(t => t.Span("CAM A").SemiBold());
@@ -132,10 +161,10 @@ public class PdfExportService
                 header.Cell().Element(HeaderStyle).Text(t => t.Span("ΣΚ").SemiBold());
                 header.Cell().Element(HeaderStyle).Text(t => t.Span("ΠΛΑΝΟ").SemiBold());
                 header.Cell().Element(HeaderStyle).Text(t => t.Span("ΛΗΨΗ").SemiBold());
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ").SemiBold());
+                header.Cell().Element(NotesHeaderStyle).Text(t => t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ").SemiBold());
 
-                // 3. Thin grid lines separating all cells
                 IContainer HeaderStyle(IContainer c) => c.Border(0.5f).BorderColor(Colors.Black).Padding(3).AlignCenter().AlignMiddle();
+                IContainer NotesHeaderStyle(IContainer c) => c.Border(0.5f).BorderColor(Colors.Black).Padding(3).AlignLeft().AlignMiddle();
             });
 
             // Data Rows
@@ -143,24 +172,31 @@ public class PdfExportService
             {
                 foreach (var take in _day.Takes)
                 {
-                    table.Cell().Element(CellStyle).Text(take.CamARoll ?? "");
-                    table.Cell().Element(CellStyle).Text(take.CamBRoll ?? "");
+                    string camAVal = take.ShowCamARoll ? (take.CamARoll ?? "") : "—″—";
+                    string camBVal = take.ShowCamBRoll ? (take.CamBRoll ?? "") : "—″—";
+                    string soundVal = take.ShowSoundNotes ? (take.SoundNotes ?? "") : "—″—";
+
+                    table.Cell().Element(CellStyle).Text(camAVal);
+                    table.Cell().Element(CellStyle).Text(camBVal);
 
                     foreach (var cam in extraCameras)
                     {
                         var extraCell = take.ExtraCameraRolls?.FirstOrDefault(c => c.Label == cam);
-                        table.Cell().Element(CellStyle).Text(extraCell?.Roll ?? "");
+                        bool showExtraRoll = extraCell?.ShowRoll ?? true;
+                        string extraVal = showExtraRoll ? (extraCell?.Roll ?? "") : "—″—";
+                        table.Cell().Element(CellStyle).Text(extraVal);
                     }
 
-                    table.Cell().Element(CellStyle).Text(take.SoundNotes ?? "");
+                    table.Cell().Element(CellStyle).Text(soundVal);
                     table.Cell().Element(CellStyle).Text(take.DisplayEpisode ?? "");
                     table.Cell().Element(CellStyle).Text(take.DisplayScene ?? "");
                     table.Cell().Element(CellStyle).Text(take.DisplayShot ?? "");
                     table.Cell().Element(CellStyle).Text(take.DisplayTakeNumber ?? "");
-                    table.Cell().Element(CellStyle).Text(take.TakeNotes ?? "");
+                    table.Cell().Element(NotesCellStyle).Text(take.TakeNotes ?? "");
 
-                    // 3. Thin grid lines separating all cells
-                    IContainer CellStyle(IContainer c) => c.Border(0.5f).BorderColor(Colors.Black).Padding(3).AlignMiddle();
+                    // MinHeight(54) ensures ~12-13 rows per page while allowing automatic vertical expansion if needed
+                    IContainer CellStyle(IContainer c) => c.Border(0.5f).BorderColor(Colors.Black).MinHeight(54).Padding(3).AlignCenter().AlignMiddle();
+                    IContainer NotesCellStyle(IContainer c) => c.Border(0.5f).BorderColor(Colors.Black).MinHeight(54).Padding(3).AlignLeft().AlignMiddle();
                 }
             }
             else
@@ -168,7 +204,7 @@ public class PdfExportService
                 table.Cell().ColumnSpan((uint)totalColumnsCount).Element(EmptyStyle)
                      .Text(t => t.Span("Δεν υπάρχουν λήψεις για αυτή την ημέρα.").Italic().FontColor(Colors.Grey.Medium));
 
-                IContainer EmptyStyle(IContainer c) => c.Border(0.5f).BorderColor(Colors.Black).Padding(10).AlignCenter().AlignMiddle();
+                IContainer EmptyStyle(IContainer c) => c.Border(0.5f).BorderColor(Colors.Black).MinHeight(54).Padding(10).AlignCenter().AlignMiddle();
             }
         });
     }
