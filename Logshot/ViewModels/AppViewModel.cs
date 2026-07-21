@@ -449,6 +449,7 @@ public partial class AppViewModel : ViewModelBase
         DayBeingEdited.ShootDayNumber = PopupShootDayNumber;
         DayBeingEdited.CalendarDate = PopupCalendarDate.Date;
         await DayBeingEdited.SaveDayCommand.ExecuteAsync(null);
+        CurrentProject?.SortDays();
 
         IsDayPopupOpen = false;
         DayBeingEdited = null;
@@ -519,6 +520,7 @@ public partial class AppViewModel : ViewModelBase
 
         await dayVM.SaveDayCommand.ExecuteAsync(null);
         CurrentProject.Days.Add(dayVM);
+        CurrentProject.SortDays();
         CurrentDay = dayVM;
     }
 

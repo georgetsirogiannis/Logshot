@@ -1,5 +1,6 @@
 ﻿using SQLite;
 using System;
+using System.Linq;
 
 namespace Logshot.Models;
 
@@ -19,4 +20,12 @@ public class Day
     public bool IsFinalized { get; set; } = false;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public static string GetSortableDayNumber(string? shootDayNumber)
+    {
+        shootDayNumber ??= string.Empty;
+        var digits = new string(shootDayNumber.TakeWhile(char.IsDigit).ToArray());
+        var suffix = shootDayNumber.Substring(digits.Length);
+        return digits.PadLeft(6, '0') + suffix;
+    }
 }

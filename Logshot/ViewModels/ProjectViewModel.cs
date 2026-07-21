@@ -91,7 +91,10 @@ public partial class ProjectViewModel : ViewModelBase
             dayVM.LoadFromModel(day);
             await dayVM.LoadTakesCommand.ExecuteAsync(null);
             Days.Add(dayVM);
+            SortDays();
         }
+
+        SortDays();
     }
 
     [RelayCommand]
@@ -131,6 +134,24 @@ public partial class ProjectViewModel : ViewModelBase
         {
             Days.Remove(day);
             await _databaseService.DeleteDayAsync(day.ToModel());
+        }
+    }
+
+    /// <summary>
+    /// Re-sorts Days numerically by ShootDayNumber, using Move so the ListBox's
+    /// current selection isn't disturbed.
+    /// </summary>
+    public void SortDays()
+    {
+        var ordered = Days
+            .OrderBy(d => Day.GetSortableDayNumber(d.ShootDayNumber), StringComparer.Ordinal)
+            .ToList();
+
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            int currentIndex = Days.IndexOf(ordered[i]);
+            if (currentIndex != i)
+                Days.Move(currentIndex, i);
         }
     }
 }
