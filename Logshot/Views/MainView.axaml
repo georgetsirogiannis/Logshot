@@ -249,6 +249,12 @@
                 <Button Content="REOPEN DAY"
                         Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
                         IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
+
+                <Button Content="EXPORT PDF"
+                        Command="{Binding AppViewModel.ExportDayToPdfCommand}"
+                        Background="{StaticResource ActionAccent}"
+                        Foreground="#121212"
+                        FontWeight="Bold"/>
               </StackPanel>
             </Grid>
 
@@ -491,6 +497,24 @@
           <Button Content="Cancel" Command="{Binding AppViewModel.CurrentDay.CancelContinuityPromptCommand}" 
                   Background="Transparent" Foreground="{StaticResource TextSecondary}"
                   HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0,4,0,0"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY POPUP: PDF Export Error (Unfinalized) -->
+    <!-- ========================================== -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsPdfExportErrorOpen}" ZIndex="200"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="380" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Cannot Export PDF" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
+          <TextBlock Text="Please finalize the day before exporting the PDF. This ensures the End Day marker is properly generated and no further edits are made to the document."
+                     TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" LineHeight="22"/>
+          <Button Content="Okay" Command="{Binding AppViewModel.ClosePdfExportErrorCommand}" 
+                  Background="{StaticResource ActionAccent}" Foreground="#121212" 
+                  HorizontalAlignment="Right" HorizontalContentAlignment="Center" Width="100" FontWeight="Bold"/>
         </StackPanel>
       </Border>
     </Grid>

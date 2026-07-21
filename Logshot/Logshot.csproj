@@ -26,5 +26,6 @@
     <PackageReference Include="sqlite-net-pcl" />
     <PackageReference Include="Supabase" />
     <PackageReference Include="Tmds.DBus.Protocol" />
+	<PackageReference Include="QuestPDF" />
   </ItemGroup>
 </Project>

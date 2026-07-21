@@ -584,11 +584,59 @@ public partial class AppViewModel : ViewModelBase
         }
     }
 
+    // --- PDF Export State ---
+    [ObservableProperty]
+    private bool _isPdfExportErrorOpen = false;
+
+    // Delegate to ask the View to open the Save File Dialog
+    public Action? RequestPdfFilePicker;
+
     [RelayCommand]
-    public async Task ExportDayToPdf()
+    public void ExportDayToPdf()
     {
-        if (CurrentDay is null)
+        if (CurrentDay is null) return;
+
+        // Ensure the user has finalized the day
+        if (!CurrentDay.IsFinalized)
+        {
+            IsPdfExportErrorOpen = true;
             return;
+        }
+
+        // Trigger the file picker in the View
+        RequestPdfFilePicker?.Invoke();
+    }
+
+    [RelayCommand]
+    public void ClosePdfExportError()
+    {
+        IsPdfExportErrorOpen = false;
+    }
+
+    /// <summary>
+    /// Called by the View once the user selects a save destination.
+    /// Passes a Stream so it works natively on both Desktop and Android.
+    /// </summary>
+    public async Task GeneratePdfAsync(System.IO.Stream stream)
+    {
+        IsLoading = true;
+        try
+        {
+            await Task.Run(() =>
+            {
+                // Activate the PDF Export Engine
+                var service = new PdfExportService(CurrentProject!, CurrentDay!);
+                service.Generate(stream);
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"PDF Export failed: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
