@@ -178,7 +178,7 @@ public partial class TakeViewModel : ViewModelBase
     public string DisplayEpisode => IsSoundOnlyRow ? string.Empty : Episode;
     public string DisplayScene => IsSoundOnlyRow ? string.Empty : Scene;
     public string DisplayShot => IsSoundOnlyRow ? string.Empty : (Shot == 0 ? string.Empty : Shot.ToString());
-    public string DisplayTakeNumber => IsSoundOnlyRow ? string.Empty : (TakeNumber == 0 ? string.Empty : TakeNumber.ToString());
+    public string DisplayTakeNumber => (IsSoundOnlyRow || HasVoidedCameras) ? string.Empty : (TakeNumber == 0 ? string.Empty : TakeNumber.ToString());
 
     public TakeViewModel(DatabaseService databaseService)
     {
@@ -458,6 +458,12 @@ public partial class TakeViewModel : ViewModelBase
         }
 
         VoidCameraLabels = JsonSerializer.Serialize(list);
+
+        if (HasVoidedCameras)
+        {
+            TakeNumber = 0;
+        }
+
         await SaveTakeCommand.ExecuteAsync(null);
         await RefreshCameraDataCommand.ExecuteAsync(null);
     }
@@ -489,6 +495,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowCircledActive));
         OnPropertyChanged(nameof(ShowFailedActive));
         OnPropertyChanged(nameof(ShowSoundNormal));
+        OnPropertyChanged(nameof(DisplayTakeNumber));
 
         foreach (var cell in ExtraCameraRolls)
         {

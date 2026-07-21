@@ -57,12 +57,11 @@ namespace Logshot.ViewModels
 
             // Find the most recent NON-VOIDED, NON-SOUND-ONLY take in this specific group
             var lastTake = GroupedTakes.Where(t => !t.HasVoidedCameras && !t.IsSoundOnlyRow).OrderByDescending(t => t.CreatedAt).FirstOrDefault()
-                           ?? GroupedTakes.Where(t => !t.HasVoidedCameras).OrderByDescending(t => t.CreatedAt).FirstOrDefault();
+                           ?? GroupedTakes.Where(t => !t.HasVoidedCameras).OrderByDescending(t => t.CreatedAt).FirstOrDefault()
+                           ?? GroupedTakes.OrderByDescending(t => t.CreatedAt).FirstOrDefault();
 
-            // If all takes in the group are voided, we can't add a new take
             if (lastTake == null) return;
 
-            // Instruct the parent DayViewModel to duplicate the shot number and increment the take
             _parentDay.CreateSubsequentTake(Episode, Scene, lastTake.Shot, lastTake.TakeNumber);
         }
 

@@ -316,9 +316,11 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddShot()
     {
-        var lastTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow) ?? Takes.LastOrDefault();
-        var episode = string.IsNullOrWhiteSpace(lastTake?.Episode) ? "1" : lastTake!.Episode;
-        var scene = string.IsNullOrWhiteSpace(lastTake?.Scene) ? "1" : lastTake!.Scene;
+        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras)
+                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
+                            ?? Takes.LastOrDefault();
+        var episode = string.IsNullOrWhiteSpace(lastValidTake?.Episode) ? "1" : lastValidTake!.Episode;
+        var scene = string.IsNullOrWhiteSpace(lastValidTake?.Scene) ? "1" : lastValidTake!.Scene;
 
         await CreateTakeWithContinuity(episode, scene);
     }
@@ -326,17 +328,19 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddTake()
     {
-        var lastTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow) ?? Takes.LastOrDefault();
+        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras)
+                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
+                            ?? Takes.LastOrDefault();
 
         var newTake = new Take
         {
             DayId = Id,
             SequenceOrder = Takes.Count,
-            Episode = lastTake?.Episode ?? string.Empty,
-            Scene = lastTake?.Scene ?? string.Empty,
-            Shot = lastTake?.Shot ?? 0,
-            TakeNumber = (lastTake?.TakeNumber ?? 0) + 1,
-            CameraData = SyncCameraDataWithActiveCameras(lastTake?.CameraData),
+            Episode = lastValidTake?.Episode ?? string.Empty,
+            Scene = lastValidTake?.Scene ?? string.Empty,
+            Shot = lastValidTake?.Shot ?? 0,
+            TakeNumber = (lastValidTake?.TakeNumber ?? 0) + 1,
+            CameraData = SyncCameraDataWithActiveCameras(lastValidTake?.CameraData),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -814,8 +818,10 @@ public partial class DayViewModel : ViewModelBase
 
     public void CreateSubsequentTake(string episode, string scene, int currentShot, int currentTake)
     {
-        var previousTake = Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene && t.Shot == currentShot && t.TakeNumber == currentTake && !t.IsSoundOnlyRow)
-                           ?? Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene && !t.IsSoundOnlyRow);
+        var previousTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras && t.Episode == episode && t.Scene == scene && t.Shot == currentShot)
+                           ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow && t.Episode == episode && t.Scene == scene)
+                           ?? Takes.LastOrDefault(t => t.Episode == episode && t.Scene == scene)
+                           ?? Takes.LastOrDefault();
 
         var newTakeModel = new Logshot.Models.Take
         {

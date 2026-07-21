@@ -552,11 +552,19 @@ public partial class AppViewModel : ViewModelBase
         if (CurrentDay is null)
             return;
 
+        var lastValidTake = CurrentDay.Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras)
+                            ?? CurrentDay.Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
+                            ?? CurrentDay.Takes.LastOrDefault();
+
         var newTake = new Take
         {
             DayId = CurrentDay.Id,
             SequenceOrder = CurrentDay.Takes.Count,
-            Shot = CurrentDay.CurrentShot
+            Shot = lastValidTake?.Shot ?? CurrentDay.CurrentShot,
+            TakeNumber = (lastValidTake?.TakeNumber ?? 0) + 1,
+            Episode = lastValidTake?.Episode ?? string.Empty,
+            Scene = lastValidTake?.Scene ?? string.Empty,
+            CameraData = lastValidTake?.CameraData ?? "{}"
         };
         var takeVM = new TakeViewModel(_databaseService);
         takeVM.LoadFromModel(newTake);
