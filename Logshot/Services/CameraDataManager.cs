@@ -150,13 +150,13 @@ public class CameraDataManager
     /// <summary>
     /// Remove a camera from the camera data
     /// </summary>
-    public CameraDataStructure RemoveCamera(CameraDataStructure data, string cameraLabel)
+    public CameraDataStructure RemoveCamera(CameraDataStructure? data, string cameraLabel)
     {
         if (data?.Cameras != null && data.Cameras.Remove(cameraLabel))
         {
             data.LastUpdated = DateTime.UtcNow;
         }
-        return data;
+        return data ?? new CameraDataStructure();
     }
 
     /// <summary>
@@ -176,10 +176,10 @@ public class CameraDataManager
     /// <summary>
     /// Mark a camera as strikethrough/voided for a take added after the camera existed
     /// </summary>
-    public CameraDataStructure MarkCameraStrikethrough(CameraDataStructure data, string cameraLabel, DateTime cameraCreatedAt, DateTime takeRecordedAt)
+    public CameraDataStructure MarkCameraStrikethrough(CameraDataStructure? data, string cameraLabel, DateTime cameraCreatedAt, DateTime takeRecordedAt)
     {
         if (data?.Cameras == null || !data.Cameras.ContainsKey(cameraLabel))
-            return data;
+            return data ?? new CameraDataStructure();
 
         // If camera was created after this take was recorded, mark it as strikethrough
         if (cameraCreatedAt > takeRecordedAt)

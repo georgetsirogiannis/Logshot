@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -40,11 +41,11 @@ namespace Logshot.ViewModels
         // 1. [ + SHOT ] Button Logic
         // -------------------------------------------------------------------------
         [RelayCommand]
-        private void AddShot()
+        private async Task AddShot()
         {
             // Triggers the continuity engine in the parent DayViewModel.
             // This automatically queries the highest shot number and initializes Take 1.
-            _parentDay.CreateTakeWithContinuity(Episode, Scene);
+            await _parentDay.CreateTakeWithContinuity(Episode, Scene);
         }
 
         // -------------------------------------------------------------------------

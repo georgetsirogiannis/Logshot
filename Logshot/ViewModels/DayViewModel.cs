@@ -63,6 +63,9 @@ public partial class DayViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isFinalized = false;
 
+    [ObservableProperty]
+    private bool _isLoadingTakes = false;
+
     partial void OnIsFinalizedChanged(bool value)
     {
         OnPropertyChanged(nameof(IsNotFinalized));
@@ -224,7 +227,7 @@ public partial class DayViewModel : ViewModelBase
         };
     }
 
-    partial void OnActiveCamerasChanged(ObservableCollection<string> oldValue, ObservableCollection<string> newValue)
+    partial void OnActiveCamerasChanged(ObservableCollection<string>? oldValue, ObservableCollection<string> newValue)
     {
         SubscribeActiveCameras(newValue);
         OnPropertyChanged(nameof(ExtraActiveCameras));
@@ -336,7 +339,7 @@ public partial class DayViewModel : ViewModelBase
         }
     }
 
-    partial void OnTakesChanged(ObservableCollection<TakeViewModel> oldValue, ObservableCollection<TakeViewModel> newValue)
+    partial void OnTakesChanged(ObservableCollection<TakeViewModel>? oldValue, ObservableCollection<TakeViewModel> newValue)
     {
         if (oldValue is not null)
         {
@@ -387,6 +390,8 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadTakes()
     {
+        IsLoadingTakes = true; // Block scrolling while loading
+
         var takes = await _databaseService.GetTakesForDayAsync(Id);
 
         Takes.Clear();
@@ -415,6 +420,8 @@ public partial class DayViewModel : ViewModelBase
 
         UpdateRowVisibilities();
         BuildHierarchicalGroups();
+
+        IsLoadingTakes = false; // Re-enable scrolling for manual user additions
     }
 
     [RelayCommand]

@@ -37,7 +37,7 @@ public partial class TakeGridView : UserControl
 
     private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Add)
+        if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
@@ -155,7 +155,7 @@ public partial class TakeGridView : UserControl
         _isDragging = false;
     }
 
-    private async void CameraRoll_LostFocus(object? sender, RoutedEventArgs e)
+    private async void CameraRoll_LostFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)
     {
         if (sender is TextBox textBox)
         {
@@ -180,7 +180,7 @@ public partial class TakeGridView : UserControl
         }
     }
 
-    private async void SoundRoll_LostFocus(object? sender, RoutedEventArgs e)
+    private async void SoundRoll_LostFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)
     {
         if (sender is TextBox textBox)
         {

@@ -29,7 +29,7 @@ public partial class MobileTakeListView : UserControl
 
     private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Add)
+        if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {

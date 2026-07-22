@@ -6,7 +6,7 @@ namespace Logshot.Services;
 
 public class SupabaseService
 {
-    private Client _client;
+    private Client _client = null!;
 
     // We will replace these with your actual Supabase project keys later
     private const string SupabaseUrl = "YOUR_SUPABASE_URL_HERE";

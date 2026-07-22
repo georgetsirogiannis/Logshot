@@ -406,15 +406,15 @@ public partial class AppViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task DeleteProject(ProjectViewModel project)
+    public async Task DeleteProject(ProjectViewModel? project)
     {
-        if (Projects.Contains(project))
+        if (project != null && Projects.Contains(project))
         {
             Projects.Remove(project);
             await _databaseService.DeleteProjectAsync(project.ToModel());
         }
 
-        if (CurrentProject?.Id == project.Id)
+        if (CurrentProject?.Id == project?.Id)
         {
             CurrentProject = null;
             CurrentDay = null;
@@ -422,8 +422,9 @@ public partial class AppViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task SelectProject(ProjectViewModel project)
+    public async Task SelectProject(ProjectViewModel? project)
     {
+        if (project == null) return;
         CurrentProject = project;
         await CurrentProject.LoadDaysCommand.ExecuteAsync(null);
         CurrentDay = null;
@@ -525,9 +526,9 @@ public partial class AppViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task DeleteDay(DayViewModel day)
+    public async Task DeleteDay(DayViewModel? day)
     {
-        if (CurrentProject?.Days.Contains(day) == true)
+        if (day != null && CurrentProject?.Days.Contains(day) == true)
         {
             CurrentProject.Days.Remove(day);
             await _databaseService.DeleteDayAsync(day.ToModel());
@@ -539,8 +540,9 @@ public partial class AppViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task SelectDay(DayViewModel day)
+    public async Task SelectDay(DayViewModel? day)
     {
+        if (day == null) return;
         ClearSearch();
         CurrentDay = day;
         await CurrentDay.LoadTakesCommand.ExecuteAsync(null);
@@ -575,9 +577,9 @@ public partial class AppViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task DeleteTake(TakeViewModel take)
+    public async Task DeleteTake(TakeViewModel? take)
     {
-        if (CurrentDay?.Takes.Contains(take) == true)
+        if (take != null && CurrentDay?.Takes.Contains(take) == true)
         {
             await CurrentDay.DeleteTakeCommand.ExecuteAsync(take);
             await CurrentDay.UpdateTotalTakesCommand.ExecuteAsync(null);

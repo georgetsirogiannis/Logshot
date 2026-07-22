@@ -479,7 +479,7 @@ public class PdfExportService
             text.Span(take.TakeNumber.ToString());
             if (take.IsPickup)
             {
-                text.Span("PU").Superscript();
+                text.Span(" PU").Superscript();
             }
         };
 

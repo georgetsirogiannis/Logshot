@@ -55,7 +55,7 @@
       <TextBox Name="NewSceneBox" PlaceholderText="SC" Width="40" FontSize="11" VerticalAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap"/>
       <Button Content="+ SCENE" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddScene_Click"/>	</StackPanel>
 
-	<ScrollViewer Name="MobileScrollViewer">
+	<ScrollViewer Name="MobileScrollViewer" BringIntoViewOnFocusChange="False">
 	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}">
 	    <ItemsControl.ItemTemplate>
 		  <DataTemplate x:DataType="vm:SetupGroupViewModel">

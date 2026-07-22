@@ -10,7 +10,7 @@ namespace Logshot.Services;
 
 public class DatabaseService
 {
-    private SQLiteAsyncConnection _db;
+    private SQLiteAsyncConnection _db = null!;
 
     public DatabaseService()
     {

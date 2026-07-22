@@ -219,7 +219,7 @@
     </Border>
 
     <!-- SCROLLABLE TAKES ROWS WORKSPACE -->
-    <ScrollViewer Grid.Row="2" Name="TakesScrollViewer" VerticalScrollBarVisibility="Visible">
+    <ScrollViewer Grid.Row="2" Name="TakesScrollViewer" VerticalScrollBarVisibility="Visible" BringIntoViewOnFocusChange="False">
       <StackPanel Orientation="Vertical">
 
         <ItemsControl ItemsSource="{Binding Takes}">

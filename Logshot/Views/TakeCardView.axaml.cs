@@ -135,7 +135,7 @@ public partial class TakeCardView : UserControl
         }
     }
 
-    private async void CameraRoll_LostFocus(object? sender, RoutedEventArgs e)
+    private async void CameraRoll_LostFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)
     {
         if (sender is TextBox textBox)
         {
@@ -160,7 +160,7 @@ public partial class TakeCardView : UserControl
         }
     }
 
-    private async void SoundRoll_LostFocus(object? sender, RoutedEventArgs e)
+    private async void SoundRoll_LostFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)
     {
         if (sender is TextBox textBox)
         {

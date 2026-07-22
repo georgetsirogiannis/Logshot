@@ -128,9 +128,9 @@ public partial class ProjectViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task DeleteDay(DayViewModel day)
+    public async Task DeleteDay(DayViewModel? day)
     {
-        if (Days.Contains(day))
+        if (day != null && Days.Contains(day))
         {
             Days.Remove(day);
             await _databaseService.DeleteDayAsync(day.ToModel());
