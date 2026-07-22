@@ -78,18 +78,18 @@ public class PdfExportService
             {
                 row.RelativeItem(1).AlignLeft().Text(t =>
                 {
-                    t.Span("ΣΚΗΝΟΘΕΣΙΑ: ").SemiBold();
-                    t.Span(_project.Director ?? "");
+                    t.Span("ΣΚΗΝΟΘΕΣΙΑ: ").FontSize(8).SemiBold();
+                    t.Span(_project.Director ?? "").FontSize(8);
                 });
                 row.RelativeItem(1).AlignCenter().Text(t =>
                 {
-                    t.Span("ΠΑΡΑΓΩΓΗ: ").SemiBold();
-                    t.Span(_project.ProductionCompany ?? "");
+                    t.Span("ΠΑΡΑΓΩΓΗ: ").FontSize(8).SemiBold();
+                    t.Span(_project.ProductionCompany ?? "").FontSize(8);
                 });
                 row.RelativeItem(1).AlignRight().Text(t =>
                 {
-                    t.Span("ΔΙΕΥΘΥΝΣΗ ΦΩΤΟΓΡΑΦΙΑΣ: ").SemiBold();
-                    t.Span(_project.Dop ?? "");
+                    t.Span("ΔΙΕΥΘΥΝΣΗ ΦΩΤΟΓΡΑΦΙΑΣ: ").FontSize(8).SemiBold();
+                    t.Span(_project.Dop ?? "").FontSize(8);
                 });
             });
 
@@ -97,20 +97,20 @@ public class PdfExportService
             {
                 row.RelativeItem(1).AlignLeft().Text(t =>
                 {
-                    t.Span("ΗΜΕΡΟΜΗΝΙΑ: ").SemiBold();
-                    t.Span(_day.CalendarDate.ToString("dd/MM/yyyy"));
+                    t.Span("ΗΜΕΡΟΜΗΝΙΑ: ").FontSize(10).SemiBold();
+                    t.Span(_day.CalendarDate.ToString("dd/MM/yyyy")).FontSize(10);
                 });
                 row.RelativeItem(1).AlignCenter().Text(t =>
                 {
-                    t.Span("ΗΜΕΡΑ ΓΥΡΙΣΜΑΤΟΣ: ").SemiBold();
-                    t.Span(_day.ShootDayNumber?.ToString() ?? "");
+                    t.Span("ΗΜΕΡΑ ΓΥΡΙΣΜΑΤΟΣ: ").FontSize(10).SemiBold();
+                    t.Span(_day.ShootDayNumber?.ToString() ?? "").FontSize(10);
                 });
                 row.RelativeItem(1).AlignRight().Text(t =>
                 {
-                    t.Span("ΣΕΛΙΔΑ: ").SemiBold();
-                    t.CurrentPageNumber();
-                    t.Span(" / ");
-                    t.TotalPages();
+                    t.Span("ΣΕΛΙΔΑ: ").FontSize(10).SemiBold();
+                    t.CurrentPageNumber().FontSize(10);
+                    t.Span(" / ").FontSize(10);
+                    t.TotalPages().FontSize(10);
                 });
             });
 
@@ -330,7 +330,7 @@ public class PdfExportService
             float h = size.Height;
 
             return $"<svg viewBox='0 0 {w.ToString(CultureInfo.InvariantCulture)} {h.ToString(CultureInfo.InvariantCulture)}' xmlns='http://www.w3.org/2000/svg'>" +
-                   $"<line x1='{w.ToString(CultureInfo.InvariantCulture)}' y1='0' x2='0' y2='{h.ToString(CultureInfo.InvariantCulture)}' stroke='black' stroke-width='1.5'/>" +
+                   $"<line x1='{w.ToString(CultureInfo.InvariantCulture)}' y1='0' x2='0' y2='{h.ToString(CultureInfo.InvariantCulture)}' stroke='black' stroke-width='0.75'/>" +
                    "</svg>";
         });
     }
@@ -356,26 +356,53 @@ public class PdfExportService
 
         if (isNoRoll)
         {
-            RenderNoRollCell(cell, 40f);
+            if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))
+            {
+                cell.Layers(layers =>
+                {
+                    layers.PrimaryLayer().Element(c => RenderNoRollCell(c, 40f));
+                    layers.Layer().AlignTop().AlignCenter().PaddingTop(1).Text(rollNumber).Bold().Underline().FontSize(8f);
+                });
+            }
+            else
+            {
+                RenderNoRollCell(cell, 40f);
+            }
             return;
         }
 
-        cell.AlignCenter().AlignMiddle().Column(col =>
+        if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))
         {
-            if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))
+            cell.Column(col =>
             {
-                col.Item().AlignCenter().Text(rollNumber).Bold().Underline().FontSize(8f);
-            }
-
-            if (showRoll && !string.IsNullOrWhiteSpace(rollVal))
+                col.Item().AlignTop().AlignCenter().PaddingTop(1).Text(rollNumber).Bold().Underline().FontSize(8f);
+                col.Item().AlignCenter().AlignMiddle().Column(textCol =>
+                {
+                    if (showRoll && !string.IsNullOrWhiteSpace(rollVal))
+                    {
+                        textCol.Item().AlignCenter().Text(rollVal).FontSize(8.5f);
+                    }
+                    else if (!showRoll)
+                    {
+                        textCol.Item().AlignCenter().Text("—″—").FontSize(8.5f);
+                    }
+                });
+            });
+        }
+        else
+        {
+            cell.AlignCenter().AlignMiddle().Column(col =>
             {
-                col.Item().AlignCenter().Text(rollVal).FontSize(8.5f);
-            }
-            else if (!showRoll)
-            {
-                col.Item().AlignCenter().Text("—″—").FontSize(8.5f);
-            }
-        });
+                if (showRoll && !string.IsNullOrWhiteSpace(rollVal))
+                {
+                    col.Item().AlignCenter().Text(rollVal).FontSize(8.5f);
+                }
+                else if (!showRoll)
+                {
+                    col.Item().AlignCenter().Text("—″—").FontSize(8.5f);
+                }
+            });
+        }
     }
 
     private void RenderSoundCell(IContainer cell, TakeViewModel take)
