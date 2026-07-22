@@ -462,7 +462,7 @@ public class PdfExportService
         {
             cell.Layers(layers =>
             {
-                layers.Layer().Extend().Svg(CircledTakeSvg);
+                layers.Layer().AlignCenter().AlignMiddle().Svg(CircledTakeSvg);
                 layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
             });
         }
@@ -470,7 +470,7 @@ public class PdfExportService
         {
             cell.Layers(layers =>
             {
-                layers.Layer().Extend().Svg(FailedTakeSvg);
+                layers.Layer().AlignCenter().AlignMiddle().Svg(FailedTakeSvg);
                 layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
             });
         }
