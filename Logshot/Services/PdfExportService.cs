@@ -373,20 +373,21 @@ public class PdfExportService
 
         if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))
         {
-            cell.Column(col =>
+            cell.Layers(layers =>
             {
-                col.Item().AlignTop().AlignCenter().PaddingTop(1).Text(rollNumber).Bold().Underline().FontSize(8f);
-                col.Item().AlignCenter().AlignMiddle().Column(textCol =>
+                layers.PrimaryLayer().PaddingTop(12).AlignCenter().AlignMiddle().Column(col =>
                 {
                     if (showRoll && !string.IsNullOrWhiteSpace(rollVal))
                     {
-                        textCol.Item().AlignCenter().Text(rollVal).FontSize(8.5f);
+                        col.Item().AlignCenter().Text(rollVal).FontSize(8.5f);
                     }
                     else if (!showRoll)
                     {
-                        textCol.Item().AlignCenter().Text("—″—").FontSize(8.5f);
+                        col.Item().AlignCenter().Text("—″—").FontSize(8.5f);
                     }
                 });
+
+                layers.Layer().AlignTop().AlignCenter().PaddingTop(1).Text(rollNumber).Bold().Underline().FontSize(8f);
             });
         }
         else
