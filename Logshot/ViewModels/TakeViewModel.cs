@@ -15,6 +15,7 @@ public partial class TakeViewModel : ViewModelBase
 {
     private readonly DatabaseService _databaseService;
     private readonly CameraDataManager _cameraDataManager;
+    private bool _isSuppressingSave = false;
 
     [ObservableProperty]
     private string _id = string.Empty;
@@ -96,20 +97,8 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isNoBoard = false;
 
-    partial void OnIsNoBoardChanged(bool value)
-    {
-        if (value) IsEndBoard = false;
-        _ = SaveTakeCommand.ExecuteAsync(null);
-    }
-
     [ObservableProperty]
     private bool _isEndBoard = false;
-
-    partial void OnIsEndBoardChanged(bool value)
-    {
-        if (value) IsNoBoard = false;
-        _ = SaveTakeCommand.ExecuteAsync(null);
-    }
 
     // False Clip Tracking
     [ObservableProperty]
@@ -195,26 +184,114 @@ public partial class TakeViewModel : ViewModelBase
     partial void OnEpisodeChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayEpisode));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     partial void OnSceneChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayScene));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnShotChanged(int value)
+    {
+        OnPropertyChanged(nameof(DisplayShot));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnTakeNumberChanged(int value)
+    {
+        OnPropertyChanged(nameof(DisplayTakeNumber));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnIsCircledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowCircledActive));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnIsFailedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowFailedActive));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnIsPickupChanged(bool value)
+    {
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     partial void OnTakeNotesChanged(string value)
     {
-        _ = SaveTakeCommand.ExecuteAsync(null);
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
+
+    partial void OnFalseStartCountChanged(int value)
+    {
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
 
     partial void OnIsLongStartChanged(bool value)
     {
-        _ = SaveTakeCommand.ExecuteAsync(null);
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     partial void OnIsBlooperChanged(bool value)
     {
-        _ = SaveTakeCommand.ExecuteAsync(null);
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnIsNoBoardChanged(bool value)
+    {
+        if (value) IsEndBoard = false;
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnIsEndBoardChanged(bool value)
+    {
+        if (value) IsNoBoard = false;
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     partial void OnSoundNotesChanged(string value)
@@ -224,12 +301,19 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayScene));
         OnPropertyChanged(nameof(DisplayShot));
         OnPropertyChanged(nameof(DisplayTakeNumber));
-        _ = SaveTakeCommand.ExecuteAsync(null);
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     partial void OnIsSoundNoRollChanged(bool value)
     {
         OnPropertyChanged(nameof(ShowSoundNormal));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     public bool ShowSoundNormal => !IsSoundNoRoll && !ShowRowCrossed;
@@ -239,27 +323,35 @@ public partial class TakeViewModel : ViewModelBase
     /// </summary>
     public void LoadFromModel(Take take)
     {
-        Id = take.Id;
-        DayId = take.DayId;
-        SequenceOrder = take.SequenceOrder;
-        Episode = take.Episode;
-        Scene = take.Scene;
-        Shot = take.Shot;
-        TakeNumber = take.TakeNumber;
-        CameraData = take.CameraData;
-        SoundNotes = take.SoundNotes;
-        IsSoundNoRoll = take.IsSoundNoRoll;
-        TakeNotes = take.TakeNotes;
-        FalseStartCount = take.FalseStartCount;
-        IsLongStart = take.IsLongStart;
-        IsCircled = take.IsCircled;
-        IsFailed = take.IsFailed;
-        IsPickup = take.IsPickup;
-        IsBlooper = take.IsBlooper;
-        IsNoBoard = take.IsNoBoard;
-        IsEndBoard = take.IsEndBoard;
-        VoidCameraLabels = take.VoidCameraLabels;
-        CreatedAt = take.CreatedAt;
+        _isSuppressingSave = true;
+        try
+        {
+            Id = take.Id;
+            DayId = take.DayId;
+            SequenceOrder = take.SequenceOrder;
+            Episode = take.Episode;
+            Scene = take.Scene;
+            Shot = take.Shot;
+            TakeNumber = take.TakeNumber;
+            CameraData = take.CameraData;
+            SoundNotes = take.SoundNotes;
+            IsSoundNoRoll = take.IsSoundNoRoll;
+            TakeNotes = take.TakeNotes;
+            FalseStartCount = take.FalseStartCount;
+            IsLongStart = take.IsLongStart;
+            IsCircled = take.IsCircled;
+            IsFailed = take.IsFailed;
+            IsPickup = take.IsPickup;
+            IsBlooper = take.IsBlooper;
+            IsNoBoard = take.IsNoBoard;
+            IsEndBoard = take.IsEndBoard;
+            VoidCameraLabels = take.VoidCameraLabels;
+            CreatedAt = take.CreatedAt;
+        }
+        finally
+        {
+            _isSuppressingSave = false;
+        }
     }
 
     /// <summary>
@@ -459,6 +551,11 @@ public partial class TakeViewModel : ViewModelBase
         foreach (var cell in ExtraCameraRolls)
         {
             cell.NotifyRollChanged();
+        }
+
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
         }
     }
 
@@ -674,17 +771,14 @@ public partial class TakeViewModel : ViewModelBase
         {
             cell.NotifyRollChanged();
         }
+
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
-    partial void OnIsCircledChanged(bool value)
-    {
-        OnPropertyChanged(nameof(ShowCircledActive));
-    }
-
-    partial void OnIsFailedChanged(bool value)
-    {
-        OnPropertyChanged(nameof(ShowFailedActive));
-    }
+    
 
     public CameraRollCell? ExtraCell1 => ExtraCameraRolls.ElementAtOrDefault(0);
     public CameraRollCell? ExtraCell2 => ExtraCameraRolls.ElementAtOrDefault(1);

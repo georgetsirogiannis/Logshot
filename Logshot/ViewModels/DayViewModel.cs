@@ -39,6 +39,7 @@ public partial class DayViewModel : ViewModelBase
     private readonly DatabaseService _databaseService;
     private readonly CameraDataManager _cameraDataManager;
     private readonly ContinuityService _continuityService;
+    private bool _isSuppressingSave = false;
 
     [ObservableProperty]
     private string _id = string.Empty;
@@ -57,7 +58,10 @@ public partial class DayViewModel : ViewModelBase
 
     partial void OnGeneralNotesChanged(string value)
     {
-        _ = SaveDayCommand.ExecuteAsync(null);
+        if (!_isSuppressingSave)
+        {
+            _ = SaveDayCommand.ExecuteAsync(null);
+        }
     }
 
     [ObservableProperty]
@@ -69,9 +73,29 @@ public partial class DayViewModel : ViewModelBase
     partial void OnIsFinalizedChanged(bool value)
     {
         OnPropertyChanged(nameof(IsNotFinalized));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveDayCommand.ExecuteAsync(null);
+        }
     }
 
     public bool IsNotFinalized => !IsFinalized;
+
+    partial void OnShootDayNumberChanged(string value)
+    {
+        if (!_isSuppressingSave)
+        {
+            _ = SaveDayCommand.ExecuteAsync(null);
+        }
+    }
+
+    partial void OnCalendarDateChanged(DateTime value)
+    {
+        if (!_isSuppressingSave)
+        {
+            _ = SaveDayCommand.ExecuteAsync(null);
+        }
+    }
 
     [ObservableProperty]
     private DateTime _createdAt = DateTime.UtcNow;
@@ -358,13 +382,21 @@ public partial class DayViewModel : ViewModelBase
     /// </summary>
     public void LoadFromModel(Day day)
     {
-        Id = day.Id;
-        ProjectId = day.ProjectId;
-        ShootDayNumber = day.ShootDayNumber;
-        CalendarDate = day.CalendarDate;
-        GeneralNotes = day.GeneralNotes;
-        IsFinalized = day.IsFinalized;
-        CreatedAt = day.CreatedAt;
+        _isSuppressingSave = true;
+        try
+        {
+            Id = day.Id;
+            ProjectId = day.ProjectId;
+            ShootDayNumber = day.ShootDayNumber;
+            CalendarDate = day.CalendarDate;
+            GeneralNotes = day.GeneralNotes;
+            IsFinalized = day.IsFinalized;
+            CreatedAt = day.CreatedAt;
+        }
+        finally
+        {
+            _isSuppressingSave = false;
+        }
     }
 
     /// <summary>

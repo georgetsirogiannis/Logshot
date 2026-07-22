@@ -17,6 +17,26 @@ public class DatabaseService
         // Empty constructor. We initialize asynchronously below to keep the app startup fast.
     }
 
+    // --- Write Queue: makes sure saves finish in the order they were made, and lets us wait for them before the app closes ---
+    private Task _writeQueue = Task.CompletedTask;
+    private readonly object _queueLock = new();
+
+    private Task<T> Enqueue<T>(Func<Task<T>> operation)
+    {
+        lock (_queueLock)
+        {
+            var task = _writeQueue.ContinueWith(_ => operation(), TaskScheduler.Default).Unwrap();
+            _writeQueue = task;
+            return task;
+        }
+    }
+
+    public Task WaitForPendingWritesAsync()
+    {
+        lock (_queueLock)
+            return _writeQueue;
+    }
+
     public async Task InitAsync()
     {
         // If the connection is already active, don't do anything
@@ -37,11 +57,14 @@ public class DatabaseService
 
     // --- CRUD OPERATIONS (Create, Read, Update, Delete) ---
 
-    public async Task<int> SaveTakeAsync(Take take)
+    public Task<int> SaveTakeAsync(Take take)
     {
-        await InitAsync();
-        // InsertOrReplaceAsync checks the ID. If it's new, it inserts. If it exists, it updates perfectly.
-        return await _db.InsertOrReplaceAsync(take);
+        return Enqueue(async () =>
+        {
+            await InitAsync();
+            // InsertOrReplaceAsync checks the ID. If it's new, it inserts. If it exists, it updates perfectly.
+            return await _db.InsertOrReplaceAsync(take);
+        });
     }
 
     public async Task<List<Take>> GetTakesForDayAsync(string dayId)
@@ -54,16 +77,22 @@ public class DatabaseService
                         .ToListAsync();
     }
 
-    public async Task<int> SaveDayAsync(Day day)
+    public Task<int> SaveDayAsync(Day day)
     {
-        await InitAsync();
-        return await _db.InsertOrReplaceAsync(day);
+        return Enqueue(async () =>
+        {
+            await InitAsync();
+            return await _db.InsertOrReplaceAsync(day);
+        });
     }
 
-    public async Task<int> SaveProjectAsync(Project project)
+    public Task<int> SaveProjectAsync(Project project)
     {
-        await InitAsync();
-        return await _db.InsertOrReplaceAsync(project);
+        return Enqueue(async () =>
+        {
+            await InitAsync();
+            return await _db.InsertOrReplaceAsync(project);
+        });
     }
 
     public async Task<int> DeleteTakeAsync(Take take)

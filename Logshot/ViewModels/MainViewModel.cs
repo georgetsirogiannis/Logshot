@@ -9,6 +9,7 @@ namespace Logshot.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     private readonly DatabaseService _databaseService;
+    public DatabaseService DatabaseService => _databaseService;
 
     [ObservableProperty]
     private AppViewModel _appViewModel;
