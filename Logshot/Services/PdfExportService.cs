@@ -133,127 +133,117 @@ public class PdfExportService
         int extraCount = extraCameras.Count;
         int totalColumnsCount = 2 + extraCount + 6;
 
-        container.Table(table =>
+        container.Column(column =>
         {
-            table.ColumnsDefinition(columns =>
+            column.Item().Table(table =>
             {
-                if (extraCount == 0)
+                table.ColumnsDefinition(columns =>
                 {
-                    columns.RelativeColumn(12.5f);
-                    columns.RelativeColumn(12.5f);
-                    columns.RelativeColumn(11.0f);
-                    columns.RelativeColumn(4.5f);
-                    columns.RelativeColumn(6.25f);
-                    columns.RelativeColumn(6.25f);
-                    columns.RelativeColumn(6.25f);
-                    columns.RelativeColumn(40.75f);
-                }
-                else if (extraCount == 1)
+                    if (extraCount == 0)
+                    {
+                        columns.RelativeColumn(12.5f);
+                        columns.RelativeColumn(12.5f);
+                        columns.RelativeColumn(11.0f);
+                        columns.RelativeColumn(4.5f);
+                        columns.RelativeColumn(6.25f);
+                        columns.RelativeColumn(6.25f);
+                        columns.RelativeColumn(6.25f);
+                        columns.RelativeColumn(40.75f);
+                    }
+                    else if (extraCount == 1)
+                    {
+                        columns.RelativeColumn(11.11f);
+                        columns.RelativeColumn(11.11f);
+                        columns.RelativeColumn(11.11f);
+                        columns.RelativeColumn(9.78f);
+                        columns.RelativeColumn(4.00f);
+                        columns.RelativeColumn(5.56f);
+                        columns.RelativeColumn(5.56f);
+                        columns.RelativeColumn(5.56f);
+                        columns.RelativeColumn(36.22f);
+                    }
+                    else
+                    {
+                        float totalUnits = 8f + extraCount;
+                        float camWeight = 1.0f / totalUnits * 100f;
+                        columns.RelativeColumn(camWeight);
+                        columns.RelativeColumn(camWeight);
+                        foreach (var _ in extraCameras) columns.RelativeColumn(camWeight);
+                        columns.RelativeColumn(0.88f / totalUnits * 100f);
+                        columns.RelativeColumn(0.36f / totalUnits * 100f);
+                        columns.RelativeColumn(0.50f / totalUnits * 100f);
+                        columns.RelativeColumn(0.50f / totalUnits * 100f);
+                        columns.RelativeColumn(0.50f / totalUnits * 100f);
+                        columns.RelativeColumn(3.26f / totalUnits * 100f);
+                    }
+                });
+
+                table.Header(header =>
                 {
-                    columns.RelativeColumn(11.11f);
-                    columns.RelativeColumn(11.11f);
-                    columns.RelativeColumn(11.11f);
-                    columns.RelativeColumn(9.78f);
-                    columns.RelativeColumn(4.00f);
-                    columns.RelativeColumn(5.56f);
-                    columns.RelativeColumn(5.56f);
-                    columns.RelativeColumn(5.56f);
-                    columns.RelativeColumn(36.22f);
+                    header.Cell().Element(HeaderStyle).Text(t => t.Span("CAM A").Bold().FontColor(Colors.White));
+                    header.Cell().Element(HeaderStyle).Text(t => t.Span("CAM B").Bold().FontColor(Colors.White));
+                    foreach (var cam in extraCameras)
+                    {
+                        header.Cell().Element(HeaderStyle).Text(t => t.Span(cam).Bold().FontColor(Colors.White));
+                    }
+                    header.Cell().Element(HeaderStyle).Text(t => t.Span("SOUND").Bold().FontColor(Colors.White));
+                    header.Cell().Element(HeaderStyle).Text(t => t.Span("ΕΠ").Bold().FontColor(Colors.White));
+                    header.Cell().Element(HeaderStyle).Text(t => t.Span("ΣΚ").Bold().FontColor(Colors.White));
+                    header.Cell().Element(HeaderStyle).Text(t => t.Span("ΠΛΑΝΟ").Bold().FontColor(Colors.White));
+                    header.Cell().Element(HeaderStyle).Text(t => t.Span("ΛΗΨΗ").Bold().FontColor(Colors.White));
+                    header.Cell().Element(NotesHeaderStyle).Text(t => t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ").Bold().FontColor(Colors.White));
+
+                    IContainer HeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(5).PaddingHorizontal(2).AlignCenter().AlignMiddle();
+                    IContainer NotesHeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle();
+                });
+
+                if (_day.Takes != null && _day.Takes.Any())
+                {
+                    foreach (var take in _day.Takes)
+                    {
+                        RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
+                            showRoll: take.ShowCamARoll, rollVal: take.CamARoll,
+                            isNoRoll: take.IsCamANoRoll, isVoided: take.IsCamAVoided,
+                            isRollChangeMarked: take.IsCamARollChangeMarked, rollNumber: take.CamARollNumber);
+
+                        RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
+                            showRoll: take.ShowCamBRoll, rollVal: take.CamBRoll,
+                            isNoRoll: take.IsCamBNoRoll, isVoided: take.IsCamBVoided,
+                            isRollChangeMarked: take.IsCamBRollChangeMarked, rollNumber: take.CamBRollNumber);
+
+                        foreach (var camLabel in extraCameras)
+                        {
+                            var extraCell = take.ExtraCameraRolls?.FirstOrDefault(c => c.Label == camLabel);
+                            RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
+                                showRoll: extraCell?.ShowRoll ?? true,
+                                rollVal: extraCell?.Roll ?? "",
+                                isNoRoll: extraCell?.IsNoRoll ?? false,
+                                isVoided: extraCell?.IsVoided ?? false,
+                                isRollChangeMarked: extraCell?.IsRollChangeMarked ?? false,
+                                rollNumber: extraCell?.RollNumber ?? "");
+                        }
+
+                        RenderSoundCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
+                        RenderEpisodeCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
+                        RenderSceneCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
+                        RenderShotCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
+                        RenderTakeCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
+                        RenderNotesCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
+                    }
                 }
                 else
                 {
-                    float totalUnits = 8f + extraCount;
-                    float camWeight = 1.0f / totalUnits * 100f;
-                    columns.RelativeColumn(camWeight);
-                    columns.RelativeColumn(camWeight);
-                    foreach (var _ in extraCameras) columns.RelativeColumn(camWeight);
-                    columns.RelativeColumn(0.88f / totalUnits * 100f);
-                    columns.RelativeColumn(0.36f / totalUnits * 100f);
-                    columns.RelativeColumn(0.50f / totalUnits * 100f);
-                    columns.RelativeColumn(0.50f / totalUnits * 100f);
-                    columns.RelativeColumn(0.50f / totalUnits * 100f);
-                    columns.RelativeColumn(3.26f / totalUnits * 100f);
-                }
-            });
-
-            table.Header(header =>
-            {
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("CAM A").Bold().FontColor(Colors.White));
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("CAM B").Bold().FontColor(Colors.White));
-                foreach (var cam in extraCameras)
-                {
-                    header.Cell().Element(HeaderStyle).Text(t => t.Span(cam).Bold().FontColor(Colors.White));
-                }
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("SOUND").Bold().FontColor(Colors.White));
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("ΕΠ").Bold().FontColor(Colors.White));
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("ΣΚ").Bold().FontColor(Colors.White));
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("ΠΛΑΝΟ").Bold().FontColor(Colors.White));
-                header.Cell().Element(HeaderStyle).Text(t => t.Span("ΛΗΨΗ").Bold().FontColor(Colors.White));
-                header.Cell().Element(NotesHeaderStyle).Text(t => t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ").Bold().FontColor(Colors.White));
-
-                IContainer HeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(5).PaddingHorizontal(2).AlignCenter().AlignMiddle();
-                IContainer NotesHeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle();
-            });
-
-            if (_day.Takes != null && _day.Takes.Any())
-            {
-                foreach (var take in _day.Takes)
-                {
-                    RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
-                        showRoll: take.ShowCamARoll, rollVal: take.CamARoll,
-                        isNoRoll: take.IsCamANoRoll, isVoided: take.IsCamAVoided,
-                        isRollChangeMarked: take.IsCamARollChangeMarked, rollNumber: take.CamARollNumber);
-
-                    RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
-                        showRoll: take.ShowCamBRoll, rollVal: take.CamBRoll,
-                        isNoRoll: take.IsCamBNoRoll, isVoided: take.IsCamBVoided,
-                        isRollChangeMarked: take.IsCamBRollChangeMarked, rollNumber: take.CamBRollNumber);
-
-                    foreach (var camLabel in extraCameras)
-                    {
-                        var extraCell = take.ExtraCameraRolls?.FirstOrDefault(c => c.Label == camLabel);
-                        RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
-                            showRoll: extraCell?.ShowRoll ?? true,
-                            rollVal: extraCell?.Roll ?? "",
-                            isNoRoll: extraCell?.IsNoRoll ?? false,
-                            isVoided: extraCell?.IsVoided ?? false,
-                            isRollChangeMarked: extraCell?.IsRollChangeMarked ?? false,
-                            rollNumber: extraCell?.RollNumber ?? "");
-                    }
-
-                    RenderSoundCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
-                    RenderEpisodeCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
-                    RenderSceneCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
-                    RenderShotCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
-                    RenderTakeCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
-                    RenderNotesCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take);
-                }
-
-                if (_day.IsFinalized)
-                {
-                    int count = _day.Takes.Count;
-                    int remaining = 12 - (count % 12);
-                    if (remaining == 12 && count > 0) remaining = 0;
-
-                    float fillerHeight = Math.Max(50f, remaining * 36f);
-
                     table.Cell().ColumnSpan((uint)totalColumnsCount)
-                         .Element(c => c.Border(0.5f).BorderColor(Colors.Black).MinHeight(fillerHeight))
-                         .Layers(layers =>
-                         {
-                             layers.Layer().Svg(CrossHatchSvg);
-                             layers.PrimaryLayer().AlignCenter().AlignMiddle()
-                                   .Border(1.5f).BorderColor(Colors.Black).Background(Colors.White)
-                                   .PaddingHorizontal(20).PaddingVertical(8)
-                                   .Text($"END DAY {_day.ShootDayNumber}").FontSize(14).Bold();
-                         });
+                         .Element(c => c.Border(0.5f).BorderColor(Colors.Black).MinHeight(54).Padding(10).AlignCenter().AlignMiddle())
+                         .Text(t => t.Span("Δεν υπάρχουν λήψεις για αυτή την ημέρα.").Italic().FontColor(Colors.Grey.Medium));
                 }
-            }
-            else
+            });
+
+            if (_day.IsFinalized && _day.Takes != null && _day.Takes.Any())
             {
-                table.Cell().ColumnSpan((uint)totalColumnsCount)
-                     .Element(c => c.Border(0.5f).BorderColor(Colors.Black).MinHeight(54).Padding(10).AlignCenter().AlignMiddle())
-                     .Text(t => t.Span("Δεν υπάρχουν λήψεις για αυτή την ημέρα.").Italic().FontColor(Colors.Grey.Medium));
+                column.Item().BorderTop(0).Border(0.5f).BorderColor(Colors.Black).Background(Colors.White)
+                      .PaddingVertical(6).AlignCenter().AlignMiddle()
+                      .Text($"END DAY {_day.ShootDayNumber}").FontSize(11f).Bold();
             }
         });
     }
