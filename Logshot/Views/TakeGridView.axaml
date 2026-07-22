@@ -118,9 +118,15 @@
 
         <!-- Extra Camera 1 Header (CAM C) -->
         <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="3" Padding="4" IsVisible="{Binding IsExtraCam1Visible}">
-          <Grid ColumnDefinitions="*,Auto">
+          <Grid ColumnDefinitions="*,Auto,Auto">
             <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Grid.Column="0" HorizontalAlignment="Center" Text="{Binding ExtraCamera1Label}" VerticalAlignment="Center"/>
-            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
+            <ToggleButton Grid.Column="1" Background="Transparent" FontSize="10" Padding="4,0" ToolTip.Tip="Toggle Enable/Disable" VerticalAlignment="Center" Margin="0,0,2,0" IsChecked="{Binding ExtraCamera1.IsDisabled, FallbackValue=False}">
+              <Panel>
+                <TextBlock Text="ON" IsVisible="{Binding !$parent[ToggleButton].IsChecked}" Foreground="{StaticResource ActionAccent}" FontWeight="Bold"/>
+                <TextBlock Text="OFF" IsVisible="{Binding $parent[ToggleButton].IsChecked}" Foreground="{StaticResource FailRed}" FontWeight="Bold"/>
+              </Panel>
+            </ToggleButton>
+            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="2" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
               <Button.Flyout>
                 <Flyout>
                   <StackPanel Spacing="10">
@@ -135,9 +141,15 @@
 
         <!-- Extra Camera 2 Header (CAM D) -->
         <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="4" Padding="4" IsVisible="{Binding IsExtraCam2Visible}">
-          <Grid ColumnDefinitions="*,Auto">
+          <Grid ColumnDefinitions="*,Auto,Auto">
             <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Grid.Column="0" HorizontalAlignment="Center" Text="{Binding ExtraCamera2Label}" VerticalAlignment="Center"/>
-            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
+            <ToggleButton Grid.Column="1" Background="Transparent" FontSize="10" Padding="4,0" ToolTip.Tip="Toggle Enable/Disable" VerticalAlignment="Center" Margin="0,0,2,0" IsChecked="{Binding ExtraCamera2.IsDisabled, FallbackValue=False}">
+              <Panel>
+                <TextBlock Text="ON" IsVisible="{Binding !$parent[ToggleButton].IsChecked}" Foreground="{StaticResource ActionAccent}" FontWeight="Bold"/>
+                <TextBlock Text="OFF" IsVisible="{Binding $parent[ToggleButton].IsChecked}" Foreground="{StaticResource FailRed}" FontWeight="Bold"/>
+              </Panel>
+            </ToggleButton>
+            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="2" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
               <Button.Flyout>
                 <Flyout>
                   <StackPanel Spacing="10">
@@ -152,9 +164,15 @@
 
         <!-- Extra Camera 3 Header (CAM E) -->
         <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="5" Padding="4" IsVisible="{Binding IsExtraCam3Visible}">
-          <Grid ColumnDefinitions="*,Auto">
+          <Grid ColumnDefinitions="*,Auto,Auto">
             <TextBlock FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Grid.Column="0" HorizontalAlignment="Center" Text="{Binding ExtraCamera3Label}" VerticalAlignment="Center"/>
-            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
+            <ToggleButton Grid.Column="1" Background="Transparent" FontSize="10" Padding="4,0" ToolTip.Tip="Toggle Enable/Disable" VerticalAlignment="Center" Margin="0,0,2,0" IsChecked="{Binding ExtraCamera3.IsDisabled, FallbackValue=False}">
+              <Panel>
+                <TextBlock Text="ON" IsVisible="{Binding !$parent[ToggleButton].IsChecked}" Foreground="{StaticResource ActionAccent}" FontWeight="Bold"/>
+                <TextBlock Text="OFF" IsVisible="{Binding $parent[ToggleButton].IsChecked}" Foreground="{StaticResource FailRed}" FontWeight="Bold"/>
+              </Panel>
+            </ToggleButton>
+            <Button Background="Transparent" Content="✕" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="2" Padding="4,0" ToolTip.Tip="Remove Camera" VerticalAlignment="Center">
               <Button.Flyout>
                 <Flyout>
                   <StackPanel Spacing="10">

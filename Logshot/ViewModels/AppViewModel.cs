@@ -564,7 +564,7 @@ public partial class AppViewModel : ViewModelBase
             TakeNumber = (lastValidTake?.TakeNumber ?? 0) + 1,
             Episode = lastValidTake?.Episode ?? string.Empty,
             Scene = lastValidTake?.Scene ?? string.Empty,
-            CameraData = lastValidTake?.CameraData ?? "{}"
+            CameraData = CurrentDay.SyncCameraDataWithActiveCameras(lastValidTake?.CameraData)
         };
         var takeVM = new TakeViewModel(_databaseService);
         takeVM.LoadFromModel(newTake);

@@ -13,6 +13,27 @@ using Logshot.Services;
 
 namespace Logshot.ViewModels;
 
+public partial class ExtraCameraHeaderState : ObservableObject
+{
+    private readonly DayViewModel _parent;
+    public string Label { get; }
+
+    [ObservableProperty]
+    private bool _isDisabled;
+
+    partial void OnIsDisabledChanged(bool value)
+    {
+        _parent.SetCameraDisabled(Label, value);
+    }
+
+    public ExtraCameraHeaderState(DayViewModel parent, string label, bool isDisabled)
+    {
+        _parent = parent;
+        Label = label;
+        _isDisabled = isDisabled;
+    }
+}
+
 public partial class DayViewModel : ViewModelBase
 {
     private readonly DatabaseService _databaseService;
@@ -116,6 +137,45 @@ public partial class DayViewModel : ViewModelBase
     /// </summary>
     public IEnumerable<string> ExtraActiveCameras => ActiveCameras.Where(c => c != "CAM A" && c != "CAM B");
 
+    public ObservableCollection<string> DisabledCameras { get; } = new();
+    public ObservableCollection<ExtraCameraHeaderState> ExtraCameraHeaders { get; } = new();
+
+    public ExtraCameraHeaderState? ExtraCamera1 => ExtraCameraHeaders.ElementAtOrDefault(0);
+    public ExtraCameraHeaderState? ExtraCamera2 => ExtraCameraHeaders.ElementAtOrDefault(1);
+    public ExtraCameraHeaderState? ExtraCamera3 => ExtraCameraHeaders.ElementAtOrDefault(2);
+
+    public void SetCameraDisabled(string label, bool isDisabled)
+    {
+        if (isDisabled && !DisabledCameras.Contains(label))
+            DisabledCameras.Add(label);
+        else if (!isDisabled && DisabledCameras.Contains(label))
+            DisabledCameras.Remove(label);
+    }
+
+    private void UpdateExtraCameraHeaders()
+    {
+        var extras = ActiveCameras.Where(c => c != "CAM A" && c != "CAM B").ToList();
+
+        for (int i = ExtraCameraHeaders.Count - 1; i >= 0; i--)
+        {
+            if (!extras.Contains(ExtraCameraHeaders[i].Label))
+                ExtraCameraHeaders.RemoveAt(i);
+        }
+
+        foreach (var cam in extras)
+        {
+            if (!ExtraCameraHeaders.Any(h => h.Label == cam))
+            {
+                bool isDisabled = DisabledCameras.Contains(cam);
+                ExtraCameraHeaders.Add(new ExtraCameraHeaderState(this, cam, isDisabled));
+            }
+        }
+
+        OnPropertyChanged(nameof(ExtraCamera1));
+        OnPropertyChanged(nameof(ExtraCamera2));
+        OnPropertyChanged(nameof(ExtraCamera3));
+    }
+
     public DayViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;
@@ -147,6 +207,7 @@ public partial class DayViewModel : ViewModelBase
     {
         cameras.CollectionChanged += (_, _) =>
         {
+            UpdateExtraCameraHeaders();
             OnPropertyChanged(nameof(ExtraActiveCameras));
             OnPropertyChanged(nameof(ExtraCam1Width));
             OnPropertyChanged(nameof(ExtraCam2Width));
@@ -159,6 +220,7 @@ public partial class DayViewModel : ViewModelBase
             OnPropertyChanged(nameof(ExtraCamera3Label));
             OnPropertyChanged(nameof(NotesWidth));
             OnPropertyChanged(nameof(ExtraActiveCameras));
+            UpdateExtraCameraHeaders();
         };
     }
 
@@ -172,7 +234,7 @@ public partial class DayViewModel : ViewModelBase
     /// Synchronizes inherited or previous camera data with the Day's current ActiveCameras.
     /// This ensures any extra cameras added mid-day are injected into brand new shots and takes.
     /// </summary>
-    private string SyncCameraDataWithActiveCameras(string baseCameraData)
+    public string SyncCameraDataWithActiveCameras(string? baseCameraData)
     {
         // Fallback to default cameras if the base data is empty
         if (string.IsNullOrWhiteSpace(baseCameraData) || baseCameraData == "{}")
@@ -197,6 +259,18 @@ public partial class DayViewModel : ViewModelBase
         foreach (var kvp in cameraData.Cameras)
         {
             kvp.Value.RollChangeMarker = false;
+
+            if (kvp.Key != "CAM A" && kvp.Key != "CAM B")
+            {
+                if (DisabledCameras.Contains(kvp.Key))
+                {
+                    kvp.Value.NoRoll = true;
+                }
+                else
+                {
+                    kvp.Value.NoRoll = false;
+                }
+            }
         }
 
         return _cameraDataManager.SerializeCameraData(cameraData);
