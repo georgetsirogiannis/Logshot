@@ -473,15 +473,26 @@ public class PdfExportService
 
         if (take.IsSoundOnlyRow || take.TakeNumber <= 0) return;
 
-        string takeText = take.TakeNumber.ToString();
-        if (take.IsPickup) takeText += " PU";
+        // Shared text configuration handling the take number and optional pickup superscript
+        Action<TextDescriptor> configureText = text =>
+        {
+            text.Span(take.TakeNumber.ToString());
+            if (take.IsPickup)
+            {
+                text.Span("PU").Superscript();
+            }
+        };
 
         if (take.IsCircled)
         {
             cell.Layers(layers =>
             {
                 layers.Layer().AlignCenter().AlignMiddle().Svg(CircledTakeSvg);
-                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(10f);
+                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(text =>
+                {
+                    text.DefaultTextStyle(x => x.Bold().FontSize(10f));
+                    configureText(text);
+                });
             });
         }
         else if (take.IsFailed)
@@ -489,12 +500,20 @@ public class PdfExportService
             cell.Layers(layers =>
             {
                 layers.Layer().AlignCenter().AlignMiddle().Svg(FailedTakeSvg);
-                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).FontSize(10f);
+                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(text =>
+                {
+                    text.DefaultTextStyle(x => x.FontSize(10f));
+                    configureText(text);
+                });
             });
         }
         else
         {
-            cell.AlignCenter().AlignMiddle().Text(takeText).FontSize(10f);
+            cell.AlignCenter().AlignMiddle().Text(text =>
+            {
+                text.DefaultTextStyle(x => x.FontSize(10f));
+                configureText(text);
+            });
         }
     }
 

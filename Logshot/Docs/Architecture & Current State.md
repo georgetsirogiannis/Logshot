@@ -1,6 +1,6 @@
 # Logshot Architecture & Current State
 
-CAUTION: ~~THIS IS AN OUTDATED REPORT~~ **UPDATED REPORT**
+CAUTION: THIS MIGHT BE AN OUTDATED REPORT
 
 **Last Updated:** ~~Phase 2 Complete (All Core Business Logic)~~ **Phase 5 Complete (Desktop & Mobile UI, Gestures & Shorthands)**  
 **Project Target:** .NET 10  

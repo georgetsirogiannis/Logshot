@@ -100,7 +100,7 @@
                 <Panel IsVisible="{Binding ShowCamANormal}" VerticalAlignment="Center">
                   <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
                   <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamARoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                  <TextBox Text="{Binding CamARoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamANotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                  <TextBox Text="{Binding CamARoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamANotEditable}" AcceptsReturn="True" TextWrapping="Wrap" Tag="CAM A" LostFocus="CameraRoll_LostFocus">
                     <TextBox.Styles>
                       <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                       <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
@@ -157,7 +157,7 @@
                 <Panel IsVisible="{Binding ShowCamBNormal}" VerticalAlignment="Center">
                   <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
                   <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamBRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                  <TextBox Text="{Binding CamBRoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                  <TextBox Text="{Binding CamBRoll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsCamBNotEditable}" AcceptsReturn="True" TextWrapping="Wrap" Tag="CAM B" LostFocus="CameraRoll_LostFocus">
                     <TextBox.Styles>
                       <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                       <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
@@ -221,7 +221,7 @@
                       <Panel IsVisible="{Binding ShowNormal}" VerticalAlignment="Center">
                         <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowRoll}" Text="{Binding Roll}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
                         <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                        <TextBox Text="{Binding Roll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsNotEditable}" AcceptsReturn="True" TextWrapping="Wrap">
+                        <TextBox Text="{Binding Roll}" PlaceholderText="Shot..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsNotEditable}" AcceptsReturn="True" TextWrapping="Wrap" LostFocus="CameraRoll_LostFocus">
                           <TextBox.Styles>
                             <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                             <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
@@ -260,7 +260,7 @@
               <Panel IsVisible="{Binding ShowSoundNormal}" VerticalAlignment="Center">
                 <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowSoundNotes}" Text="{Binding SoundNotes}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
                 <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowSoundNotes}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                <TextBox Text="{Binding SoundNotes}" PlaceholderText="..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundNoRoll}" AcceptsReturn="True" TextWrapping="Wrap">
+                <TextBox Text="{Binding SoundNotes}" PlaceholderText="..." FontSize="12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0" Foreground="{StaticResource TextPrimary}" IsReadOnly="{Binding IsSoundNoRoll}" AcceptsReturn="True" TextWrapping="Wrap" LostFocus="SoundRoll_LostFocus">
                   <TextBox.Styles>
                     <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
                     <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>

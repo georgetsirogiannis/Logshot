@@ -134,4 +134,44 @@ public partial class TakeCardView : UserControl
             });
         }
     }
+
+    private async void CameraRoll_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            var text = textBox.Text?.Trim();
+            if (text == "---" || text == "----")
+            {
+                if (textBox.DataContext is TakeViewModel takeVm)
+                {
+                    // This handles CAM A and CAM B
+                    string camLabel = textBox.Tag?.ToString() ?? "";
+                    if (!string.IsNullOrEmpty(camLabel))
+                    {
+                        await takeVm.ToggleCameraNoRollCommand.ExecuteAsync(camLabel);
+                    }
+                }
+                else if (textBox.DataContext is CameraRollCell extraCell)
+                {
+                    // This handles dynamically added Extra Cameras
+                    await extraCell.ToggleNoRollCommand.ExecuteAsync(null);
+                }
+            }
+        }
+    }
+
+    private async void SoundRoll_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            var text = textBox.Text?.Trim();
+            if (text == "---" || text == "----")
+            {
+                if (textBox.DataContext is TakeViewModel takeVm)
+                {
+                    await takeVm.ToggleSoundNoRollCommand.ExecuteAsync(null);
+                }
+            }
+        }
+    }
 }
