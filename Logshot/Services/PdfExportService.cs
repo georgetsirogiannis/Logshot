@@ -258,15 +258,15 @@ public class PdfExportService
 
         if (take.HasVoidedCameras)
         {
-            return c.Height(20f);
+            return c.Height(15f);
         }
 
         return c.MinHeight(40f).Padding(2);
     }
 
-    private static void RenderCrossStitchCell(IContainer cell)
+    private static void RenderCrossStitchCell(IContainer cell, float targetHeight)
     {
-        cell.Svg(size =>
+        cell.Height(targetHeight).Svg(size =>
         {
             if (float.IsNaN(size.Width) || float.IsInfinity(size.Width) || size.Width <= 0.1f ||
                 float.IsNaN(size.Height) || float.IsInfinity(size.Height) || size.Height <= 0.1f)
@@ -341,15 +341,15 @@ public class PdfExportService
         {
             if (isVoided)
             {
-                cell.Padding(2).AlignCenter().AlignMiddle().Text("ΑΚΥΡΟ CLIP").Bold().FontSize(8f).FontColor(Colors.Red.Medium);
+                cell.Padding(2).AlignCenter().AlignMiddle().Text("ΑΚΥΡΟ CLIP").Bold().FontSize(7f).FontColor(Colors.Red.Medium);
             }
             else if (isNoRoll)
             {
-                RenderNoRollCell(cell, 20f);
+                RenderNoRollCell(cell, 15f);
             }
             else
             {
-                RenderCrossStitchCell(cell);
+                RenderCrossStitchCell(cell, 15f);
             }
             return;
         }
@@ -409,7 +409,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell);
+            RenderCrossStitchCell(cell, 15f);
             return;
         }
 
@@ -429,44 +429,44 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell);
+            RenderCrossStitchCell(cell, 15f);
             return;
         }
 
         if (take.IsSoundOnlyRow || !take.ShowEpisode) return;
-        cell.AlignCenter().AlignMiddle().Text(take.Episode ?? "").FontSize(8.5f);
+        cell.AlignCenter().AlignMiddle().Text(take.Episode ?? "").FontSize(10f);
     }
 
     private void RenderSceneCell(IContainer cell, TakeViewModel take)
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell);
+            RenderCrossStitchCell(cell, 15f);
             return;
         }
 
         if (take.IsSoundOnlyRow || !take.ShowScene) return;
-        cell.AlignCenter().AlignMiddle().Text(take.Scene ?? "").FontSize(8.5f);
+        cell.AlignCenter().AlignMiddle().Text(take.Scene ?? "").FontSize(10f);
     }
 
     private void RenderShotCell(IContainer cell, TakeViewModel take)
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell);
+            RenderCrossStitchCell(cell, 15f);
             return;
         }
 
         if (take.IsSoundOnlyRow || !take.ShowShot) return;
         string shotStr = take.Shot > 0 ? take.Shot.ToString() : "";
-        cell.AlignCenter().AlignMiddle().Text(shotStr).FontSize(8.5f);
+        cell.AlignCenter().AlignMiddle().Text(shotStr).FontSize(10f);
     }
 
     private void RenderTakeCell(IContainer cell, TakeViewModel take)
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell);
+            RenderCrossStitchCell(cell, 15f);
             return;
         }
 
@@ -480,7 +480,7 @@ public class PdfExportService
             cell.Layers(layers =>
             {
                 layers.Layer().AlignCenter().AlignMiddle().Svg(CircledTakeSvg);
-                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
+                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(10f);
             });
         }
         else if (take.IsFailed)
@@ -488,12 +488,12 @@ public class PdfExportService
             cell.Layers(layers =>
             {
                 layers.Layer().AlignCenter().AlignMiddle().Svg(FailedTakeSvg);
-                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
+                layers.PrimaryLayer().AlignCenter().AlignMiddle().Text(takeText).FontSize(10f);
             });
         }
         else
         {
-            cell.AlignCenter().AlignMiddle().Text(takeText).Bold().FontSize(8.5f);
+            cell.AlignCenter().AlignMiddle().Text(takeText).FontSize(10f);
         }
     }
 
@@ -501,7 +501,7 @@ public class PdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell);
+            RenderCrossStitchCell(cell, 15f);
             return;
         }
 
