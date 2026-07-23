@@ -19,20 +19,20 @@
       <!-- HEADER: Identification & Status -->
       <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
         <!-- Shot & Take -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="40" VerticalAlignment="Center">
            <!-- Shot -->
            <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="SH" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
-              <TextBox Text="{Binding DisplayShot}" FontSize="16" FontWeight="Bold" MinWidth="44" MinHeight="36" TextAlignment="Center" VerticalContentAlignment="Center" Padding="4" IsReadOnly="{Binding IsSoundOnlyRow}"/>
+              <TextBlock Text="ΠΛΑΝΟ" FontSize="14" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
+              <TextBox Text="{Binding DisplayShot}" FontSize="22" FontWeight="Bold" MinWidth="44" MinHeight="36" TextAlignment="Center" VerticalContentAlignment="Center" Padding="4" IsReadOnly="{Binding IsSoundOnlyRow}"/>
            </StackPanel>
            
            <!-- Take -->
            <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="TK" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
+              <TextBlock Text="ΛΗΨΗ" FontSize="14" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
               <Grid MinWidth="44" MinHeight="36">
                  <Border BorderBrush="{StaticResource ActionAccent}" BorderThickness="2" CornerRadius="18" IsVisible="{Binding ShowCircledActive}"/>
                  <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
-                 <TextBox Text="{Binding DisplayTakeNumber}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextAlignment="Center" VerticalContentAlignment="Center" Padding="4" Foreground="{StaticResource ActionAccent}" IsReadOnly="{Binding IsSoundOnlyRow}" Background="Transparent" BorderThickness="0"/>
+                 <TextBox Text="{Binding DisplayTakeNumber}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextAlignment="Center" VerticalContentAlignment="Center" Padding="4" Foreground="{StaticResource ActionAccent}" IsReadOnly="{Binding IsSoundOnlyRow}" Background="Transparent" BorderThickness="0"/>
               </Grid>
            </StackPanel>
            <TextBlock Text="PU" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" FontSize="12" VerticalAlignment="Top" Margin="0,4,0,0" IsVisible="{Binding IsPickup}"/>

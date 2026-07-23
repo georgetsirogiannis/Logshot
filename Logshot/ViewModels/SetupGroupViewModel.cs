@@ -19,13 +19,24 @@ namespace Logshot.ViewModels
         private string _scene = string.Empty;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HeaderTitle))]
+        private bool _isContinued;
+
+        [ObservableProperty]
         private bool _isCollapsed;
 
-        // This collection holds only the takes for this specific Episode/Scene combination
+        // This collection holds only the takes for this specific Episode/Scene chunk
         public ObservableCollection<TakeViewModel> GroupedTakes { get; } = new();
 
-        // Generates the required mobile UI format: "ΕΠ 10 - ΣΚ 40 (3 Takes)"
-        public string HeaderTitle => $"ΕΠ {Episode} - ΣΚ {Scene} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow)} Takes)";
+        // Generates the required mobile UI format: "ΕΠ 10 - ΣΚ 40 (Continued) (3 Takes)"
+        public string HeaderTitle
+        {
+            get
+            {
+                var continuedText = IsContinued ? " (Continued)" : "";
+                return $"ΕΠ {Episode} - ΣΚ {Scene}{continuedText} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow)} Takes)";
+            }
+        }
 
         public SetupGroupViewModel(string episode, string scene, DayViewModel parentDay)
         {
