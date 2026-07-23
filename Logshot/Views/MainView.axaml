@@ -153,215 +153,221 @@
       <!-- ========================================== -->
       <!-- RIGHT SIDE: Main Workspace & Info View     -->
       <!-- ========================================== -->
-      <Grid Grid.Column="1" Background="{StaticResource WorkspaceBackground}">
+      <Grid Grid.Column="1" RowDefinitions="Auto, *" Background="{StaticResource WorkspaceBackground}">
         
-        <!-- Workspace Views (Visible when Info/Settings is closed) -->
-        <Grid IsVisible="{Binding IsInfoViewOpen, Converter={x:Static BoolConverters.Not}}">
+        <!-- Mobile Top Bar with Persistent Hamburger -->
+        <Border Grid.Row="0" Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1" Padding="12,8"
+                IsVisible="{Binding IsMobileLayout}">
+          <Button Content="&#9776;" FontSize="16" Padding="8,4"
+                  Command="{Binding ToggleSidebarCommand}"
+                  VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Content Container -->
+        <Grid Grid.Row="1">
           
-          <!-- State 0: Search Results Active -->
-          <Grid RowDefinitions="Auto, *" Margin="30"
-                IsVisible="{Binding AppViewModel.IsSearchActive}">
+          <!-- Workspace Views (Visible when Info/Settings is closed) -->
+          <Grid IsVisible="{Binding IsInfoViewOpen, Converter={x:Static BoolConverters.Not}}">
             
-            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
-              <StackPanel Orientation="Vertical">
-                <TextBlock Text="EPISODE &amp; SCENE SEARCH RESULTS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
-                <TextBlock Text="{Binding AppViewModel.SearchQuery, StringFormat='Filtering project for Episode/Scene: {0}'}" 
-                           FontSize="13" Foreground="{StaticResource TextSecondary}"/>
-              </StackPanel>
-              <Button Grid.Column="1" Content="CLEAR SEARCH" 
-                      Command="{Binding AppViewModel.ClearSearchCommand}"
-                      VerticalAlignment="Center"/>
-            </Grid>
-
-            <ScrollViewer Grid.Row="1">
-              <StackPanel Spacing="20">
-                <TextBlock Text="No matching takes found across project for this Episode/Scene combination."
-                           Foreground="{StaticResource TextSecondary}" FontSize="16"
-                           IsVisible="{Binding AppViewModel.HasNoSearchResults}"
-                           HorizontalAlignment="Center" Margin="0,40,0,0"/>
-
-                <ItemsControl ItemsSource="{Binding AppViewModel.SearchResultGroups}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:DaySearchResultGroupViewModel">
-                      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
-                              BorderThickness="1" CornerRadius="6" Padding="16">
-                        <StackPanel Spacing="12">
-                          <Grid ColumnDefinitions="*, Auto">
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                              <TextBlock Text="🔒" FontSize="14" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}" 
-                                         ToolTip.Tip="Day is Finalized (Locked)"/>
-                              <TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
-                              <TextBlock Text="(Finalized - Read Only)" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}"/>
-                            </StackPanel>
-                          </Grid>
-
-                          <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
-                                  CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True" Height="340">
-                            <views:TakeGridView />
-                          </Border>
-                        </StackPanel>
-                      </Border>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </StackPanel>
-            </ScrollViewer>
-          </Grid>
-
-          <!-- State 1: No Day Selected -->
-          <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <StackPanel.IsVisible>
-              <MultiBinding Converter="{x:Static BoolConverters.And}">
-                <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNull}"/>
-                <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
-              </MultiBinding>
-            </StackPanel.IsVisible>
-            <TextBlock Text="Select a shoot day or create a new one to begin." 
-                       Foreground="{StaticResource TextSecondary}" FontSize="18" 
-                       HorizontalAlignment="Center"/>
-          </StackPanel>
-
-          <!-- State 2: Day Selected (The A4 Workspace) -->
-          <Grid RowDefinitions="Auto, *" Margin="30">
-            <Grid.IsVisible>
-              <MultiBinding Converter="{x:Static BoolConverters.And}">
-                <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNotNull}"/>
-                <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
-              </MultiBinding>
-            </Grid.IsVisible>
-            
-            <!-- Header Metadata -->
-            <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Margin="0,0,0,20">
+            <!-- State 0: Search Results Active -->
+            <Grid RowDefinitions="Auto, *" Margin="30"
+                  IsVisible="{Binding AppViewModel.IsSearchActive}">
               
-              <Grid Grid.Row="0" Margin="0,0,0,12">
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto"/>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Hamburger Menu -->
-                <Button Grid.Row="0" Grid.Column="0" Content="&#9776;" FontSize="16" Padding="8,4" Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        IsVisible="{Binding IsMobileLayout}"
-                        Command="{Binding ToggleSidebarCommand}"/>
-
-                <!-- Title -->
-                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                  <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
-                             ToolTip.Tip="Day is Finalized (Locked)"/>
-                  <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
-                             FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+              <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+                <StackPanel Orientation="Vertical">
+                  <TextBlock Text="EPISODE &amp; SCENE SEARCH RESULTS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                  <TextBlock Text="{Binding AppViewModel.SearchQuery, StringFormat='Filtering project for Episode/Scene: {0}'}" 
+                             FontSize="13" Foreground="{StaticResource TextSecondary}"/>
                 </StackPanel>
-
-                <!-- Desktop Action Buttons (Hidden on Mobile) -->
-                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center"
-                            IsVisible="{Binding !IsMobileLayout}">
-                  <Button Content="+ SCENE"
-                          Command="{Binding AppViewModel.OpenAddSceneDialogCommand}"
-                          IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
-
-                  <Button Content="+ SHOT"
-                          Command="{Binding AppViewModel.CurrentDay.AddShotCommand}"
-                          IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
-
-                  <Button Content="+ TAKE"
-                          Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}"
-                          IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
-
-                  <Button Content="FINALIZE DAY"
-                          Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
-                          IsVisible="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
-
-                  <Button Content="REOPEN DAY"
-                          Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
-                          IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
-
-                  <Button Content="EXPORT PDF"
-                          Command="{Binding AppViewModel.ExportDayToPdfCommand}"
-                          Background="{StaticResource ActionAccent}"
-                          Foreground="#121212"
-                          FontWeight="Bold"/>
-                </StackPanel>
-
-                <!-- Mobile Action Buttons (Visible only on Mobile, sitting on a second row) -->
-                <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" ColumnDefinitions="*, *" Margin="0,16,0,0"
-                      IsVisible="{Binding IsMobileLayout}">
-                  
-                  <Panel Grid.Column="0" Margin="0,0,5,0">
-                    <Button Content="FINALIZE DAY" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
-                            IsVisible="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
-                    <Button Content="REOPEN DAY" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
-                            IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
-                  </Panel>
-                  
-                  <Button Grid.Column="1" Content="EXPORT PDF" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                          Margin="5,0,0,0"
-                          Command="{Binding AppViewModel.ExportDayToPdfCommand}"
-                          Background="{StaticResource ActionAccent}"
-                          Foreground="#121212"
-                          FontWeight="Bold"/>
-                </Grid>
+                <Button Grid.Column="1" Content="CLEAR SEARCH" 
+                        Command="{Binding AppViewModel.ClearSearchCommand}"
+                        VerticalAlignment="Center"/>
               </Grid>
 
-              <!-- General Day Notes Box -->
-              <Expander Grid.Row="1" 
-                        HorizontalAlignment="Stretch" 
-                        IsExpanded="False"
-                        Background="{StaticResource CardBackground}" 
-                        BorderBrush="{StaticResource BorderColor}" 
-                        BorderThickness="1" 
-                        CornerRadius="4">
-                <Expander.Header>
-                  <TextBlock Text="GENERAL DAY NOTES" 
-                             FontWeight="Bold" 
-                             FontSize="12" 
-                             Foreground="{StaticResource ActionAccent}" />
-                </Expander.Header>
+              <ScrollViewer Grid.Row="1">
+                <StackPanel Spacing="20">
+                  <TextBlock Text="No matching takes found across project for this Episode/Scene combination."
+                             Foreground="{StaticResource TextSecondary}" FontSize="16"
+                             IsVisible="{Binding AppViewModel.HasNoSearchResults}"
+                             HorizontalAlignment="Center" Margin="0,40,0,0"/>
 
-                <TextBox Text="{Binding AppViewModel.CurrentDay.GeneralNotes}" 
-                         PlaceholderText="General Day Notes (e.g., weather, global scene observations)..." 
-                         AcceptsReturn="True" 
-                         TextWrapping="Wrap" 
-                         MinHeight="60" 
-                         MaxHeight="150"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         Background="{StaticResource CardBackground}" 
-                         BorderBrush="{StaticResource BorderColor}" 
-                         BorderThickness="1" 
-                         Padding="12,8" 
-                         FontSize="13" 
-                         Foreground="{StaticResource TextPrimary}"
-                         IsReadOnly="{Binding AppViewModel.CurrentDay.IsFinalized}" />
-              </Expander>
+                  <ItemsControl ItemsSource="{Binding AppViewModel.SearchResultGroups}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:DaySearchResultGroupViewModel">
+                        <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
+                                BorderThickness="1" CornerRadius="6" Padding="16">
+                          <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="*, Auto">
+                              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="🔒" FontSize="14" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}" 
+                                           ToolTip.Tip="Day is Finalized (Locked)"/>
+                                <TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+                                <TextBlock Text="(Finalized - Read Only)" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}"/>
+                              </StackPanel>
+                            </Grid>
 
+                            <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
+                                    CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True" Height="340">
+                              <views:TakeGridView />
+                            </Border>
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </ScrollViewer>
             </Grid>
 
-            <!-- Grid Layout (Desktop) -->
-            <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
-                    CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True"
-                    IsVisible="{Binding IsMobileLayout, Converter={x:Static BoolConverters.Not}}">
-              <views:TakeGridView DataContext="{Binding AppViewModel.CurrentDay}"/>
-            </Border>
+            <!-- State 1: No Day Selected -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+              <StackPanel.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNull}"/>
+                  <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
+                </MultiBinding>
+              </StackPanel.IsVisible>
+              <TextBlock Text="Select a shoot day or create a new one to begin." 
+                         Foreground="{StaticResource TextSecondary}" FontSize="18" 
+                         HorizontalAlignment="Center"/>
+            </StackPanel>
 
-            <!-- Card Layout (Mobile) -->
-            <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
-                    CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True"
-                    IsVisible="{Binding IsMobileLayout}">
-              <views:MobileTakeListView DataContext="{Binding AppViewModel.CurrentDay}"/>
-            </Border>
+            <!-- State 2: Day Selected (The A4 Workspace) -->
+            <Grid RowDefinitions="Auto, *" Margin="30">
+              <Grid.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                  <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
+                </MultiBinding>
+              </Grid.IsVisible>
+              
+              <!-- Header Metadata -->
+              <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Margin="0,0,0,20">
+                
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                  </Grid.RowDefinitions>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                  </Grid.ColumnDefinitions>
 
+                  <!-- Title -->
+                  <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
+                               ToolTip.Tip="Day is Finalized (Locked)"/>
+                    <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
+                               FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                  </StackPanel>
+
+                  <!-- Desktop Action Buttons (Hidden on Mobile) -->
+                  <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center"
+                              IsVisible="{Binding !IsMobileLayout}">
+                    <Button Content="+ SCENE"
+                            Command="{Binding AppViewModel.OpenAddSceneDialogCommand}"
+                            IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+
+                    <Button Content="+ SHOT"
+                            Command="{Binding AppViewModel.CurrentDay.AddShotCommand}"
+                            IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+
+                    <Button Content="+ TAKE"
+                            Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}"
+                            IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+
+                    <Button Content="FINALIZE DAY"
+                            Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
+                            IsVisible="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+
+                    <Button Content="REOPEN DAY"
+                            Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
+                            IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
+
+                    <Button Content="EXPORT PDF"
+                            Command="{Binding AppViewModel.ExportDayToPdfCommand}"
+                            Background="{StaticResource ActionAccent}"
+                            Foreground="#121212"
+                            FontWeight="Bold"/>
+                  </StackPanel>
+
+                  <!-- Mobile Action Buttons (Visible only on Mobile, sitting on a second row) -->
+                  <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*, *" Margin="0,16,0,0"
+                        IsVisible="{Binding IsMobileLayout}">
+                    
+                    <Panel Grid.Column="0" Margin="0,0,5,0">
+                      <Button Content="FINALIZE DAY" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                              Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
+                              IsVisible="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+                      <Button Content="REOPEN DAY" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                              Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
+                              IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
+                    </Panel>
+                    
+                    <Button Grid.Column="1" Content="EXPORT PDF" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Margin="5,0,0,0"
+                            Command="{Binding AppViewModel.ExportDayToPdfCommand}"
+                            Background="{StaticResource ActionAccent}"
+                            Foreground="#121212"
+                            FontWeight="Bold"/>
+                  </Grid>
+                </Grid>
+
+                <!-- General Day Notes Box -->
+                <Expander Grid.Row="1" 
+                          HorizontalAlignment="Stretch" 
+                          IsExpanded="False"
+                          Background="{StaticResource CardBackground}" 
+                          BorderBrush="{StaticResource BorderColor}" 
+                          BorderThickness="1" 
+                          CornerRadius="4">
+                  <Expander.Header>
+                    <TextBlock Text="GENERAL DAY NOTES" 
+                               FontWeight="Bold" 
+                               FontSize="12" 
+                               Foreground="{StaticResource ActionAccent}" />
+                  </Expander.Header>
+
+                  <TextBox Text="{Binding AppViewModel.CurrentDay.GeneralNotes}" 
+                           PlaceholderText="General Day Notes (e.g., weather, global scene observations)..." 
+                           AcceptsReturn="True" 
+                           TextWrapping="Wrap" 
+                           MinHeight="60" 
+                           MaxHeight="150"
+                           ScrollViewer.VerticalScrollBarVisibility="Auto"
+                           Background="{StaticResource CardBackground}" 
+                           BorderBrush="{StaticResource BorderColor}" 
+                           BorderThickness="1" 
+                           Padding="12,8" 
+                           FontSize="13" 
+                           Foreground="{StaticResource TextPrimary}"
+                           IsReadOnly="{Binding AppViewModel.CurrentDay.IsFinalized}" />
+                </Expander>
+
+              </Grid>
+
+              <!-- Grid Layout (Desktop) -->
+              <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
+                      CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True"
+                      IsVisible="{Binding IsMobileLayout, Converter={x:Static BoolConverters.Not}}">
+                <views:TakeGridView DataContext="{Binding AppViewModel.CurrentDay}"/>
+              </Border>
+
+              <!-- Card Layout (Mobile) -->
+              <Border Grid.Row="1" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                      CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True"
+                      IsVisible="{Binding IsMobileLayout}">
+                <views:MobileTakeListView DataContext="{Binding AppViewModel.CurrentDay}"/>
+              </Border>
+
+            </Grid>
           </Grid>
-        </Grid>
 
-        <!-- Info / Settings View -->
-        <views:InfoView IsVisible="{Binding IsInfoViewOpen}"/>
+          <!-- Info / Settings View -->
+          <views:InfoView IsVisible="{Binding IsInfoViewOpen}"/>
+
+        </Grid>
 
       </Grid>
       
