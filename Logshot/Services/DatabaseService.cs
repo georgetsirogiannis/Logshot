@@ -12,12 +12,13 @@ public class DatabaseService
 {
     private SQLiteAsyncConnection _db = null!;
 
+    // This event tells our Supabase worker that new changes exist
+    public event Action? OnDataChanged;
+
     public DatabaseService()
     {
-        // Empty constructor. We initialize asynchronously below to keep the app startup fast.
     }
 
-    // --- Write Queue: makes sure saves finish in the order they were made, and lets us wait for them before the app closes ---
     private Task _writeQueue = Task.CompletedTask;
     private readonly object _queueLock = new();
 
@@ -39,42 +40,35 @@ public class DatabaseService
 
     public async Task InitAsync()
     {
-        // If the connection is already active, don't do anything
-        if (_db is not null)
-            return;
+        if (_db is not null) return;
 
-        // Environment.SpecialFolder.LocalApplicationData is cross-platform magic. 
-        // On Windows it goes to AppData/Local. On Android, it goes to the app's secure internal storage.
         string databasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "logshot.db");
-
         _db = new SQLiteAsyncConnection(databasePath);
 
-        // This reads your C# Models and automatically builds the SQL tables
         await _db.CreateTableAsync<Project>();
         await _db.CreateTableAsync<Day>();
         await _db.CreateTableAsync<Take>();
+        await _db.CreateTableAsync<SyncQueueItem>(); // New outbox table
     }
 
-    // --- CRUD OPERATIONS (Create, Read, Update, Delete) ---
+    private async Task QueueSyncAction(string entityType, string entityId, string action)
+    {
+        await _db.InsertAsync(new SyncQueueItem { EntityType = entityType, EntityId = entityId, Action = action });
+        // Fire the event to reset the 3-second debounce timer
+        OnDataChanged?.Invoke();
+    }
+
+    // --- CRUD OPERATIONS ---
 
     public Task<int> SaveTakeAsync(Take take)
     {
         return Enqueue(async () =>
         {
             await InitAsync();
-            // InsertOrReplaceAsync checks the ID. If it's new, it inserts. If it exists, it updates perfectly.
-            return await _db.InsertOrReplaceAsync(take);
+            var result = await _db.InsertOrReplaceAsync(take);
+            await QueueSyncAction("Take", take.Id, "Upsert");
+            return result;
         });
-    }
-
-    public async Task<List<Take>> GetTakesForDayAsync(string dayId)
-    {
-        await InitAsync();
-        // Grabs all takes for a specific day, respecting your custom SequenceOrder for drag-and-drop
-        return await _db.Table<Take>()
-                        .Where(t => t.DayId == dayId)
-                        .OrderBy(t => t.SequenceOrder)
-                        .ToListAsync();
     }
 
     public Task<int> SaveDayAsync(Day day)
@@ -82,7 +76,9 @@ public class DatabaseService
         return Enqueue(async () =>
         {
             await InitAsync();
-            return await _db.InsertOrReplaceAsync(day);
+            var result = await _db.InsertOrReplaceAsync(day);
+            await QueueSyncAction("Day", day.Id, "Upsert");
+            return result;
         });
     }
 
@@ -91,52 +87,92 @@ public class DatabaseService
         return Enqueue(async () =>
         {
             await InitAsync();
-            return await _db.InsertOrReplaceAsync(project);
+            var result = await _db.InsertOrReplaceAsync(project);
+            await QueueSyncAction("Project", project.Id, "Upsert");
+            return result;
         });
     }
 
     public async Task<int> DeleteTakeAsync(Take take)
     {
         await InitAsync();
-        return await _db.DeleteAsync(take);
+        var result = await _db.DeleteAsync(take);
+        await QueueSyncAction("Take", take.Id, "Delete");
+        return result;
     }
 
-    // --- QUERY OPERATIONS (For Cross-Day Continuity) ---
+    public async Task<int> DeleteDayAsync(Day day)
+    {
+        await InitAsync();
+        var takes = await GetTakesForDayAsync(day.Id);
+        foreach (var take in takes)
+        {
+            await _db.DeleteAsync(take);
+            await QueueSyncAction("Take", take.Id, "Delete");
+        }
+        var result = await _db.DeleteAsync(day);
+        await QueueSyncAction("Day", day.Id, "Delete");
+        return result;
+    }
 
-    /// <summary>
-    /// Get all takes for a project across all days (for historical queries)
-    /// </summary>
+    public async Task<int> DeleteProjectAsync(Project project)
+    {
+        await InitAsync();
+        var days = await GetDaysForProjectAsync(project.Id);
+        foreach (var day in days)
+        {
+            await DeleteDayAsync(day);
+        }
+        var result = await _db.DeleteAsync(project);
+        await QueueSyncAction("Project", project.Id, "Delete");
+        return result;
+    }
+
+    // --- NEW: Single Entity Retrievals for Sync Worker ---
+
+    public async Task<Take> GetTakeAsync(string id) { await InitAsync(); return await _db.FindAsync<Take>(id); }
+    public async Task<Day> GetDayAsync(string id) { await InitAsync(); return await _db.FindAsync<Day>(id); }
+    public async Task<Project> GetProjectAsync(string id) { await InitAsync(); return await _db.FindAsync<Project>(id); }
+
+    // --- OUTBOX QUEUE METHODS ---
+
+    public async Task<List<SyncQueueItem>> GetPendingSyncItemsAsync()
+    {
+        await InitAsync();
+        return await _db.Table<SyncQueueItem>().OrderBy(x => x.Id).ToListAsync();
+    }
+
+    public async Task DeleteSyncItemAsync(SyncQueueItem item)
+    {
+        await InitAsync();
+        await _db.DeleteAsync(item);
+    }
+
+    // --- EXISTING QUERY OPERATIONS ---
+
+    public async Task<List<Take>> GetTakesForDayAsync(string dayId)
+    {
+        await InitAsync();
+        return await _db.Table<Take>().Where(t => t.DayId == dayId).OrderBy(t => t.SequenceOrder).ToListAsync();
+    }
+
     public async Task<List<Take>> GetTakesForProjectAsync(string projectId)
     {
         await InitAsync();
-
-        // Get all days in the project first
-        var days = await _db.Table<Day>()
-                           .Where(d => d.ProjectId == projectId)
-                           .ToListAsync();
-
-        // Get all takes for those days
+        var days = await _db.Table<Day>().Where(d => d.ProjectId == projectId).ToListAsync();
         var dayIds = days.Select(d => d.Id).ToList();
 
-        if (dayIds.Count == 0)
-            return new List<Take>();
+        if (dayIds.Count == 0) return new List<Take>();
 
         var takes = new List<Take>();
         foreach (var dayId in dayIds)
         {
-            var takesForDay = await _db.Table<Take>()
-                                      .Where(t => t.DayId == dayId)
-                                      .ToListAsync();
+            var takesForDay = await _db.Table<Take>().Where(t => t.DayId == dayId).ToListAsync();
             takes.AddRange(takesForDay);
         }
-
         return takes.OrderBy(t => t.CreatedAt).ToList();
     }
 
-   
-   
-    /// Helper to tokenize episode or scene strings by line breaks, spaces, commas, or hyphens.
-    /// </summary>
     public static List<string> GetTokens(string input)
     {
         if (string.IsNullOrWhiteSpace(input)) return new List<string>();
@@ -147,10 +183,6 @@ public class DatabaseService
                     .ToList();
     }
 
-    /// <summary>
-    /// Get all takes for a specific Episode/Scene combination across a project.
-    /// Supports "Multiple Scenes Intelligence" by matching overlapping scene tokens.
-    /// </summary>
     public async Task<List<Take>> GetTakesForEpisodeSceneAsync(string projectId, string episode, string scene)
     {
         await InitAsync();
@@ -164,73 +196,23 @@ public class DatabaseService
             {
                 var takeEpisodes = GetTokens(t.Episode);
                 var takeScenes = GetTokens(t.Scene);
-
                 bool episodeMatch = !queryEpisodes.Any() || !takeEpisodes.Any() || takeEpisodes.Intersect(queryEpisodes, StringComparer.OrdinalIgnoreCase).Any();
                 bool sceneMatch = !queryScenes.Any() || !takeScenes.Any() || takeScenes.Intersect(queryScenes, StringComparer.OrdinalIgnoreCase).Any();
-
                 return episodeMatch && sceneMatch;
             })
             .OrderByDescending(t => t.CreatedAt)
             .ToList();
     }
 
-    /// <summary>
-    /// Get a specific day by ID
-    /// </summary>
-    public async Task<Day> GetDayAsync(string dayId)
-    {
-        await InitAsync();
-        return await _db.FindAsync<Day>(dayId);
-    }
-
-    /// <summary>
-    /// Get all days for a project
-    /// </summary>
     public async Task<List<Day>> GetDaysForProjectAsync(string projectId)
     {
         await InitAsync();
-        return await _db.Table<Day>()
-                       .Where(d => d.ProjectId == projectId)
-                       .OrderByDescending(d => d.CalendarDate)
-                       .ToListAsync();
+        return await _db.Table<Day>().Where(d => d.ProjectId == projectId).OrderByDescending(d => d.CalendarDate).ToListAsync();
     }
 
-    /// <summary>
-    /// Get all projects
-    /// </summary>
     public async Task<List<Project>> GetAllProjectsAsync()
     {
         await InitAsync();
-        return await _db.Table<Project>()
-                       .OrderBy(p => p.Name)
-                       .ToListAsync();
-    }
-
-    /// <summary>
-    /// Delete a day (and its takes) from the database
-    /// </summary>
-    public async Task<int> DeleteDayAsync(Day day)
-    {
-        await InitAsync();
-        var takes = await GetTakesForDayAsync(day.Id);
-        foreach (var take in takes)
-        {
-            await _db.DeleteAsync(take);
-        }
-        return await _db.DeleteAsync(day);
-    }
-
-    /// <summary>
-    /// Delete a project (and its days/takes) from the database
-    /// </summary>
-    public async Task<int> DeleteProjectAsync(Project project)
-    {
-        await InitAsync();
-        var days = await GetDaysForProjectAsync(project.Id);
-        foreach (var day in days)
-        {
-            await DeleteDayAsync(day);
-        }
-        return await _db.DeleteAsync(project);
+        return await _db.Table<Project>().OrderBy(p => p.Name).ToListAsync();
     }
 }
