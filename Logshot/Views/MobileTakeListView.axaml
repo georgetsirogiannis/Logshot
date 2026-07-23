@@ -59,7 +59,12 @@
 			  <StackPanel>
 			    <Button Classes="collapse-btn" Command="{Binding ToggleCollapsedCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
 				  <Grid ColumnDefinitions="Auto,*">
-				    <TextBlock Grid.Column="0" Text="&#9656;" Margin="0,0,8,0" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+				    <Panel Grid.Column="0" Width="12" Margin="0,0,8,0" VerticalAlignment="Center">
+				      <!-- Collapsed: points right -->
+				      <TextBlock Text="&#9656;" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCollapsed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				      <!-- Expanded: points down -->
+				      <TextBlock Text="&#9660;" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding !IsCollapsed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				    </Panel>
 				    <TextBlock Grid.Column="1" Text="{Binding HeaderTitle}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}"/>
 				  </Grid>
 			    </Button>
