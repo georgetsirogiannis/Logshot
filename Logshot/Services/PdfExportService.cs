@@ -74,26 +74,31 @@ public class PdfExportService
                 text.Span($"{projectName} - ΔΕΛΤΙΟ ΛΗΨΕΩΝ").FontSize(14).Bold();
             });
 
-            column.Item().PaddingTop(6).Row(row =>
+            column.Item().PaddingTop(8).PaddingHorizontal(40).AlignCenter().Text(t =>
             {
-                row.RelativeItem(1).AlignLeft().Text(t =>
-                {
-                    t.Span("ΣΚΗΝΟΘΕΣΙΑ: ").FontSize(8).SemiBold();
-                    t.Span(_project.Director ?? "").FontSize(8);
-                });
-                row.RelativeItem(1).AlignCenter().Text(t =>
-                {
-                    t.Span("ΠΑΡΑΓΩΓΗ: ").FontSize(8).SemiBold();
-                    t.Span(_project.ProductionCompany ?? "").FontSize(8);
-                });
-                row.RelativeItem(1).AlignRight().Text(t =>
-                {
-                    t.Span("ΔΙΕΥΘΥΝΣΗ ΦΩΤΟΓΡΑΦΙΑΣ: ").FontSize(8).SemiBold();
-                    t.Span(_project.Dop ?? "").FontSize(8);
-                });
+                t.DefaultTextStyle(x => x.FontSize(7.5f).Italic());
+
+                // Director
+                t.Span("ΣΚΗΝΟΘΕΣΙΑ: ").SemiBold();
+                t.Span(_project.Director ?? "");
+
+                // Separator
+                t.Span("       •       ").SemiBold();
+
+                // Production
+                t.Span("ΠΑΡΑΓΩΓΗ: ").SemiBold();
+                t.Span(_project.ProductionCompany ?? "");
+
+                // Separator
+                t.Span("       •       ").SemiBold();
+
+                // DOP
+                t.Span("ΔΙΕΥΘΥΝΣΗ ΦΩΤΟΓΡΑΦΙΑΣ: ").SemiBold();
+                t.Span(_project.Dop ?? "");
             });
 
-            column.Item().PaddingTop(6).Background("#EFEFEF").PaddingHorizontal(12).PaddingVertical(6).Row(row =>
+            column.Item().PaddingTop(16).Border(0.5f).BorderColor(Colors.Grey.Lighten1)
+                      .Background(Colors.Grey.Lighten4).PaddingHorizontal(12).PaddingVertical(6).Row(row =>
             {
                 row.RelativeItem(1).AlignLeft().Text(t =>
                 {
@@ -118,7 +123,7 @@ public class PdfExportService
             if (!string.IsNullOrWhiteSpace(_day.GeneralNotes))
             {
                 column.Item().ShowIf(x => x.PageNumber == 1).PaddingTop(4).Border(0.5f).BorderColor(Colors.Grey.Lighten1)
-                      .Background(Colors.Grey.Lighten4).Padding(6).Text(t =>
+                      .Background(Colors.Grey.Lighten5).Padding(6).Text(t =>
                       {
                           t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ: ").Bold().FontSize(8f);
                           t.Span(_day.GeneralNotes).FontSize(8f);
@@ -193,8 +198,8 @@ public class PdfExportService
                     header.Cell().Element(HeaderStyle).Text(t => t.Span("ΛΗΨΗ").Bold().FontColor(Colors.White));
                     header.Cell().Element(NotesHeaderStyle).Text(t => t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ").Bold().FontColor(Colors.White));
 
-                    IContainer HeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(5).PaddingHorizontal(2).AlignCenter().AlignMiddle();
-                    IContainer NotesHeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle();
+                    IContainer HeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(3).PaddingHorizontal(2).AlignCenter().AlignMiddle();
+                    IContainer NotesHeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(3).PaddingHorizontal(6).AlignLeft().AlignMiddle();
                 });
 
                 if (_day.Takes != null && _day.Takes.Any())
@@ -243,7 +248,7 @@ public class PdfExportService
             {
                 column.Item().BorderTop(0).Border(0.5f).BorderColor(Colors.Black).Background(Colors.White)
                       .PaddingVertical(6).AlignCenter().AlignMiddle()
-                      .Text($"END DAY {_day.ShootDayNumber}").FontSize(11f).Bold();
+                      .Text($"— END DAY {_day.ShootDayNumber} —").FontSize(11f).Bold().LetterSpacing(0.15f);
             }
         });
     }
@@ -557,7 +562,8 @@ public class PdfExportService
                 {
                     innerRow.AutoItem().AlignRight().AlignMiddle().PaddingLeft(6).Text(t =>
                     {
-                        t.DefaultTextStyle(x => x.FontSize(7.5f).Bold());
+                        t.AlignCenter();
+                        t.DefaultTextStyle(x => x.FontSize(7.5f).Italic().Bold());
                         if (take.IsEndBoard) t.Span("ΚΛΑΚΕΤΑ\nΤΕΛΟΥΣ");
                         else if (take.IsNoBoard) t.Span("ΧΩΡΙΣ\nΚΛΑΚΕΤΑ");
                     });
