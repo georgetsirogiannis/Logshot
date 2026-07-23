@@ -436,6 +436,9 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task ToggleSoundNoRoll()
     {
+        // Fix: Prevent toggling No-Roll if the row is currently an ΑΚΥΡΟ CLIP row
+        if (HasVoidedCameras) return;
+
         IsSoundNoRoll = !IsSoundNoRoll;
         if (IsSoundNoRoll)
         {
@@ -500,12 +503,22 @@ public partial class TakeViewModel : ViewModelBase
             list.Add(cameraLabel);
 
             var data = _cameraDataManager.ParseCameraData(CameraData);
+
+            // Fix: When a row becomes an ΑΚΥΡΟ CLIP row, no cameras can have a no-roll.
+            foreach (var kvp in data.Cameras)
+            {
+                kvp.Value.NoRoll = false;
+            }
+
             if (data.Cameras.TryGetValue(cameraLabel, out var state))
             {
-                state.NoRoll = false;
                 state.Notes = string.Empty;
-                CameraData = _cameraDataManager.SerializeCameraData(data);
             }
+
+            CameraData = _cameraDataManager.SerializeCameraData(data);
+
+            // Safely remove sound no-roll as well for consistency
+            IsSoundNoRoll = false;
         }
         else
         {
@@ -559,12 +572,15 @@ public partial class TakeViewModel : ViewModelBase
         }
     }
 
-    public bool IsCamANoRoll => GetCameraFlag("CAM A", s => s.NoRoll) || IsCameraStrikethrough("CAM A");
-    public bool IsCamBNoRoll => GetCameraFlag("CAM B", s => s.NoRoll) || IsCameraStrikethrough("CAM B");
+    public bool IsCamANoRoll => !HasVoidedCameras && (GetCameraFlag("CAM A", s => s.NoRoll) || IsCameraStrikethrough("CAM A"));
+    public bool IsCamBNoRoll => !HasVoidedCameras && (GetCameraFlag("CAM B", s => s.NoRoll) || IsCameraStrikethrough("CAM B"));
 
     [RelayCommand]
     public async Task ToggleCameraNoRoll(string cameraLabel)
     {
+        // Fix: Prevent toggling No-Roll if the row is currently an ΑΚΥΡΟ CLIP row
+        if (HasVoidedCameras) return;
+
         var data = _cameraDataManager.ParseCameraData(CameraData);
         if (!data.Cameras.TryGetValue(cameraLabel, out var state))
         {
@@ -852,7 +868,7 @@ public partial class CameraRollCell : ObservableObject
     }
 
     public bool IsVoided => _owner.IsCameraVoided(Label);
-    public bool IsNoRoll => _owner.GetCameraFlagPublic(Label, s => s.NoRoll) || _owner.IsCameraStrikethrough(Label);
+    public bool IsNoRoll => !_owner.HasVoidedCameras && (_owner.GetCameraFlagPublic(Label, s => s.NoRoll) || _owner.IsCameraStrikethrough(Label));
     public bool ShowCrossed => _owner.HasVoidedCameras && !IsVoided && !IsNoRoll;
 
     public bool IsNotEditable => IsVoided || IsNoRoll || _owner.HasVoidedCameras;
