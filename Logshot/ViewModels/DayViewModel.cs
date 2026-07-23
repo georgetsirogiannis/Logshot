@@ -614,8 +614,6 @@ public partial class DayViewModel : ViewModelBase
         await SaveDayCommand.ExecuteAsync(null);
     }
 
-
-
     /// <summary>
     /// Reopens a finalized day, allowing edits to resume.
     /// </summary>
@@ -938,28 +936,55 @@ public partial class DayViewModel : ViewModelBase
 
     public ObservableCollection<SetupGroupViewModel> MobileSetupGroups { get; } = new();
 
+    /// <summary>
+    /// Rebuilds the MobileSetupGroups collection sequentially based on logging order during the day.
+    /// Consecutive takes for the same setup are grouped together. Returning to a scene shot earlier 
+    /// creates a new group marked as 'IsContinued = true'.
+    /// </summary>
     public void BuildHierarchicalGroups()
     {
-        var groupedData = Takes
-            .GroupBy(t => new { t.Episode, t.Scene })
-            .OrderBy(g => g.Min(t => t.CreatedAt));
-
-        var updatedGroups = new System.Collections.Generic.List<SetupGroupViewModel>();
-
-        foreach (var group in groupedData)
+        if (Takes == null || !Takes.Any())
         {
-            var existingGroup = MobileSetupGroups.FirstOrDefault(g =>
-                g.Episode == group.Key.Episode && g.Scene == group.Key.Scene);
+            MobileSetupGroups.Clear();
+            return;
+        }
 
-            var setupGroup = existingGroup ?? new SetupGroupViewModel(group.Key.Episode, group.Key.Scene, this);
+        // Store existing collapse state by Episode, Scene, and Continued status
+        var collapsedStates = MobileSetupGroups
+            .GroupBy(g => (g.Episode, g.Scene, g.IsContinued))
+            .ToDictionary(g => g.Key, g => g.First().IsCollapsed);
 
-            setupGroup.GroupedTakes.Clear();
-            foreach (var take in group.OrderBy(t => t.SequenceOrder))
+        var updatedGroups = new List<SetupGroupViewModel>();
+        var seenSetups = new HashSet<(string Episode, string Scene)>();
+
+        SetupGroupViewModel? currentGroup = null;
+
+        // Iterate through takes sequentially in logging order
+        foreach (var take in Takes.OrderBy(t => t.SequenceOrder))
+        {
+            string ep = take.Episode ?? string.Empty;
+            string sc = take.Scene ?? string.Empty;
+
+            // Start a new setup group card when changing episode/scene or starting
+            if (currentGroup == null || currentGroup.Episode != ep || currentGroup.Scene != sc)
             {
-                setupGroup.GroupedTakes.Add(take);
+                bool isContinued = seenSetups.Contains((ep, sc));
+                seenSetups.Add((ep, sc));
+
+                currentGroup = new SetupGroupViewModel(ep, sc, this)
+                {
+                    IsContinued = isContinued
+                };
+
+                if (collapsedStates.TryGetValue((ep, sc, isContinued), out bool wasCollapsed))
+                {
+                    currentGroup.IsCollapsed = wasCollapsed;
+                }
+
+                updatedGroups.Add(currentGroup);
             }
 
-            updatedGroups.Add(setupGroup);
+            currentGroup.GroupedTakes.Add(take);
         }
 
         MobileSetupGroups.Clear();
