@@ -233,35 +233,49 @@
             <!-- Header Metadata -->
             <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Margin="0,0,0,20">
               
-              <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,12">
-                <Button Grid.Column="0" Content="&#9776;" FontSize="16" Padding="8,4" Margin="0,0,10,0"
+              <Grid Grid.Row="0" Margin="0,0,0,12">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Hamburger Menu -->
+                <Button Grid.Row="0" Grid.Column="0" Content="&#9776;" FontSize="16" Padding="8,4" Margin="0,0,10,0"
                         VerticalAlignment="Center"
                         IsVisible="{Binding IsMobileLayout}"
                         Command="{Binding ToggleSidebarCommand}"/>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <!-- Title -->
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                   <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
                              ToolTip.Tip="Day is Finalized (Locked)"/>
                   <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
-                             FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                             FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <!-- Desktop Action Buttons (Hidden on Mobile) -->
+                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center"
+                            IsVisible="{Binding !IsMobileLayout}">
                   <Button Content="+ SCENE"
                           Command="{Binding AppViewModel.OpenAddSceneDialogCommand}"
-                          IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+                          IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
 
                   <Button Content="+ SHOT"
                           Command="{Binding AppViewModel.CurrentDay.AddShotCommand}"
-                          IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+                          IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
 
                   <Button Content="+ TAKE"
                           Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}"
-                          IsEnabled="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+                          IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
 
                   <Button Content="FINALIZE DAY"
                           Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
-                          IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized, Converter={x:Static BoolConverters.Not}}"/>
+                          IsVisible="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
 
                   <Button Content="REOPEN DAY"
                           Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
@@ -273,6 +287,27 @@
                           Foreground="#121212"
                           FontWeight="Bold"/>
                 </StackPanel>
+
+                <!-- Mobile Action Buttons (Visible only on Mobile, sitting on a second row) -->
+                <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" ColumnDefinitions="*, *" Margin="0,16,0,0"
+                      IsVisible="{Binding IsMobileLayout}">
+                  
+                  <Panel Grid.Column="0" Margin="0,0,5,0">
+                    <Button Content="FINALIZE DAY" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}"
+                            IsVisible="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+                    <Button Content="REOPEN DAY" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}"
+                            IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"/>
+                  </Panel>
+                  
+                  <Button Grid.Column="1" Content="EXPORT PDF" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                          Margin="5,0,0,0"
+                          Command="{Binding AppViewModel.ExportDayToPdfCommand}"
+                          Background="{StaticResource ActionAccent}"
+                          Foreground="#121212"
+                          FontWeight="Bold"/>
+                </Grid>
               </Grid>
 
               <!-- General Day Notes Box -->
