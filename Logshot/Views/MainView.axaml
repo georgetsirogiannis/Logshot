@@ -248,6 +248,7 @@
                   <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                   </Grid.RowDefinitions>
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -311,6 +312,23 @@
                             Background="{StaticResource ActionAccent}"
                             Foreground="#121212"
                             FontWeight="Bold"/>
+                  </Grid>
+
+                  <!-- Mobile Action Buttons Row 2: + SCENE, + SHOT, + TAKE -->
+                  <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*, *, *" Margin="0,8,0,0"
+                        IsVisible="{Binding IsMobileLayout}">
+                    <Button Grid.Column="0" Content="+ SCENE" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Margin="0,0,4,0"
+                            Command="{Binding AppViewModel.OpenAddSceneDialogCommand}"
+                            IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+                    <Button Grid.Column="1" Content="+ SHOT" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Margin="2,0,2,0"
+                            Command="{Binding AppViewModel.CurrentDay.AddShotCommand}"
+                            IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
+                    <Button Grid.Column="2" Content="+ TAKE" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Margin="4,0,0,0"
+                            Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}"
+                            IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}"/>
                   </Grid>
                 </Grid>
 
