@@ -13,7 +13,7 @@
       <Setter Property="IsReadOnly" Value="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
       <Setter Property="IsHitTestVisible" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
     </Style>
-    <Style Selector="Button">
+    <Style Selector="Button:not(.collapse-btn)">
       <Setter Property="IsEnabled" Value="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}" />
     </Style>
     <Style Selector="ToggleButton">
@@ -57,7 +57,7 @@
 		  <DataTemplate x:DataType="vm:SetupGroupViewModel">
 		    <Border Margin="10,6" CornerRadius="6" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Background="{StaticResource CardBackground}" ClipToBounds="True">
 			  <StackPanel>
-			    <Button Command="{Binding ToggleCollapsedCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
+			    <Button Classes="collapse-btn" Command="{Binding ToggleCollapsedCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
 				  <Grid ColumnDefinitions="Auto,*">
 				    <TextBlock Grid.Column="0" Text="&#9656;" Margin="0,0,8,0" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
 				    <TextBlock Grid.Column="1" Text="{Binding HeaderTitle}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}"/>
