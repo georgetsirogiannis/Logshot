@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Logshot.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Logshot.Views.InfoView"
+             x:DataType="vm:MainViewModel">
+
+  <Grid RowDefinitions="Auto, *" Margin="30" Background="{StaticResource WorkspaceBackground}">
+    
+    <!-- Top Header Bar with Close Button -->
+    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,30">
+      <TextBlock Grid.Column="0" Text="INFO &amp; SETTINGS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+      <Button Grid.Column="1" Content="✕ CLOSE" 
+              Command="{Binding CloseInfoViewCommand}"
+              VerticalAlignment="Center" Padding="12,6" FontWeight="Bold"/>
+    </Grid>
+
+    <!-- Info Content Body -->
+    <ScrollViewer Grid.Row="1">
+      <StackPanel Spacing="24" MaxWidth="600" HorizontalAlignment="Left">
+        
+        <!-- App Title & Description Block -->
+        <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
+                BorderThickness="1" CornerRadius="8" Padding="24">
+          <StackPanel Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
+              <TextBlock Text="LOGSHOT" FontSize="32" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+              <TextBlock Text="v1.0.0" FontSize="14" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+            </StackPanel>
+
+            <TextBlock Text="A digital daily shot reporting application designed for script supervisors to easily log, track, and manage film &amp; television production metadata."
+                       FontSize="14" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" LineHeight="20"/>
+
+            <Separator Background="{StaticResource BorderColor}" Margin="0,4"/>
+
+            <TextBlock Text="© 2026 George Tsirogiannis" FontSize="13" Foreground="{StaticResource TextSecondary}"/>
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+</UserControl>

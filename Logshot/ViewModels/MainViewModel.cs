@@ -31,6 +31,22 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSidebarOpen = true;
 
+    // --- Info / Settings View State ---
+    [ObservableProperty]
+    private bool _isInfoViewOpen = false;
+
+    [RelayCommand]
+    public void ToggleInfoView()
+    {
+        IsInfoViewOpen = !IsInfoViewOpen;
+    }
+
+    [RelayCommand]
+    public void CloseInfoView()
+    {
+        IsInfoViewOpen = false;
+    }
+
     // --- Cloud Sync UI Properties ---
     [ObservableProperty]
     private string _syncIcon = "☁️";
