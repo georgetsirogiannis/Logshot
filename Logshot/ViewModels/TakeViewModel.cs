@@ -354,6 +354,7 @@ public partial class TakeViewModel : ViewModelBase
         }
     }
 
+
     /// <summary>
     /// Convert this ViewModel back to a model for database persistence
     /// </summary>
@@ -560,6 +561,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowFailedActive));
         OnPropertyChanged(nameof(ShowSoundNormal));
         OnPropertyChanged(nameof(DisplayTakeNumber));
+        OnPropertyChanged(nameof(VoidedHeadingText));
 
         foreach (var cell in ExtraCameraRolls)
         {
@@ -825,6 +827,29 @@ public partial class TakeViewModel : ViewModelBase
         foreach (var cell in ExtraCameraRolls)
         {
             cell.NotifyRollChanged();
+        }
+    }
+
+    /// <summary>
+    /// Mobile view: Returns the appropriate heading text for the voided cameras section.
+    /// </summary>
+    public string VoidedHeadingText
+    {
+        get
+        {
+            int voidCount = 0;
+            if (IsCamAVoided) voidCount++;
+            if (IsCamBVoided) voidCount++;
+
+            if (ExtraCameraRolls != null)
+            {
+                foreach (var cam in ExtraCameraRolls)
+                {
+                    if (cam.IsVoided) voidCount++;
+                }
+            }
+
+            return voidCount > 1 ? "ΑΚΥΡΑ CLIPS" : "ΑΚΥΡΟ CLIP";
         }
     }
 }
