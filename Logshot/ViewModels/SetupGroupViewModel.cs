@@ -1,8 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 
 namespace Logshot.ViewModels
 {
@@ -28,13 +29,27 @@ namespace Logshot.ViewModels
         // This collection holds only the takes for this specific Episode/Scene chunk
         public ObservableCollection<TakeViewModel> GroupedTakes { get; } = new();
 
-        // Generates the required mobile UI format: "ΕΠ 10 - ΣΚ 40 (Continued) (3 Takes)"
+        // Helper method to turn multiline entries (e.g. 45\n46) into a dashed string (45-46)
+        private static string FormatHeaderValue(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+
+            var parts = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                             .Select(p => p.Trim());
+
+            return string.Join("-", parts);
+        }
+
+        // Generates the mobile UI format: "10 / 40-41 (Continued) (3 Takes)"
         public string HeaderTitle
         {
             get
             {
+                var formattedEp = FormatHeaderValue(Episode);
+                var formattedSc = FormatHeaderValue(Scene);
                 var continuedText = IsContinued ? " (Continued)" : "";
-                return $"ΕΠ {Episode} - ΣΚ {Scene}{continuedText} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow)} Takes)";
+
+                return $"{formattedEp} / {formattedSc}{continuedText} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow)} Takes)";
             }
         }
 
