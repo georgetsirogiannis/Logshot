@@ -3,16 +3,30 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Logshot.ViewModels"
+             xmlns:views="using:Logshot.Views"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
              x:Class="Logshot.Views.TakeCardView"
              x:DataType="vm:TakeViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBox">
+      <Setter Property="IsReadOnly" Value="{Binding $parent[views:MobileTakeListView].((vm:DayViewModel)DataContext).IsFinalized}" />
+      <Setter Property="IsHitTestVisible" Value="{Binding !$parent[views:MobileTakeListView].((vm:DayViewModel)DataContext).IsFinalized}" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="IsEnabled" Value="{Binding !$parent[views:MobileTakeListView].((vm:DayViewModel)DataContext).IsFinalized}" />
+    </Style>
+    <Style Selector="ToggleButton">
+      <Setter Property="IsEnabled" Value="{Binding !$parent[views:MobileTakeListView].((vm:DayViewModel)DataContext).IsFinalized}" />
+    </Style>
+  </UserControl.Styles>
   
   <Border Background="{StaticResource CardBackground}" 
           BorderBrush="{StaticResource GridLineColor}" 
           BorderThickness="0,0,0,1" 
           Padding="16,16" 
           MinHeight="{Binding RowMinHeight}" 
-          IsHitTestVisible="{Binding !$parent[UserControl].((vm:DayViewModel)DataContext).IsFinalized}">
+          IsHitTestVisible="{Binding !$parent[views:MobileTakeListView].((vm:DayViewModel)DataContext).IsFinalized}">
     
     <Grid>
       
