@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.IO;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Logshot.Services;
@@ -29,6 +31,13 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSidebarOpen = true;
 
+    // --- Cloud Sync UI Properties ---
+    [ObservableProperty]
+    private string _syncIcon = "☁️";
+
+    [ObservableProperty]
+    private string _syncText = "Waiting...";
+
     partial void OnIsMobileLayoutChanged(bool value)
     {
         IsSidebarOpen = !value;
@@ -48,6 +57,16 @@ public partial class MainViewModel : ViewModelBase
         // Hook up the debounce sync trigger so it runs automatically in the background
         _databaseService.OnDataChanged += () => _supabaseService.TriggerSync();
 
+        // Listen for status changes from the Sync Engine and update the UI securely
+        _supabaseService.OnSyncStatusChanged += (icon, text) =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                SyncIcon = icon;
+                SyncText = text;
+            });
+        };
+
         _appViewModel = new AppViewModel(databaseService);
     }
 
@@ -58,6 +77,18 @@ public partial class MainViewModel : ViewModelBase
         {
             StatusMessage = "Connecting to cloud...";
             await _supabaseService.InitializeAsync();
+
+            // One-time: push any data that existed before cloud sync was added
+            string backfillMarker = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "logshot_backfill_done.txt");
+
+            if (!File.Exists(backfillMarker))
+            {
+                await _databaseService.EnqueueAllExistingDataForSyncAsync();
+                File.WriteAllText(backfillMarker, "done");
+                _supabaseService.TriggerSync();
+            }
 
             StatusMessage = "Loading application...";
             await AppViewModel.InitializeAppCommand.ExecuteAsync(null);

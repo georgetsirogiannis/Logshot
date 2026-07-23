@@ -32,7 +32,9 @@
               BorderThickness="0,0,1,0"
               Padding="20"
               IsVisible="{Binding IsSidebarOpen}">
-        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *, Auto">
+        
+        <!-- Updated to 9 Rows to accommodate the Sync Status at the bottom -->
+        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *, Auto, Auto">
 
           <!-- App Brand -->
           <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,25">
@@ -129,6 +131,13 @@
                     IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}" 
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
           </StackPanel>
+
+          <!-- NEW: Cloud Sync Status Indicator -->
+          <StackPanel Grid.Row="8" Orientation="Horizontal" Spacing="6" Margin="0,20,0,0" HorizontalAlignment="Center" ToolTip.Tip="Cloud Sync Status">
+            <TextBlock Text="{Binding SyncIcon}" FontSize="14" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+          </StackPanel>
+
         </Grid>
       </Border>
 
@@ -190,14 +199,13 @@
         </Grid>
 
         <!-- State 1: No Day Selected -->
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" 
-                    IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNull}}">
-          <StackPanel.IsVisible>
-            <MultiBinding Converter="{x:Static BoolConverters.And}">
-              <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNull}"/>
-              <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
-            </MultiBinding>
-          </StackPanel.IsVisible>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+  <StackPanel.IsVisible>
+    <MultiBinding Converter="{x:Static BoolConverters.And}">
+      <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNull}"/>
+      <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
+    </MultiBinding>
+  </StackPanel.IsVisible>
           <TextBlock Text="Select a shoot day or create a new one to begin." 
                      Foreground="{StaticResource TextSecondary}" FontSize="18" 
                      HorizontalAlignment="Center"/>

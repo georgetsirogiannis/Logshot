@@ -72,9 +72,11 @@ public class SupabaseService
     private bool _isInitialized = false;
     private CancellationTokenSource? _debounceCts;
 
-    // TODO: Paste your real Supabase URL and Anon Key here
+    // UI Event to notify the ViewModel of state changes (Icon, Text)
+    public event Action<string, string>? OnSyncStatusChanged;
+
     private const string SupabaseUrl = "https://wcddchyqorejtashswsu.supabase.co";
-    private const string SupabaseKey = "sb_publishable_vH1pQRXnFMbcmb5Y7KHukw_sDqq5yD4";
+    private const string SupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZGRjaHlxb3JlanRhc2hzd3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAyMzksImV4cCI6MjEwMDMzNjIzOX0.cZrcrRAIEEvAYOEbiTcorBGPgx04tcLfuQH3suFn3IE"; // Keep your working JWT anon key here
 
     public SupabaseService(DatabaseService databaseService)
     {
@@ -85,14 +87,27 @@ public class SupabaseService
     {
         if (_isInitialized) return;
 
-        var options = new SupabaseOptions { AutoConnectRealtime = true };
-        _client = new Client(SupabaseUrl, SupabaseKey, options);
-        await _client.InitializeAsync();
-
         _isInitialized = true;
+        OnSyncStatusChanged?.Invoke("🔄", "Connecting...");
 
-        // On app load, trigger a sync to clear out anything logged while offline
-        TriggerSync();
+        try
+        {
+            var options = new SupabaseOptions { AutoConnectRealtime = true };
+            _client = new Client(SupabaseUrl, SupabaseKey, options);
+
+            // Wrap initialization in a 5-second timeout so it never hangs indefinitely
+            await ExecuteWithTimeout(async () => await _client.InitializeAsync(), 5000);
+
+            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+
+            // On app load, trigger a sync to clear out anything logged while offline
+            TriggerSync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Supabase Init Error: {ex.Message}");
+            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+        }
     }
 
     /// <summary>
@@ -123,33 +138,110 @@ public class SupabaseService
 
     private async Task ProcessSyncQueueAsync()
     {
+        _syncedProjectIds.Clear();
+        _syncedDayIds.Clear();
+
         var pendingItems = await _databaseService.GetPendingSyncItemsAsync();
-        if (pendingItems.Count == 0) return;
+        if (pendingItems.Count == 0)
+        {
+            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+            return;
+        }
+
+        OnSyncStatusChanged?.Invoke("🔄", "Syncing...");
+        bool hasError = false;
 
         foreach (var item in pendingItems)
         {
             try
             {
-                if (item.Action == "Upsert")
+                // Wrap each item sync operation in a strict 5-second timeout
+                await ExecuteWithTimeout(async () =>
                 {
-                    await ProcessUpsertAsync(item);
-                }
-                else if (item.Action == "Delete")
-                {
-                    await ProcessDeleteAsync(item);
-                }
+                    if (item.Action == "Upsert")
+                    {
+                        await ProcessUpsertAsync(item);
+                    }
+                    else if (item.Action == "Delete")
+                    {
+                        await ProcessDeleteAsync(item);
+                    }
+                }, 5000);
 
                 // If successful, remove it from the local outbox queue
                 await _databaseService.DeleteSyncItemAsync(item);
             }
             catch (Exception ex)
             {
-                // If it fails (e.g., no internet connection), break the loop.
-                // The item remains in SQLite, and will automatically retry next time.
-                System.Diagnostics.Debug.WriteLine($"Cloud Sync Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Cloud Sync Error on [{item.EntityType} {item.EntityId}]: {ex.Message}");
+                hasError = true;
                 break;
             }
         }
+
+        if (hasError)
+        {
+            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+        }
+        else
+        {
+            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+        }
+    }
+
+    private async Task ExecuteWithTimeout(Func<Task> action, int timeoutMs)
+    {
+        using var cts = new CancellationTokenSource(timeoutMs);
+        var task = action();
+        var completedTask = await Task.WhenAny(task, Task.Delay(timeoutMs, cts.Token));
+        if (completedTask != task)
+        {
+            throw new TimeoutException("Supabase operation timed out.");
+        }
+        await task;
+    }
+
+    private readonly HashSet<string> _syncedProjectIds = new();
+    private readonly HashSet<string> _syncedDayIds = new();
+
+    private async Task UpsertProjectIfNeeded(string projectId)
+    {
+        if (string.IsNullOrEmpty(projectId) || _syncedProjectIds.Contains(projectId)) return;
+        var project = await _databaseService.GetProjectAsync(projectId);
+        if (project == null) return;
+
+        await _client.From<SupabaseProject>().Upsert(new SupabaseProject
+        {
+            Id = project.Id,
+            Name = project.Name,
+            Director = project.Director,
+            Dop = project.Dop,
+            ProductionCompany = project.ProductionCompany,
+            ScriptSupervisor = project.ScriptSupervisor,
+            CreatedAt = project.CreatedAt
+        });
+        _syncedProjectIds.Add(projectId);
+    }
+
+    private async Task UpsertDayIfNeeded(string dayId)
+    {
+        if (string.IsNullOrEmpty(dayId) || _syncedDayIds.Contains(dayId)) return;
+        var day = await _databaseService.GetDayAsync(dayId);
+        if (day == null) return;
+
+        await UpsertProjectIfNeeded(day.ProjectId);
+
+        await _client.From<SupabaseDay>().Upsert(new SupabaseDay
+        {
+            Id = day.Id,
+            ProjectId = day.ProjectId,
+            ShootDayNumber = day.ShootDayNumber,
+            CalendarDate = day.CalendarDate,
+            GeneralNotes = day.GeneralNotes,
+            IsFinalized = day.IsFinalized,
+            CreatedAt = day.CreatedAt
+        });
+        _syncedDayIds.Add(dayId);
     }
 
     private async Task ProcessUpsertAsync(SyncQueueItem item)
@@ -157,43 +249,19 @@ public class SupabaseService
         switch (item.EntityType)
         {
             case "Project":
-                var project = await _databaseService.GetProjectAsync(item.EntityId);
-                if (project != null)
-                {
-                    await _client.From<SupabaseProject>().Upsert(new SupabaseProject
-                    {
-                        Id = project.Id,
-                        Name = project.Name,
-                        Director = project.Director,
-                        Dop = project.Dop,
-                        ProductionCompany = project.ProductionCompany,
-                        ScriptSupervisor = project.ScriptSupervisor,
-                        CreatedAt = project.CreatedAt
-                    });
-                }
+                await UpsertProjectIfNeeded(item.EntityId);
                 break;
 
             case "Day":
-                var day = await _databaseService.GetDayAsync(item.EntityId);
-                if (day != null)
-                {
-                    await _client.From<SupabaseDay>().Upsert(new SupabaseDay
-                    {
-                        Id = day.Id,
-                        ProjectId = day.ProjectId,
-                        ShootDayNumber = day.ShootDayNumber,
-                        CalendarDate = day.CalendarDate,
-                        GeneralNotes = day.GeneralNotes,
-                        IsFinalized = day.IsFinalized,
-                        CreatedAt = day.CreatedAt
-                    });
-                }
+                await UpsertDayIfNeeded(item.EntityId);
                 break;
 
             case "Take":
                 var take = await _databaseService.GetTakeAsync(item.EntityId);
                 if (take != null)
                 {
+                    await UpsertDayIfNeeded(take.DayId);
+
                     await _client.From<SupabaseTake>().Upsert(new SupabaseTake
                     {
                         Id = take.Id,

@@ -148,6 +148,26 @@ public class DatabaseService
         await _db.DeleteAsync(item);
     }
 
+    public async Task<int> EnqueueAllExistingDataForSyncAsync()
+    {
+        await InitAsync();
+
+        var projects = await _db.Table<Project>().ToListAsync();
+        var days = await _db.Table<Day>().ToListAsync();
+        var takes = await _db.Table<Take>().ToListAsync();
+
+        foreach (var p in projects)
+            await _db.InsertAsync(new SyncQueueItem { EntityType = "Project", EntityId = p.Id, Action = "Upsert" });
+
+        foreach (var d in days)
+            await _db.InsertAsync(new SyncQueueItem { EntityType = "Day", EntityId = d.Id, Action = "Upsert" });
+
+        foreach (var t in takes)
+            await _db.InsertAsync(new SyncQueueItem { EntityType = "Take", EntityId = t.Id, Action = "Upsert" });
+
+        return projects.Count + days.Count + takes.Count;
+    }
+
     // --- EXISTING QUERY OPERATIONS ---
 
     public async Task<List<Take>> GetTakesForDayAsync(string dayId)
