@@ -14,7 +14,6 @@ CAUTION: ~~THIS IS AN OUTDATED REPORT.~~ **UPDATED REPORT.**
 2. **C# Entity Models:** Write the C# classes (Project, Day, Take) exactly mirroring the schema.  ✅ **COMPLETED**
 3. **Local SQLite Initialization:** Set up the local database engine so the app automatically creates the logshot.db file and tables on first launch.  ✅ **COMPLETED**
 4. **Data Repository Layer:** Write the basic CRUD commands to save new Takes and Days to the local database in under 2 milliseconds.  ✅ **COMPLETED**
-5. **Supabase Connection:** Install the Supabase C# SDK and set up the basic authentication and cloud connection endpoints.  ⏳ **DEFERRED** (scheduled for Phase 7)
 
 ---
 
@@ -84,7 +83,7 @@ CAUTION: ~~THIS IS AN OUTDATED REPORT.~~ **UPDATED REPORT.**
 
 ---
 
-### **Phase 6: The PDF Export Engine (QuestPDF)** ⏳ **PENDING**
+### **Phase 6: The PDF Export Engine (QuestPDF)** ✅ **COMPLETE**
 
 **Dependency:** Phase 3, 5 (UI data complete) — satisfied
 **Important Note:** The PDF Export is a day-based operation. The PDF will only export the takes of a single day, not the entire project. So we need to design this feature with the understanding that the user will select a day and then export that day's takes to PDF.
@@ -108,12 +107,11 @@ CAUTION: ~~THIS IS AN OUTDATED REPORT.~~ **UPDATED REPORT.**
 
 **Dependency:** All previous phases (full feature complete)
 
-1. **The Outbox Sync Worker:** Build the background task with the 3-second debounce timer to quietly push SQLite changes to Supabase.  
-   - *Note: Includes Supabase connection setup deferred from Phase 1*
-
-2. **Emergency Backup:** Implement the button that bundles the .db file for local Bluetooth/USB sharing.  
-3. **Version Control Audit:** Update version numbers across all manifests and configuration files.  
-4. **Testing & Bug Hunting:** Run the app with a simulated 100-take day to check for lag, scrolling issues, or UI wrapping errors.
+1. **Supabase Connection:** Install the Supabase C# SDK and set up the basic authentication and cloud connection endpoints.
+2. **The Outbox Sync Worker:** Build the background task with the 3-second debounce timer to quietly push SQLite changes to Supabase.  
+3. **Emergency Backup:** Implement the button that bundles the .db file for local Bluetooth/USB sharing.  
+4. **Version Control Audit:** Update version numbers across all manifests and configuration files.  
+5. **Testing & Bug Hunting:** Run the app with a simulated 100-take day to check for lag, scrolling issues, or UI wrapping errors.
 
 ---
 
