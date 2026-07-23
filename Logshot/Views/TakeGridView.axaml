@@ -462,11 +462,13 @@
                           <!-- Chips & Board Text Row -->
                           <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,4">
                             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                             <Button Classes="fs-chip" Command="{Binding IncrementFalseStartsCommand}" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="10" IsVisible="{Binding FalseStartCount}" Padding="4,1"/>
-                              <Button Command="{Binding IncrementFalseStartsCommand}" Content="+" FontSize="10" Padding="4,0"/>
-                              <Button Command="{Binding DecrementFalseStartsCommand}" Content="-" FontSize="10" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
-                              
-                              <ToggleButton Content="LS" FontSize="10" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="4,0">
+
+                             <!--- FS Chip -->
+                              <Button Command="{Binding IncrementFalseStartsCommand}" Content="FS" FontSize="11" IsVisible="{Binding !FalseStartCount}" Padding="4,0"/>
+                              <Button Classes="fs-chip" Command="{Binding IncrementFalseStartsCommand}" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="11" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
+                              <Button Command="{Binding DecrementFalseStartsCommand}" Content="-" FontSize="11" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
+
+                              <ToggleButton Content="LS" FontSize="11" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="4,0">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                     <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
@@ -487,7 +489,7 @@
                                 </ToggleButton.Styles>
                               </ToggleButton>
                               
-                              <ToggleButton Content="BL" FontSize="10" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
+                              <ToggleButton Content="BL" FontSize="11" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                     <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
@@ -510,7 +512,7 @@
 
                               <TextBlock Text="|" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="2,0"/>
 
-                              <ToggleButton Content="NB" FontSize="10" Padding="4,0" IsChecked="{Binding IsNoBoard, Mode=TwoWay}">
+                              <ToggleButton Content="NB" FontSize="11" Padding="4,0" IsChecked="{Binding IsNoBoard, Mode=TwoWay}">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                     <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
@@ -531,7 +533,7 @@
                                 </ToggleButton.Styles>
                               </ToggleButton>
 
-                              <ToggleButton Content="EB" FontSize="10" Padding="4,0" IsChecked="{Binding IsEndBoard, Mode=TwoWay}">
+                              <ToggleButton Content="EB" FontSize="11" Padding="4,0" IsChecked="{Binding IsEndBoard, Mode=TwoWay}">
                                 <ToggleButton.Styles>
                                   <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                     <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
