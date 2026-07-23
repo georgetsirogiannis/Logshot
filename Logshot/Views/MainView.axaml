@@ -341,14 +341,14 @@
                           BorderThickness="1" 
                           CornerRadius="4">
                   <Expander.Header>
-                    <TextBlock Text="GENERAL DAY NOTES" 
+                    <TextBlock Text="ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ" 
                                FontWeight="Bold" 
                                FontSize="12" 
                                Foreground="{StaticResource ActionAccent}" />
                   </Expander.Header>
 
                   <TextBox Text="{Binding AppViewModel.CurrentDay.GeneralNotes}" 
-                           PlaceholderText="General Day Notes (e.g., weather, global scene observations)..." 
+                           PlaceholderText="Γενικές σημειώσεις (π.χ. οδηγίες/επεξηγήσεις προς μοντέρ)..." 
                            AcceptsReturn="True" 
                            TextWrapping="Wrap" 
                            MinHeight="60" 
