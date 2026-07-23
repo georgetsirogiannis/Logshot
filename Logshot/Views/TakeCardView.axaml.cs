@@ -13,6 +13,27 @@ public partial class TakeCardView : UserControl
         InitializeComponent();
     }
 
+    private void DeleteTake_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem menuItem && menuItem.DataContext is TakeViewModel takeVm)
+        {
+            // Traverse up the visual/logical tree to find the DayViewModel
+            Control? curr = this;
+            while (curr != null)
+            {
+                if (curr is UserControl uc && uc.DataContext is DayViewModel dayVm)
+                {
+                    if (dayVm.PromptDeleteTakeCommand.CanExecute(takeVm))
+                    {
+                        dayVm.PromptDeleteTakeCommand.Execute(takeVm);
+                    }
+                    break;
+                }
+                curr = curr.Parent as Control ?? curr.GetVisualParent() as Control;
+            }
+        }
+    }
+
     private void CloseFlyout_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn)

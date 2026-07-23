@@ -46,7 +46,7 @@
                  <MenuItem Header="Mark Failed" Command="{Binding MarkFailedCommand}"/>
                  <MenuItem Header="Toggle Pickup (PU)" Command="{Binding TogglePickupCommand}"/>
                  <Separator/>
-                 <MenuItem Header="Delete Take" Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).PromptDeleteTakeCommand}" CommandParameter="{Binding}" Foreground="{StaticResource FailRed}"/>
+                 <MenuItem Header="Delete Take" Click="DeleteTake_Click" Foreground="{StaticResource FailRed}"/>
               </MenuFlyout>
            </Button.Flyout>
         </Button>
@@ -211,13 +211,12 @@
                      
                      <!-- FS Group -->
                      <Border Background="{StaticResource HeaderBackground}" CornerRadius="6" ClipToBounds="True">
-    <StackPanel Orientation="Horizontal" Spacing="0">
-        <Button Content="-FS" Command="{Binding DecrementFalseStartsCommand}" IsVisible="{Binding FalseStartCount}" Padding="12,8" Background="Transparent" FontSize="13"/>
-        <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}" Padding="12,8" Background="Transparent" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" FontSize="13"/>
-        <Button Content="+FS" Command="{Binding IncrementFalseStartsCommand}" IsVisible="{Binding !FalseStartCount}" Padding="12,8" Background="Transparent" FontWeight="Bold" FontSize="13"/>
-    </StackPanel>
-</Border>
-
+                        <StackPanel Orientation="Horizontal" Spacing="0">
+                            <Button Content="-FS" Command="{Binding DecrementFalseStartsCommand}" IsVisible="{Binding FalseStartCount}" Padding="12,8" Background="Transparent" FontSize="13"/>
+                            <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}" Padding="12,8" Background="Transparent" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" FontSize="13"/>
+                            <Button Content="+FS" Command="{Binding IncrementFalseStartsCommand}" IsVisible="{Binding !FalseStartCount}" Padding="12,8" Background="Transparent" FontWeight="Bold" FontSize="13"/>
+                        </StackPanel>
+                     </Border>
 
                      <ToggleButton Content="LS" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="16,8" CornerRadius="6" FontWeight="Bold" FontSize="13">
                         <ToggleButton.Styles>
