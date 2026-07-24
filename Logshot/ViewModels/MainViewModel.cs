@@ -65,6 +65,35 @@ public partial class MainViewModel : ViewModelBase
 
     private string _pendingImportPath = string.Empty;
 
+    private bool _isImportResultOpen = false;
+    public bool IsImportResultOpen
+    {
+        get => _isImportResultOpen;
+        set => SetProperty(ref _isImportResultOpen, value);
+    }
+
+    private string _importResultTitle = string.Empty;
+    public string ImportResultTitle
+    {
+        get => _importResultTitle;
+        set => SetProperty(ref _importResultTitle, value);
+    }
+
+    private string _importResultMessage = string.Empty;
+    public string ImportResultMessage
+    {
+        get => _importResultMessage;
+        set => SetProperty(ref _importResultMessage, value);
+    }
+
+    private IRelayCommand? _closeImportResultCommand;
+    public IRelayCommand CloseImportResultCommand => _closeImportResultCommand ??= new RelayCommand(CloseImportResult);
+
+    public void CloseImportResult()
+    {
+        IsImportResultOpen = false;
+    }
+
     [RelayCommand]
     public void ExportDatabase() => RequestExportDbFilePicker?.Invoke();
 
@@ -118,9 +147,18 @@ public partial class MainViewModel : ViewModelBase
             else
             {
                 StatusMessage = "Import Failed: " + summaryMsg;
+                ImportResultTitle = "Database Merge Failed";
+                ImportResultMessage = summaryMsg;
+                IsImportResultOpen = true;
             }
         }
-        catch (Exception ex) { StatusMessage = $"Import Check Failed: {ex.Message}"; }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Import Check Failed: {ex.Message}";
+            ImportResultTitle = "Database Merge Failed";
+            ImportResultMessage = $"Could not open or read the imported database file.\n\nReason:\n{ex.Message}";
+            IsImportResultOpen = true;
+        }
         finally { AppViewModel.IsLoading = false; }
     }
 
@@ -133,7 +171,13 @@ public partial class MainViewModel : ViewModelBase
         {
             await ExecuteImport();
         }
-        catch (Exception ex) { StatusMessage = $"Import Failed: {ex.Message}"; }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Import Failed: {ex.Message}";
+            ImportResultTitle = "Database Merge Failed";
+            ImportResultMessage = $"An error occurred while merging data into your database.\n\nReason:\n{ex.Message}";
+            IsImportResultOpen = true;
+        }
         finally { AppViewModel.IsLoading = false; }
     }
 
@@ -148,8 +192,8 @@ public partial class MainViewModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(_pendingImportPath)) return;
 
-        // Execute the safe merge instead of a file replacement
-        await _databaseService.MergeDatabaseAsync(_pendingImportPath);
+        // Execute the safe merge instead of a file replacement and get added counts
+        var (addedProjects, addedDays, addedTakes) = await _databaseService.MergeDatabaseAsync(_pendingImportPath);
         _pendingImportPath = string.Empty;
 
         // Force a full reload of the app state after DB merge
@@ -157,8 +201,16 @@ public partial class MainViewModel : ViewModelBase
         AppViewModel.CurrentProject = null;
         AppViewModel.CurrentDay = null;
 
-        IsInfoViewOpen = false;
         StatusMessage = "Database merged successfully.";
+
+        // Display completion result popup with exact breakdown
+        ImportResultTitle = "Database Merge Successful";
+        ImportResultMessage = $"The database merge completed successfully!\n\n" +
+                               $"Added Data:\n" +
+                               $"• Projects: {addedProjects}\n" +
+                               $"• Days: {addedDays}\n" +
+                               $"• Takes: {addedTakes}";
+        IsImportResultOpen = true;
     }
 
     // --- Cloud Sync UI Properties ---

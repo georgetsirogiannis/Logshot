@@ -111,18 +111,31 @@ public class DatabaseService
         return (true, msg);
     }
 
-    public async Task MergeDatabaseAsync(string importPath)
+    public async Task<(int addedProjects, int addedDays, int addedTakes)> MergeDatabaseAsync(string importPath)
     {
         // 1. Load imported data
         var importDb = new SQLiteAsyncConnection(importPath);
-        var importedProjects = await importDb.Table<Project>().ToListAsync();
-        var importedDays = await importDb.Table<Day>().ToListAsync();
-        var importedTakes = await importDb.Table<Take>().ToListAsync();
-        await importDb.CloseAsync();
+        List<Project> importedProjects;
+        List<Day> importedDays;
+        List<Take> importedTakes;
+
+        try
+        {
+            importedProjects = await importDb.Table<Project>().ToListAsync();
+            importedDays = await importDb.Table<Day>().ToListAsync();
+            importedTakes = await importDb.Table<Take>().ToListAsync();
+        }
+        finally
+        {
+            await importDb.CloseAsync();
+        }
 
         await InitAsync();
 
         var insertedSyncItems = new List<SyncQueueItem>();
+        int addedProjects = 0;
+        int addedDays = 0;
+        int addedTakes = 0;
 
         // 2. Merge only new records (non-destructive)
         await _db.RunInTransactionAsync(tran =>
@@ -133,6 +146,7 @@ public class DatabaseService
                 if (tran.Find<Project>(p.Id) == null)
                 {
                     tran.Insert(p);
+                    addedProjects++;
                     insertedSyncItems.Add(new SyncQueueItem { EntityType = "Project", EntityId = p.Id, Action = "Upsert" });
                 }
             }
@@ -143,6 +157,7 @@ public class DatabaseService
                 if (tran.Find<Day>(d.Id) == null)
                 {
                     tran.Insert(d);
+                    addedDays++;
                     insertedSyncItems.Add(new SyncQueueItem { EntityType = "Day", EntityId = d.Id, Action = "Upsert" });
                 }
             }
@@ -153,6 +168,7 @@ public class DatabaseService
                 if (tran.Find<Take>(t.Id) == null)
                 {
                     tran.Insert(t);
+                    addedTakes++;
                     insertedSyncItems.Add(new SyncQueueItem { EntityType = "Take", EntityId = t.Id, Action = "Upsert" });
                 }
             }
@@ -164,6 +180,8 @@ public class DatabaseService
             await _db.InsertAllAsync(insertedSyncItems);
             OnDataChanged?.Invoke();
         }
+
+        return (addedProjects, addedDays, addedTakes);
     }
 
     private async Task QueueSyncAction(string entityType, string entityId, string action)

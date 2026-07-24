@@ -91,5 +91,21 @@
       </Border>
     </Grid>
 
+    <!-- Import DB Merge Result Modal -->
+    <Grid Background="#B2000000" IsVisible="{Binding IsImportResultOpen}" ZIndex="510"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch"> 
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="420" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="{Binding ImportResultTitle}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+          <TextBlock Text="{Binding ImportResultMessage}" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" LineHeight="20"/>
+          
+          <Button Content="OK" Command="{Binding CloseImportResultCommand}" 
+                  Background="{StaticResource ActionAccent}" Foreground="#121212" Width="100" 
+                  HorizontalAlignment="Right" HorizontalContentAlignment="Center" FontWeight="Bold" Margin="0,12,0,0"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+
   </Grid>
 </UserControl>
