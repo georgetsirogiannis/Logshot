@@ -31,6 +31,41 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSidebarOpen = true;
 
+    // --- Autocorrection State ---
+    [ObservableProperty]
+    private bool _isAutocorrectEnabled;
+
+    partial void OnIsAutocorrectEnabledChanged(bool value)
+    {
+        AutocorrectionManager.Instance.SaveSettings(value, AutocorrectionManager.Instance.CustomDictionaryText);
+    }
+
+    [ObservableProperty]
+    private bool _isCustomDictModalOpen = false;
+
+    [ObservableProperty]
+    private string _customDictText = string.Empty;
+
+    [RelayCommand]
+    public void OpenCustomDict()
+    {
+        CustomDictText = AutocorrectionManager.Instance.CustomDictionaryText;
+        IsCustomDictModalOpen = true;
+    }
+
+    [RelayCommand]
+    public void SaveCustomDict()
+    {
+        AutocorrectionManager.Instance.SaveSettings(IsAutocorrectEnabled, CustomDictText);
+        IsCustomDictModalOpen = false;
+    }
+
+    [RelayCommand]
+    public void CancelCustomDict()
+    {
+        IsCustomDictModalOpen = false;
+    }
+
     // --- Info / Settings View State ---
     [ObservableProperty]
     private bool _isInfoViewOpen = false;
@@ -248,6 +283,8 @@ public partial class MainViewModel : ViewModelBase
                 SyncText = text;
             });
         };
+
+        IsAutocorrectEnabled = AutocorrectionManager.Instance.IsEnabled;
 
         _appViewModel = new AppViewModel(databaseService);
     }

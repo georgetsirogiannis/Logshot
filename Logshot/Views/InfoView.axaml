@@ -13,7 +13,7 @@
       
       <!-- Top Header Bar with Close Button -->
       <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,30">
-        <TextBlock Grid.Column="0" Text="INFO &amp; SETTINGS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="0" Text="SETTINGS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
         <Button Grid.Column="1" Content="✕ CLOSE" 
                 Command="{Binding CloseInfoViewCommand}"
                 VerticalAlignment="Center" Padding="12,6" FontWeight="Bold"/>
@@ -23,6 +23,25 @@
       <ScrollViewer Grid.Row="1">
         <StackPanel Spacing="24" MaxWidth="600" HorizontalAlignment="Left">
           
+          <!-- Autocorrection Block -->
+          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
+                  BorderThickness="1" CornerRadius="8" Padding="24">
+            <StackPanel Spacing="16">
+              <Grid ColumnDefinitions="*, Auto">
+                <TextBlock Grid.Column="0" Text="SPELLING AUTOCORRECT" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAutocorrectEnabled}" OnContent="ON" OffContent="OFF"/>
+              </Grid>
+              
+              <TextBlock Text="Instantly corrects common shorthand typos when you press space. Add your own in the custom dictionary."
+                         FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
+
+              <Button Content="EDIT CUSTOM DICTIONARY" 
+                      Command="{Binding OpenCustomDictCommand}"
+                      Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+            </StackPanel>
+          </Border>
+            
           <!-- Database Export/Import Block -->
           <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
                   BorderThickness="1" CornerRadius="8" Padding="24">
@@ -103,6 +122,32 @@
           <Button Content="OK" Command="{Binding CloseImportResultCommand}" 
                   Background="{StaticResource ActionAccent}" Foreground="#121212" Width="100" 
                   HorizontalAlignment="Right" HorizontalContentAlignment="Center" FontWeight="Bold" Margin="0,12,0,0"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+      <!-- Custom Dictionary Modal -->
+    <Grid Background="#B2000000" IsVisible="{Binding IsCustomDictModalOpen}" ZIndex="520"
+          VerticalAlignment="Stretch" HorizontalAlignment="Stretch"> 
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+              CornerRadius="8" Width="440" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Custom Dictionary" FontSize="20" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+          <TextBlock Text="Add one pair per line, separating the typo and the correct word with an equals sign (=). Example: Κοτνινο = Κοντινό" 
+                     TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" FontSize="12" LineHeight="18"/>
+          
+          <TextBox Text="{Binding CustomDictText}" 
+                   AcceptsReturn="True" 
+                   TextWrapping="NoWrap" 
+                   MinHeight="150" 
+                   MaxHeight="300"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto"
+                   PlaceholderText="Typo = Correction"/>
+          
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" Command="{Binding CancelCustomDictCommand}" Width="100" HorizontalContentAlignment="Center"/>
+            <Button Content="Save Pairs" Command="{Binding SaveCustomDictCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" Width="130" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </StackPanel>
         </StackPanel>
       </Border>
     </Grid>
