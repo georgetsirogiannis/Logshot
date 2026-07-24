@@ -59,6 +59,7 @@ public class SupabaseTake : BaseModel
     [Column("is_blooper")] public bool IsBlooper { get; set; }
     [Column("is_no_board")] public bool IsNoBoard { get; set; }
     [Column("is_end_board")] public bool IsEndBoard { get; set; }
+    [Column("is_wild_shot")] public bool IsWildShot { get; set; }
     [Column("void_camera_labels")] public string VoidCameraLabels { get; set; } = string.Empty;
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
@@ -283,6 +284,7 @@ public class SupabaseService
                         IsBlooper = take.IsBlooper,
                         IsNoBoard = take.IsNoBoard,
                         IsEndBoard = take.IsEndBoard,
+                        IsWildShot = take.IsWildShot,
                         VoidCameraLabels = take.VoidCameraLabels,
                         CreatedAt = take.CreatedAt
                     });

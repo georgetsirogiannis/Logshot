@@ -100,6 +100,10 @@ public partial class TakeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isEndBoard = false;
 
+    [ObservableProperty]
+    private bool _isWildShot = false;
+    public bool IsWildOrSoundOnly => IsWildShot || IsSoundOnlyRow;
+
     // False Clip Tracking
     [ObservableProperty]
     private string _voidCameraLabels = "[]";
@@ -165,9 +169,9 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     public string DisplayEpisode => IsSoundOnlyRow ? string.Empty : Episode;
-    public string DisplayScene => IsSoundOnlyRow ? string.Empty : Scene;
-    public string DisplayShot => IsSoundOnlyRow ? string.Empty : (Shot == 0 ? string.Empty : Shot.ToString());
-    public string DisplayTakeNumber => (IsSoundOnlyRow || HasVoidedCameras) ? string.Empty : (TakeNumber == 0 ? string.Empty : TakeNumber.ToString());
+    public string DisplayScene => (IsSoundOnlyRow || IsWildShot) ? string.Empty : Scene;
+    public string DisplayShot => (IsSoundOnlyRow || IsWildShot) ? string.Empty : (Shot == 0 ? string.Empty : Shot.ToString());
+    public string DisplayTakeNumber => (IsSoundOnlyRow || HasVoidedCameras || IsWildShot) ? string.Empty : (TakeNumber == 0 ? string.Empty : TakeNumber.ToString());
 
     public TakeViewModel(DatabaseService databaseService)
     {
@@ -300,6 +304,18 @@ public partial class TakeViewModel : ViewModelBase
         }
     }
 
+    partial void OnIsWildShotChanged(bool value)
+    {
+        OnPropertyChanged(nameof(DisplayScene));
+        OnPropertyChanged(nameof(DisplayShot));
+        OnPropertyChanged(nameof(DisplayTakeNumber));
+        OnPropertyChanged(nameof(IsWildOrSoundOnly));
+        if (!_isSuppressingSave)
+        {
+            _ = SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
     partial void OnSoundNotesChanged(string value)
     {
         if (value != null && value.Contains("-->"))
@@ -357,6 +373,7 @@ public partial class TakeViewModel : ViewModelBase
             IsBlooper = take.IsBlooper;
             IsNoBoard = take.IsNoBoard;
             IsEndBoard = take.IsEndBoard;
+            IsWildShot = take.IsWildShot;
             VoidCameraLabels = take.VoidCameraLabels;
             CreatedAt = take.CreatedAt;
         }
@@ -393,6 +410,7 @@ public partial class TakeViewModel : ViewModelBase
             IsBlooper = IsBlooper,
             IsNoBoard = IsNoBoard,
             IsEndBoard = IsEndBoard,
+            IsWildShot = IsWildShot,
             VoidCameraLabels = VoidCameraLabels,
             CreatedAt = CreatedAt
         };

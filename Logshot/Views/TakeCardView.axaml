@@ -54,7 +54,7 @@
                          BorderThickness="0"
                          CornerRadius="6"
                          Background="{DynamicResource TextControlBackground}"
-                         IsReadOnly="{Binding IsSoundOnlyRow}"/>
+                         IsReadOnly="{Binding IsWildOrSoundOnly}"/>
                 <!-- Empty space reserved to match the PU badge height perfectly -->
                 <Grid Height="18" />
              </StackPanel>
@@ -88,7 +88,7 @@
                             TextAlignment="Center" 
                             VerticalContentAlignment="Center" 
                             Padding="0" 
-                            IsReadOnly="{Binding IsSoundOnlyRow}"/>
+                            IsReadOnly="{Binding IsWildOrSoundOnly}"/>
 
                    <!-- Failed (X) Overlay -->
                    <Path Data="M0,0 L1,1 M1,0 L0,1" 
@@ -130,7 +130,7 @@
                  </StackPanel>
                  <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <TextBlock Text="ΣΚ" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBox Text="{Binding Scene}" MinWidth="32" MinHeight="26" Padding="0" FontSize="12" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="4" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
+                    <TextBox Text="{Binding Scene}" MinWidth="32" MinHeight="26" Padding="0" FontSize="12" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="4" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsWildOrSoundOnly}"/>
                  </StackPanel>
               </StackPanel>
 

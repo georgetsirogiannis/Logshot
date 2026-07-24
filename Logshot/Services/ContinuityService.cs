@@ -93,7 +93,7 @@ public class ContinuityService
         var continuity = new ContinuityData();
 
         var allProjectTakes = await _databaseService.GetTakesForProjectAsync(projectId);
-        var nonVoidedTakes = allProjectTakes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t)).ToList();
+        var nonVoidedTakes = allProjectTakes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t) && !t.IsWildShot).ToList();
 
         if (nonVoidedTakes.Count == 0)
         {
@@ -169,7 +169,7 @@ public class ContinuityService
         var allTakes = await _databaseService.GetTakesForProjectAsync(projectId);
 
         return allTakes
-            .Where(t => !string.IsNullOrWhiteSpace(t.Episode) && !string.IsNullOrWhiteSpace(t.Scene) && !IsSoundOnlyTake(t))
+            .Where(t => !string.IsNullOrWhiteSpace(t.Episode) && !string.IsNullOrWhiteSpace(t.Scene) && !IsSoundOnlyTake(t) && !t.IsWildShot)
             .GroupBy(t => (t.Episode, t.Scene))
             .Select(g => g.Key)
             .OrderBy(es => es.Episode)
@@ -185,7 +185,7 @@ public class ContinuityService
         var takes = await _databaseService.GetTakesForEpisodeSceneAsync(projectId, episode, scene);
 
         // For stats, only count non-voided takes and non-sound-only rows
-        var nonVoidedTakes = takes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t)).ToList();
+        var nonVoidedTakes = takes.Where(t => !HasVoidedCamerasTake(t) && !IsSoundOnlyTake(t) && !t.IsWildShot).ToList();
 
         var stats = new EpisodeSceneStatistics
         {
@@ -223,7 +223,7 @@ public class ContinuityService
     public async Task<List<Take>> GetRecentTakesAsync(string projectId, int limit = 10)
     {
         var allTakes = await _databaseService.GetTakesForProjectAsync(projectId);
-        return allTakes.Where(t => !IsSoundOnlyTake(t)).Take(limit).ToList();
+        return allTakes.Where(t => !IsSoundOnlyTake(t) && !t.IsWildShot).Take(limit).ToList();
     }
 
     /// <summary>
@@ -242,6 +242,6 @@ public class ContinuityService
             return new List<Take>();
 
         var takes = await _databaseService.GetTakesForDayAsync(previousDay.Id);
-        return takes.Where(t => !IsSoundOnlyTake(t)).ToList();
+        return takes.Where(t => !IsSoundOnlyTake(t) && !t.IsWildShot).ToList();
     }
 }

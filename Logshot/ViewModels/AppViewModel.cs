@@ -1,11 +1,12 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Logshot.Models;
 using Logshot.Services;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Logshot.ViewModels;
 
@@ -57,41 +58,54 @@ public partial class AppViewModel : ViewModelBase
         }
 
         string queryTrimmed = query.Trim();
-        char separator = '\0';
-        if (queryTrimmed.Contains('/')) separator = '/';
-        else if (queryTrimmed.Contains('.')) separator = '.';
+        bool isWildShotSearch = queryTrimmed.Equals("wild shot", StringComparison.OrdinalIgnoreCase) ||
+                                queryTrimmed.Equals("wild shots", StringComparison.OrdinalIgnoreCase);
 
-        if (separator == '\0')
+        List<Take> matchingTakes;
+
+        if (isWildShotSearch)
         {
             IsSearchActive = true;
-            HasNoSearchResults = true;
-            SearchResultGroups.Clear();
-            return;
+            var allTakes = await _databaseService.GetTakesForProjectAsync(CurrentProject.Id);
+            matchingTakes = allTakes.Where(t => t.IsWildShot).ToList();
         }
-
-        var parts = queryTrimmed.Split(separator, 2, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length < 2)
+        else
         {
+            char separator = '\0';
+            if (queryTrimmed.Contains('/')) separator = '/';
+            else if (queryTrimmed.Contains('.')) separator = '.';
+
+            if (separator == '\0')
+            {
+                IsSearchActive = true;
+                HasNoSearchResults = true;
+                SearchResultGroups.Clear();
+                return;
+            }
+
+            var parts = queryTrimmed.Split(separator, 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                IsSearchActive = true;
+                HasNoSearchResults = true;
+                SearchResultGroups.Clear();
+                return;
+            }
+
+            string episode = parts[0].Trim();
+            string scene = parts[1].Trim();
+
+            if (string.IsNullOrEmpty(episode) || string.IsNullOrEmpty(scene))
+            {
+                IsSearchActive = true;
+                HasNoSearchResults = true;
+                SearchResultGroups.Clear();
+                return;
+            }
+
             IsSearchActive = true;
-            HasNoSearchResults = true;
-            SearchResultGroups.Clear();
-            return;
+            matchingTakes = await _databaseService.GetTakesForEpisodeSceneAsync(CurrentProject.Id, episode, scene);
         }
-
-        string episode = parts[0].Trim();
-        string scene = parts[1].Trim();
-
-        if (string.IsNullOrEmpty(episode) || string.IsNullOrEmpty(scene))
-        {
-            IsSearchActive = true;
-            HasNoSearchResults = true;
-            SearchResultGroups.Clear();
-            return;
-        }
-
-        IsSearchActive = true;
-
-        var matchingTakes = await _databaseService.GetTakesForEpisodeSceneAsync(CurrentProject.Id, episode, scene);
 
         SearchResultGroups.Clear();
 
@@ -104,7 +118,6 @@ public partial class AppViewModel : ViewModelBase
         var takesByDay = matchingTakes.GroupBy(t => t.DayId).ToDictionary(g => g.Key, g => g.ToList());
         var projectDays = await _databaseService.GetDaysForProjectAsync(CurrentProject.Id);
 
-        // Sort days chronologically: earliest calendar date to latest
         var sortedDays = projectDays
             .Where(d => takesByDay.ContainsKey(d.Id))
             .OrderBy(d => d.CalendarDate)
@@ -232,6 +245,15 @@ public partial class AppViewModel : ViewModelBase
 
         IsAddScenePopupOpen = false;
         await CurrentDay.CheckContinuityAndPromptAsync(ep, sc);
+    }
+
+    [RelayCommand]
+    public async Task ConfirmAddWildShotDialog()
+    {
+        if (CurrentDay is null) return;
+        var ep = PopupNewEpisode?.Trim() ?? string.Empty;
+        IsAddScenePopupOpen = false;
+        await CurrentDay.CreateWildShotAsync(ep);
     }
 
     public bool IsTakeDeleteConfirmationOpen => CurrentDay?.IsTakeDeleteConfirmationOpen ?? false;
@@ -528,7 +550,8 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task DeleteDay(DayViewModel? day)
     {
-        if (day != null && CurrentProject?.Days.Contains(day) == true)
+        // FIX: Replaced the '?.Contains() == true' shortcut with explicit null checks
+        if (day != null && CurrentProject != null && CurrentProject.Days.Contains(day))
         {
             CurrentProject.Days.Remove(day);
             await _databaseService.DeleteDayAsync(day.ToModel());
@@ -579,7 +602,8 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task DeleteTake(TakeViewModel? take)
     {
-        if (take != null && CurrentDay?.Takes.Contains(take) == true)
+        // FIX: Replaced the '?.Contains() == true' shortcut with explicit null checks
+        if (take != null && CurrentDay != null && CurrentDay.Takes.Contains(take))
         {
             await CurrentDay.DeleteTakeCommand.ExecuteAsync(take);
             await CurrentDay.UpdateTotalTakesCommand.ExecuteAsync(null);

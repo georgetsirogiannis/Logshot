@@ -460,7 +460,7 @@ public class PdfExportService
             return;
         }
 
-        if (take.IsSoundOnlyRow || !take.ShowScene) return;
+        if (take.IsSoundOnlyRow || take.IsWildShot || !take.ShowScene) return;
         cell.AlignCenter().AlignMiddle().Text(FormatText(take.Scene ?? "")).FontSize(10f);
     }
 
@@ -472,7 +472,7 @@ public class PdfExportService
             return;
         }
 
-        if (take.IsSoundOnlyRow || !take.ShowShot) return;
+        if (take.IsSoundOnlyRow || take.IsWildShot || !take.ShowShot) return;
         string shotStr = take.Shot > 0 ? take.Shot.ToString() : "";
         cell.AlignCenter().AlignMiddle().Text(shotStr).FontSize(10f);
     }
@@ -485,7 +485,7 @@ public class PdfExportService
             return;
         }
 
-        if (take.IsSoundOnlyRow || take.TakeNumber <= 0) return;
+        if (take.IsSoundOnlyRow || take.IsWildShot || take.TakeNumber <= 0) return;
 
         Action<TextDescriptor> configureText = text =>
         {
