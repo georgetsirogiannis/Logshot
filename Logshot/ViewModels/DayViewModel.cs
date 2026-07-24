@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -58,6 +58,12 @@ public partial class DayViewModel : ViewModelBase
 
     partial void OnGeneralNotesChanged(string value)
     {
+        if (value != null && value.Contains("-->"))
+        {
+            GeneralNotes = value.Replace("-->", "→");
+            return;
+        }
+
         if (!_isSuppressingSave)
         {
             _ = SaveDayCommand.ExecuteAsync(null);

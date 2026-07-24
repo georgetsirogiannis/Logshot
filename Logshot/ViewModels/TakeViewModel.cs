@@ -245,6 +245,12 @@ public partial class TakeViewModel : ViewModelBase
 
     partial void OnTakeNotesChanged(string value)
     {
+        if (value != null && value.Contains("-->"))
+        {
+            TakeNotes = value.Replace("-->", "→");
+            return;
+        }
+
         if (!_isSuppressingSave)
         {
             _ = SaveTakeCommand.ExecuteAsync(null);
@@ -296,6 +302,12 @@ public partial class TakeViewModel : ViewModelBase
 
     partial void OnSoundNotesChanged(string value)
     {
+        if (value != null && value.Contains("-->"))
+        {
+            SoundNotes = value.Replace("-->", "→");
+            return;
+        }
+
         OnPropertyChanged(nameof(IsSoundOnlyRow));
         OnPropertyChanged(nameof(DisplayEpisode));
         OnPropertyChanged(nameof(DisplayScene));
@@ -718,6 +730,11 @@ public partial class TakeViewModel : ViewModelBase
 
     internal void SetCameraRoll(string cameraLabel, string value)
     {
+        if (value != null && value.Contains("-->"))
+        {
+            value = value.Replace("-->", "→");
+        }
+
         var data = _cameraDataManager.ParseCameraData(CameraData);
         if (!data.Cameras.ContainsKey(cameraLabel))
         {
@@ -796,7 +813,7 @@ public partial class TakeViewModel : ViewModelBase
         }
     }
 
-    
+
 
     public CameraRollCell? ExtraCell1 => ExtraCameraRolls.ElementAtOrDefault(0);
     public CameraRollCell? ExtraCell2 => ExtraCameraRolls.ElementAtOrDefault(1);

@@ -43,6 +43,15 @@ public class PdfExportService
         _day = day;
     }
 
+    /// <summary>
+    /// Replaces the shorthand '-->' with the unicode right arrow '→' across PDF text.
+    /// </summary>
+    private static string FormatText(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        return text.Replace("-->", "→");
+    }
+
     public void Generate(Stream stream)
     {
         _day.UpdateRowVisibilities();
@@ -68,7 +77,7 @@ public class PdfExportService
     {
         container.PaddingBottom(8).Column(column =>
         {
-            string projectName = _project.Name?.ToUpper() ?? "UNTITLED PROJECT";
+            string projectName = FormatText(_project.Name)?.ToUpper() ?? "UNTITLED PROJECT";
             column.Item().AlignCenter().Text(text =>
             {
                 text.Span($"{projectName} - ΔΕΛΤΙΟ ΛΗΨΕΩΝ").FontSize(14).Bold();
@@ -80,21 +89,21 @@ public class PdfExportService
 
                 // Director
                 t.Span("ΣΚΗΝΟΘΕΣΙΑ: ").SemiBold();
-                t.Span(_project.Director ?? "");
+                t.Span(FormatText(_project.Director ?? ""));
 
                 // Separator
                 t.Span("       •       ").SemiBold();
 
                 // Production
                 t.Span("ΠΑΡΑΓΩΓΗ: ").SemiBold();
-                t.Span(_project.ProductionCompany ?? "");
+                t.Span(FormatText(_project.ProductionCompany ?? ""));
 
                 // Separator
                 t.Span("       •       ").SemiBold();
 
                 // DOP
                 t.Span("ΔΙΕΥΘΥΝΣΗ ΦΩΤΟΓΡΑΦΙΑΣ: ").SemiBold();
-                t.Span(_project.Dop ?? "");
+                t.Span(FormatText(_project.Dop ?? ""));
             });
 
             column.Item().PaddingTop(16).Border(0.5f).BorderColor(Colors.Grey.Lighten1)
@@ -108,7 +117,7 @@ public class PdfExportService
                 row.RelativeItem(1).AlignCenter().Text(t =>
                 {
                     t.Span("ΗΜΕΡΑ ΓΥΡΙΣΜΑΤΟΣ: ").FontSize(10).SemiBold();
-                    t.Span(_day.ShootDayNumber?.ToString() ?? "").FontSize(10);
+                    t.Span(FormatText(_day.ShootDayNumber?.ToString() ?? "")).FontSize(10);
                 });
                 row.RelativeItem(1).AlignRight().Text(t =>
                 {
@@ -126,7 +135,7 @@ public class PdfExportService
                       .Background(Colors.Grey.Lighten5).Padding(6).Text(t =>
                       {
                           t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ: ").Bold().FontSize(8f);
-                          t.Span(_day.GeneralNotes).FontSize(8f);
+                          t.Span(FormatText(_day.GeneralNotes)).FontSize(8f);
                       });
             }
         });
@@ -248,7 +257,7 @@ public class PdfExportService
             {
                 column.Item().BorderTop(0).Border(0.5f).BorderColor(Colors.Black).Background(Colors.White)
                       .PaddingVertical(6).AlignCenter().AlignMiddle()
-                      .Text($"— END DAY {_day.ShootDayNumber} —").FontSize(11f).Bold().LetterSpacing(0.15f);
+                      .Text(FormatText($"— END DAY {_day.ShootDayNumber} —")).FontSize(11f).Bold().LetterSpacing(0.15f);
             }
         });
     }
@@ -366,7 +375,7 @@ public class PdfExportService
                 cell.Layers(layers =>
                 {
                     layers.PrimaryLayer().Element(c => RenderNoRollCell(c, 40f));
-                    layers.Layer().AlignTop().AlignCenter().PaddingTop(1).Text(rollNumber).Bold().Underline().FontSize(8f);
+                    layers.Layer().AlignTop().AlignCenter().PaddingTop(1).Text(FormatText(rollNumber)).Bold().Underline().FontSize(8f);
                 });
             }
             else
@@ -384,7 +393,7 @@ public class PdfExportService
                 {
                     if (showRoll && !string.IsNullOrWhiteSpace(rollVal))
                     {
-                        col.Item().AlignCenter().Text(rollVal).FontSize(8.5f);
+                        col.Item().AlignCenter().Text(FormatText(rollVal)).FontSize(8.5f);
                     }
                     else if (!showRoll)
                     {
@@ -392,7 +401,7 @@ public class PdfExportService
                     }
                 });
 
-                layers.Layer().AlignTop().AlignCenter().PaddingTop(1).Text(rollNumber).Bold().Underline().FontSize(8f);
+                layers.Layer().AlignTop().AlignCenter().PaddingTop(1).Text(FormatText(rollNumber)).Bold().Underline().FontSize(8f);
             });
         }
         else
@@ -401,7 +410,7 @@ public class PdfExportService
             {
                 if (showRoll && !string.IsNullOrWhiteSpace(rollVal))
                 {
-                    col.Item().AlignCenter().Text(rollVal).FontSize(8.5f);
+                    col.Item().AlignCenter().Text(FormatText(rollVal)).FontSize(8.5f);
                 }
                 else if (!showRoll)
                 {
@@ -427,7 +436,7 @@ public class PdfExportService
 
         cell.AlignCenter().AlignMiddle().Element(c =>
         {
-            c.Text(take.ShowSoundNotes ? (take.SoundNotes ?? "") : "—″—").FontSize(8.5f);
+            c.Text(FormatText(take.ShowSoundNotes ? (take.SoundNotes ?? "") : "—″—")).FontSize(8.5f);
         });
     }
 
@@ -440,7 +449,7 @@ public class PdfExportService
         }
 
         if (take.IsSoundOnlyRow || !take.ShowEpisode) return;
-        cell.AlignCenter().AlignMiddle().Text(take.Episode ?? "").FontSize(10f);
+        cell.AlignCenter().AlignMiddle().Text(FormatText(take.Episode ?? "")).FontSize(10f);
     }
 
     private void RenderSceneCell(IContainer cell, TakeViewModel take)
@@ -452,7 +461,7 @@ public class PdfExportService
         }
 
         if (take.IsSoundOnlyRow || !take.ShowScene) return;
-        cell.AlignCenter().AlignMiddle().Text(take.Scene ?? "").FontSize(10f);
+        cell.AlignCenter().AlignMiddle().Text(FormatText(take.Scene ?? "")).FontSize(10f);
     }
 
     private void RenderShotCell(IContainer cell, TakeViewModel take)
@@ -478,7 +487,6 @@ public class PdfExportService
 
         if (take.IsSoundOnlyRow || take.TakeNumber <= 0) return;
 
-        // Shared text configuration handling the take number and optional pickup superscript
         Action<TextDescriptor> configureText = text =>
         {
             text.Span(take.TakeNumber.ToString());
@@ -556,7 +564,7 @@ public class PdfExportService
                     });
                 }
 
-                innerRow.RelativeItem().AlignMiddle().Text(take.TakeNotes ?? "").FontSize(8.5f);
+                innerRow.RelativeItem().AlignMiddle().Text(FormatText(take.TakeNotes ?? "")).FontSize(8.5f);
 
                 if (take.IsEndBoard || take.IsNoBoard)
                 {
