@@ -25,7 +25,10 @@ public class AutocorrectionManager
         { "Μεσασίο", "Μεσαίο" },
         { "Roning", "Ronin" },
         { "Ρονιν", "Ronin" },
-        { "ΠΟΩ", "POV" }
+        { "Ρόνιν", "Ronin" },
+        { "ΠΟΩ", "POV" },
+        { "Κοτνινό", "Κοντινό" },
+        { "Κλάμερα", "Κάμερα" }
     };
 
     private Dictionary<string, string> _activePairs = new();
