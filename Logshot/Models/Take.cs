@@ -38,6 +38,7 @@ public class Take
     public bool IsBlooper { get; set; } = false;
     public bool IsNoBoard { get; set; } = false;
     public bool IsEndBoard { get; set; } = false;
+    public bool IsWildShot { get; set; } = false;
 
     // False Clip Tracking
     public string VoidCameraLabels { get; set; } = "[]"; // JSON array for specific voided cameras

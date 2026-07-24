@@ -492,7 +492,7 @@
     <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsAddScenePopupOpen}" ZIndex="200"
           VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
       <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
-              CornerRadius="8" Width="360" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+              CornerRadius="8" Width="420" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
         <StackPanel Spacing="16">
           <TextBlock Text="New Scene Setup" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
 
@@ -506,10 +506,27 @@
             <TextBox Text="{Binding AppViewModel.PopupNewScene}" PlaceholderText="e.g. 32 or 28-29" AcceptsReturn="True" TextWrapping="Wrap"/>
           </StackPanel>
 
-          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="Cancel" Command="{Binding AppViewModel.CancelAddSceneDialogCommand}" Width="100" HorizontalContentAlignment="Center"/>
-            <Button Content="Initialize Scene" Command="{Binding AppViewModel.ConfirmAddSceneDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" Width="140" HorizontalContentAlignment="Center" FontWeight="Bold"/>
-          </StackPanel>
+          <!-- FIXED ACTION BAR -->
+          <Grid ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,12,0,0">
+            
+            <!-- Left Side: Wild Shot (Ghost Button Style) -->
+            <!-- Note: Wire up your new Command here when you write it in the ViewModel -->
+            <Button Grid.Column="0" Content="+ Wild Shot" 
+                    Command="{Binding AppViewModel.ConfirmAddWildShotDialogCommand}"
+                    Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"
+                    Padding="12,6" HorizontalContentAlignment="Center"/>
+
+            <!-- Right Side: Cancel & Initialize Group -->
+            <Button Grid.Column="2" Content="Cancel" 
+                    Command="{Binding AppViewModel.CancelAddSceneDialogCommand}" 
+                    Margin="0,0,10,0" Padding="16,6" HorizontalContentAlignment="Center"/>
+                    
+            <Button Grid.Column="3" Content="Initialize Scene" 
+                    Command="{Binding AppViewModel.ConfirmAddSceneDialogCommand}" 
+                    Background="{StaticResource ActionAccent}" Foreground="#121212" 
+                    Padding="16,6" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </Grid>
+          
         </StackPanel>
       </Border>
     </Grid>

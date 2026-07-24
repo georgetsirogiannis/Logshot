@@ -491,6 +491,12 @@ public partial class DayViewModel : ViewModelBase
                             ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
                             ?? Takes.LastOrDefault();
 
+        if (lastValidTake != null && lastValidTake.IsWildShot)
+        {
+            await CreateWildShotAsync(lastValidTake.Episode);
+            return;
+        }
+
         var newTake = new Take
         {
             DayId = Id,
@@ -633,13 +639,13 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task UpdateTotalTakes()
     {
-        TotalTakes = Takes.Count(t => !t.IsSoundOnlyRow);
+        TotalTakes = Takes.Count(t => !t.IsSoundOnlyRow && !t.IsWildShot);
     }
 
     [RelayCommand]
     public async Task UpdateCurrentShot()
     {
-        var validTakes = Takes.Where(t => !t.IsSoundOnlyRow).ToList();
+        var validTakes = Takes.Where(t => !t.IsSoundOnlyRow && !t.IsWildShot).ToList();
         if (validTakes.Count > 0)
         {
             CurrentShot = validTakes.Last().Shot;
@@ -648,6 +654,39 @@ public partial class DayViewModel : ViewModelBase
         {
             CurrentShot = 0;
         }
+    }
+    /// <summary>
+    /// Creates a new "wild shot" take, which is a special type of take that has no scene and is marked as a wild shot. The new take inherits camera data from the last valid take in the day.
+    /// </summary>
+    public async Task CreateWildShotAsync(string episode)
+    {
+        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras)
+                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
+                            ?? Takes.LastOrDefault();
+
+        var newTake = new Take
+        {
+            DayId = Id,
+            SequenceOrder = Takes.Count,
+            Episode = episode,
+            Scene = string.Empty, // Wild shots have no scene
+            Shot = 0,
+            TakeNumber = 0,
+            IsWildShot = true,
+            CameraData = SyncCameraDataWithActiveCameras(lastValidTake?.CameraData),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
+        takeVM.LoadFromModel(newTake);
+        await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
+
+        await takeVM.SaveTakeCommand.ExecuteAsync(null);
+        Takes.Add(takeVM);
+
+        RefreshAllExtraCameraRolls();
+        await UpdateTotalTakesCommand.ExecuteAsync(null);
+        BuildHierarchicalGroups();
     }
 
     /// <summary>
@@ -1051,8 +1090,10 @@ public partial class DayViewModel : ViewModelBase
             }
             else
             {
-                // A new group starts if either the episode or the scene changes
-                currentTake.IsGroupStart = (currentTake.Episode != previousTake.Episode) || (currentTake.Scene != previousTake.Scene);
+                // A new group starts if either the episode or the scene changes - updated to also consider wild shots as a separate group
+                currentTake.IsGroupStart = (currentTake.Episode != previousTake.Episode) ||
+                                   (currentTake.Scene != previousTake.Scene) ||
+                                   (currentTake.IsWildShot != previousTake.IsWildShot);
 
                 // Show Episode whenever there's a group start (whether a new episode or a new scene in the same episode)
                 currentTake.ShowEpisode = currentTake.IsGroupStart;

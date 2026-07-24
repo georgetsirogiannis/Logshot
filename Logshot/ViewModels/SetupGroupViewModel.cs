@@ -40,7 +40,9 @@ namespace Logshot.ViewModels
             return string.Join("-", parts);
         }
 
-        // Generates the mobile UI format: "10 / 40-41 (Continued) (3 Takes)"
+        // Code related to the "WILD SHOTS" group header
+        public bool IsWildShotGroup => GroupedTakes.Any(t => t.IsWildShot);
+
         public string HeaderTitle
         {
             get
@@ -49,7 +51,14 @@ namespace Logshot.ViewModels
                 var formattedSc = FormatHeaderValue(Scene);
                 var continuedText = IsContinued ? " (Continued)" : "";
 
-                return $"{formattedEp} / {formattedSc}{continuedText} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow)} Takes)";
+                if (IsWildShotGroup)
+                {
+                    string epText = string.IsNullOrEmpty(formattedEp) ? "" : $"{formattedEp} / ";
+                    int validCount = GroupedTakes.Count(t => !t.IsSoundOnlyRow);
+                    return $"{epText}WILD SHOTS ({validCount} Takes)";
+                }
+
+                return $"{formattedEp} / {formattedSc}{continuedText} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow && !t.IsWildShot)} Takes)";
             }
         }
 
@@ -100,5 +109,6 @@ namespace Logshot.ViewModels
         {
             IsCollapsed = !IsCollapsed;
         }
+
     }
 }
