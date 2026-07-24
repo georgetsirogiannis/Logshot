@@ -615,11 +615,8 @@
           <!-- Header -->
           <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,16">
             <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='DAY {0} INFO'}" 
-                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
-            <Button Grid.Column="1" Content="CLOSE" 
-                    Command="{Binding AppViewModel.CurrentDay.CloseDayInfoCommand}"
-                    Background="Transparent" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
-                    Padding="10,4" FontWeight="Bold" VerticalAlignment="Center"/>
+                       FontSize="24" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+            
           </Grid>
 
           <!-- Content Body -->
@@ -628,22 +625,22 @@
               
               <!-- Scenes -->
               <StackPanel Spacing="4">
-                <TextBlock Text="Scenes:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                <TextBlock Text="{Binding AppViewModel.CurrentDay.DayInfoScenes}" FontSize="14" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
+                <TextBlock Text="Scenes:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="{Binding AppViewModel.CurrentDay.DayInfoScenes}" FontSize="16" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
               </StackPanel>
 
               <Separator Background="{StaticResource BorderColor}"/>
 
               <!-- Setups -->
               <StackPanel Spacing="4">
-                <TextBlock Text="Setups:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="Setups:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
                 <TextBlock Text="{Binding AppViewModel.CurrentDay.DayInfoSetupsCount}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
               </StackPanel>
 
               <!-- Wild Shots (Conditional) -->
               <StackPanel Spacing="4" IsVisible="{Binding AppViewModel.CurrentDay.DayInfoHasWildShots}">
                 <Separator Background="{StaticResource BorderColor}"/>
-                <TextBlock Text="Wild Shots:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="Wild Shots:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
                 <TextBlock Text="{Binding AppViewModel.CurrentDay.DayInfoWildShotsCount}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
               </StackPanel>
 
@@ -651,13 +648,13 @@
 
               <!-- Cameras Clip Counts -->
               <StackPanel Spacing="8">
-                <TextBlock Text="Cameras:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="Cameras:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
                 
                 <ItemsControl ItemsSource="{Binding AppViewModel.CurrentDay.DayInfoCameraGroups}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:CameraClipGroupViewModel">
                       <StackPanel Spacing="4" Margin="0,4,0,8">
-                        <TextBlock FontWeight="Bold" FontSize="13" Foreground="{StaticResource ActionAccent}">
+                        <TextBlock FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}">
                           <Run Text="• "/>
                           <Run Text="{Binding CameraLabel}"/>
                           <Run Text=" - "/>
@@ -668,7 +665,7 @@
                         <ItemsControl ItemsSource="{Binding Rolls}" Margin="16,2,0,0">
                           <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:CameraRollClipCountViewModel">
-                              <TextBlock FontSize="12" Foreground="{StaticResource TextPrimary}">
+                              <TextBlock FontSize="14" Foreground="{StaticResource TextPrimary}">
                                 <Run Text="* "/>
                                 <Run Text="{Binding RollName}"/>
                                 <Run Text=": "/>
