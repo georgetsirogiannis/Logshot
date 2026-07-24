@@ -209,6 +209,26 @@ public partial class DayViewModel : ViewModelBase
         OnPropertyChanged(nameof(ExtraCamera3));
     }
 
+    // --- DAY INFO MODAL STATE ---
+    [ObservableProperty]
+    private bool _isDayInfoOpen = false;
+
+    [ObservableProperty]
+    private string _dayInfoScenes = string.Empty;
+
+    [ObservableProperty]
+    private int _dayInfoSetupsCount = 0;
+
+    [ObservableProperty]
+    private int _dayInfoWildShotsCount = 0;
+
+    [ObservableProperty]
+    private bool _dayInfoHasWildShots = false;
+
+    [ObservableProperty]
+    private ObservableCollection<CameraClipGroupViewModel> _dayInfoCameraGroups = new();
+    // ----------------------------
+
     public DayViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;
@@ -979,6 +999,158 @@ public partial class DayViewModel : ViewModelBase
     }
     // === END NEW CONTINUITY PROMPT LOGIC ===
 
+    [RelayCommand]
+    public void OpenDayInfo()
+    {
+        CalculateDayInfo();
+        IsDayInfoOpen = true;
+    }
+
+    [RelayCommand]
+    public void CloseDayInfo()
+    {
+        IsDayInfoOpen = false;
+    }
+
+    public void CalculateDayInfo()
+    {
+        if (Takes == null || !Takes.Any())
+        {
+            DayInfoScenes = string.Empty;
+            DayInfoSetupsCount = 0;
+            DayInfoWildShotsCount = 0;
+            DayInfoHasWildShots = false;
+            DayInfoCameraGroups.Clear();
+            return;
+        }
+
+        // 1. Scenes logged in the day
+        var sceneTokens = new List<string>();
+        foreach (var take in Takes.Where(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.HasVoidedCameras))
+        {
+            string ep = FormatLineBreaks(take.Episode);
+            string sc = FormatLineBreaks(take.Scene);
+            if (!string.IsNullOrEmpty(ep) && !string.IsNullOrEmpty(sc))
+            {
+                sceneTokens.Add($"{ep}/{sc}");
+            }
+            else if (!string.IsNullOrEmpty(sc))
+            {
+                sceneTokens.Add(sc);
+            }
+        }
+        DayInfoScenes = string.Join(", ", sceneTokens.Distinct());
+
+        // 2. Setups count
+        var validShots = Takes.Where(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.HasVoidedCameras).ToList();
+        DayInfoSetupsCount = validShots.Count;
+
+        // 3. Wild Shots count
+        int wildShotsCellCount = 0;
+        var wildTakes = Takes.Where(t => t.IsWildShot).ToList();
+        foreach (var wildTake in wildTakes)
+        {
+            var camData = _cameraDataManager.ParseCameraData(wildTake.CameraData);
+            var activeLabels = _cameraDataManager.GetActiveCameraLabels(camData);
+            foreach (string label in activeLabels)
+            {
+                bool isNoRoll = _cameraDataManager.IsCameraStrikethrough(camData, label) ||
+                                (camData.Cameras.TryGetValue(label, out var st) && st.NoRoll);
+                if (!isNoRoll)
+                {
+                    wildShotsCellCount++;
+                }
+            }
+        }
+        DayInfoWildShotsCount = wildShotsCellCount;
+        DayInfoHasWildShots = wildShotsCellCount > 0;
+
+        // 4. Cameras clip count grouped by Camera (first-level) and Roll (second-level)
+        // Rule: Each camera maintains an active roll state as it processes takes sequentially. 
+        // When a roll change marker is encountered with a valid roll number, it updates the current roll.
+        // All subsequent valid clips belong to that roll until the next roll change.
+        var cameraRollClips = new Dictionary<string, Dictionary<string, int>>(StringComparer.OrdinalIgnoreCase);
+        var currentActiveRolls = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        // Discover all active camera labels present across the day's takes
+        var allCameraLabels = Takes
+            .SelectMany(t => _cameraDataManager.GetActiveCameraLabels(_cameraDataManager.ParseCameraData(t.CameraData)))
+            .Distinct()
+            .ToList();
+
+        foreach (var label in allCameraLabels)
+        {
+            currentActiveRolls[label] = "DEFAULT";
+            cameraRollClips[label] = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        foreach (var take in Takes.Where(t => !t.IsSoundOnlyRow).OrderBy(t => t.SequenceOrder))
+        {
+            var camData = _cameraDataManager.ParseCameraData(take.CameraData);
+            bool isRowVoided = take.HasVoidedCameras;
+
+            foreach (var label in allCameraLabels)
+            {
+                bool exists = camData.Cameras.TryGetValue(label, out var state);
+                bool isNoRoll = exists && (state.NoRoll || _cameraDataManager.IsCameraStrikethrough(camData, label));
+                bool isCameraVoided = take.IsCameraVoided(label);
+
+                // Check if this row marks a roll change for this specific camera
+                if (exists && state.RollChangeMarker && !string.IsNullOrWhiteSpace(state.RollNumber))
+                {
+                    currentActiveRolls[label] = state.RollNumber.Trim();
+                }
+
+                // Skip counting if no-roll, or if row is voided but this specific camera is NOT an AKYRO clip
+                if (isNoRoll) continue;
+                if (isRowVoided && !isCameraVoided) continue;
+
+                // If the cell is active and valid, attribute it to the currently active roll for this camera
+                string activeRoll = currentActiveRolls.ContainsKey(label) ? currentActiveRolls[label] : "DEFAULT";
+
+                if (!cameraRollClips[label].ContainsKey(activeRoll))
+                {
+                    cameraRollClips[label][activeRoll] = 0;
+                }
+
+                cameraRollClips[label][activeRoll]++;
+            }
+        }
+
+        DayInfoCameraGroups.Clear();
+        foreach (var camKv in cameraRollClips.OrderBy(k => k.Key))
+        {
+            string camLabel = camKv.Key;
+            var rolls = camKv.Value;
+            int totalCamClips = rolls.Values.Sum();
+
+            var groupVm = new CameraClipGroupViewModel
+            {
+                CameraLabel = camLabel,
+                TotalClips = totalCamClips
+            };
+
+            foreach (var rollKv in rolls.OrderBy(r => r.Key))
+            {
+                groupVm.Rolls.Add(new CameraRollClipCountViewModel
+                {
+                    RollName = rollKv.Key,
+                    ClipCount = rollKv.Value
+                });
+            }
+
+            DayInfoCameraGroups.Add(groupVm);
+        }
+    }
+
+    private string FormatLineBreaks(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+        var parts = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                         .Select(p => p.Trim());
+        return string.Join("-", parts);
+    }
+
     public ObservableCollection<SetupGroupViewModel> MobileSetupGroups { get; } = new();
 
     /// <summary>
@@ -1126,4 +1298,28 @@ public partial class DayViewModel : ViewModelBase
             previousTake = currentTake;
         }
     }
+
+
+
+
+}
+
+public partial class CameraClipGroupViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private string _cameraLabel = string.Empty;
+
+    [ObservableProperty]
+    private int _totalClips = 0;
+
+    public ObservableCollection<CameraRollClipCountViewModel> Rolls { get; } = new();
+}
+
+public partial class CameraRollClipCountViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private string _rollName = string.Empty;
+
+    [ObservableProperty]
+    private int _clipCount = 0;
 }
