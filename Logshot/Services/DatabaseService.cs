@@ -38,17 +38,150 @@ public class DatabaseService
             return _writeQueue;
     }
 
+    public string GetDatabasePath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "logshot.db");
+
     public async Task InitAsync()
     {
         if (_db is not null) return;
 
-        string databasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "logshot.db");
+        string databasePath = GetDatabasePath();
         _db = new SQLiteAsyncConnection(databasePath);
 
         await _db.CreateTableAsync<Project>();
         await _db.CreateTableAsync<Day>();
         await _db.CreateTableAsync<Take>();
         await _db.CreateTableAsync<SyncQueueItem>(); // New outbox table
+    }
+
+    public async Task CloseAsync()
+    {
+        if (_db != null)
+        {
+            await _db.CloseAsync();
+            _db = null!;
+        }
+    }
+
+    public async Task ExportDatabaseAsync(string destPath, string? specificProjectId)
+    {
+        await WaitForPendingWritesAsync();
+        var sourcePath = GetDatabasePath();
+
+        if (string.IsNullOrEmpty(specificProjectId))
+        {
+            // Export the entire DB
+            File.Copy(sourcePath, destPath, true);
+        }
+        else
+        {
+            // Export just one project by copying everything and pruning the irrelevant data
+            File.Copy(sourcePath, destPath, true);
+            var tempDb = new SQLiteAsyncConnection(destPath);
+            await tempDb.ExecuteAsync("DELETE FROM Projects WHERE Id != ?", specificProjectId);
+            await tempDb.ExecuteAsync("DELETE FROM Days WHERE ProjectId != ?", specificProjectId);
+            await tempDb.ExecuteAsync("DELETE FROM Takes WHERE DayId NOT IN (SELECT Id FROM Days WHERE ProjectId = ?)", specificProjectId);
+            await tempDb.ExecuteAsync("DELETE FROM SyncQueue"); // Don't carry over sync outbox for single exports
+            await tempDb.ExecuteAsync("VACUUM"); // Shrinks the DB file footprint
+            await tempDb.CloseAsync();
+        }
+    }
+
+    public async Task<(bool isValid, string summaryMessage)> GetImportSummaryAsync(string importPath)
+    {
+        var importDb = new SQLiteAsyncConnection(importPath);
+        int importedTakeCount = 0;
+        int importedProjectCount = 0;
+
+        try
+        {
+            importedTakeCount = await importDb.Table<Take>().CountAsync();
+            importedProjectCount = await importDb.Table<Project>().CountAsync();
+        }
+        catch
+        {
+            await importDb.CloseAsync();
+            return (false, "The selected file does not appear to be a valid Logshot database format.");
+        }
+        await importDb.CloseAsync();
+
+        string msg = $"You are about to merge {importedProjectCount} project(s) and {importedTakeCount} take(s) into your current app.\n\n" +
+                     $"Only new records (that don't already exist) will be added. Existing projects, days, and takes will remain untouched.\n\n" +
+                     $"Do you want to proceed?";
+
+        return (true, msg);
+    }
+
+    public async Task<(int addedProjects, int addedDays, int addedTakes)> MergeDatabaseAsync(string importPath)
+    {
+        // 1. Load imported data
+        var importDb = new SQLiteAsyncConnection(importPath);
+        List<Project> importedProjects;
+        List<Day> importedDays;
+        List<Take> importedTakes;
+
+        try
+        {
+            importedProjects = await importDb.Table<Project>().ToListAsync();
+            importedDays = await importDb.Table<Day>().ToListAsync();
+            importedTakes = await importDb.Table<Take>().ToListAsync();
+        }
+        finally
+        {
+            await importDb.CloseAsync();
+        }
+
+        await InitAsync();
+
+        var insertedSyncItems = new List<SyncQueueItem>();
+        int addedProjects = 0;
+        int addedDays = 0;
+        int addedTakes = 0;
+
+        // 2. Merge only new records (non-destructive)
+        await _db.RunInTransactionAsync(tran =>
+        {
+            // Projects
+            foreach (var p in importedProjects)
+            {
+                if (tran.Find<Project>(p.Id) == null)
+                {
+                    tran.Insert(p);
+                    addedProjects++;
+                    insertedSyncItems.Add(new SyncQueueItem { EntityType = "Project", EntityId = p.Id, Action = "Upsert" });
+                }
+            }
+
+            // Days
+            foreach (var d in importedDays)
+            {
+                if (tran.Find<Day>(d.Id) == null)
+                {
+                    tran.Insert(d);
+                    addedDays++;
+                    insertedSyncItems.Add(new SyncQueueItem { EntityType = "Day", EntityId = d.Id, Action = "Upsert" });
+                }
+            }
+
+            // Takes
+            foreach (var t in importedTakes)
+            {
+                if (tran.Find<Take>(t.Id) == null)
+                {
+                    tran.Insert(t);
+                    addedTakes++;
+                    insertedSyncItems.Add(new SyncQueueItem { EntityType = "Take", EntityId = t.Id, Action = "Upsert" });
+                }
+            }
+        });
+
+        // 3. Queue only actually inserted items for cloud sync
+        if (insertedSyncItems.Count > 0)
+        {
+            await _db.InsertAllAsync(insertedSyncItems);
+            OnDataChanged?.Invoke();
+        }
+
+        return (addedProjects, addedDays, addedTakes);
     }
 
     private async Task QueueSyncAction(string entityType, string entityId, string action)

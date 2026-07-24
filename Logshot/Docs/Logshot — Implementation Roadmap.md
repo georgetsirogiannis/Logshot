@@ -109,7 +109,7 @@ CAUTION: ~~THIS IS AN OUTDATED REPORT.~~ **UPDATED REPORT.**
 
 1. **Supabase Connection:** Install the Supabase C# SDK and set up the basic authentication and cloud connection endpoints. ✅ **COMPLETE**
 2. **The Outbox Sync Worker:** Build the background task with the 3-second debounce timer to quietly push SQLite changes to Supabase.  ✅ **COMPLETE**
-3. **Emergency Backup:** Implement the button that bundles the .db file for local Bluetooth/USB sharing.  
+3. **Emergency Backup / Database Export-Import:** Implement the button(s) that bundles the .db file for local Bluetooth/USB sharing.  ✅ **COMPLETE**
 4. **Version Control Audit:** Update version numbers across all manifests and configuration files.  
 5. **Testing & Bug Hunting:** Run the app with a simulated 100-take day to check for lag, scrolling issues, or UI wrapping errors.
 
