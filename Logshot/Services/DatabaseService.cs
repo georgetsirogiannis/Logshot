@@ -105,7 +105,7 @@ public class DatabaseService
         await importDb.CloseAsync();
 
         string msg = $"You are about to merge {importedProjectCount} project(s) and {importedTakeCount} take(s) into your current app.\n\n" +
-                     $"Matching projects will be updated with this imported data, while your other existing projects will remain completely safe and untouched.\n\n" +
+                     $"Only new records (that don't already exist) will be added. Existing projects, days, and takes will remain untouched.\n\n" +
                      $"Do you want to proceed?";
 
         return (true, msg);
@@ -113,7 +113,7 @@ public class DatabaseService
 
     public async Task MergeDatabaseAsync(string importPath)
     {
-        // 1. Open the imported database and extract all records
+        // 1. Load imported data
         var importDb = new SQLiteAsyncConnection(importPath);
         var importedProjects = await importDb.Table<Project>().ToListAsync();
         var importedDays = await importDb.Table<Day>().ToListAsync();
@@ -122,30 +122,48 @@ public class DatabaseService
 
         await InitAsync();
 
-        // 2. Bulk merge the records into the active database safely via transaction
+        var insertedSyncItems = new List<SyncQueueItem>();
+
+        // 2. Merge only new records (non-destructive)
         await _db.RunInTransactionAsync(tran =>
         {
+            // Projects
             foreach (var p in importedProjects)
-                tran.InsertOrReplace(p);
+            {
+                if (tran.Find<Project>(p.Id) == null)
+                {
+                    tran.Insert(p);
+                    insertedSyncItems.Add(new SyncQueueItem { EntityType = "Project", EntityId = p.Id, Action = "Upsert" });
+                }
+            }
+
+            // Days
             foreach (var d in importedDays)
-                tran.InsertOrReplace(d);
+            {
+                if (tran.Find<Day>(d.Id) == null)
+                {
+                    tran.Insert(d);
+                    insertedSyncItems.Add(new SyncQueueItem { EntityType = "Day", EntityId = d.Id, Action = "Upsert" });
+                }
+            }
+
+            // Takes
             foreach (var t in importedTakes)
-                tran.InsertOrReplace(t);
+            {
+                if (tran.Find<Take>(t.Id) == null)
+                {
+                    tran.Insert(t);
+                    insertedSyncItems.Add(new SyncQueueItem { EntityType = "Take", EntityId = t.Id, Action = "Upsert" });
+                }
+            }
         });
 
-        // 3. Queue all merged items for cloud sync (Supabase outbox)
-        var syncItems = new System.Collections.Generic.List<SyncQueueItem>();
-        foreach (var p in importedProjects)
-            syncItems.Add(new SyncQueueItem { EntityType = "Project", EntityId = p.Id, Action = "Upsert" });
-        foreach (var d in importedDays)
-            syncItems.Add(new SyncQueueItem { EntityType = "Day", EntityId = d.Id, Action = "Upsert" });
-        foreach (var t in importedTakes)
-            syncItems.Add(new SyncQueueItem { EntityType = "Take", EntityId = t.Id, Action = "Upsert" });
-
-        await _db.InsertAllAsync(syncItems);
-
-        // 4. Trigger the background sync worker
-        OnDataChanged?.Invoke();
+        // 3. Queue only actually inserted items for cloud sync
+        if (insertedSyncItems.Count > 0)
+        {
+            await _db.InsertAllAsync(insertedSyncItems);
+            OnDataChanged?.Invoke();
+        }
     }
 
     private async Task QueueSyncAction(string entityType, string entityId, string action)
