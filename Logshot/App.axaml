@@ -35,6 +35,7 @@
         <SolidColorBrush x:Key="NoBoardTeal">#26A69A</SolidColorBrush>
         <SolidColorBrush x:Key="EndBoardAmber">#FFD54F</SolidColorBrush>
         <SolidColorBrush x:Key="ActionAccent">#4FC3F7</SolidColorBrush>
+        <SolidColorBrush x:Key="LockYellow">#D4BC48</SolidColorBrush>
 
         <!-- Cross-Stitch Pattern Brush for Voided/AKYRO Rows -->
         <DrawingBrush x:Key="CrossStitchPatternBrush" TileMode="Tile" SourceRect="0,0 12,12" DestinationRect="0,0 12,12">

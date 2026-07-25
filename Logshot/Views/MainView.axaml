@@ -197,13 +197,18 @@
                         <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
                                 BorderThickness="1" CornerRadius="6" Padding="16">
                           <StackPanel Spacing="12">
-                            <Grid ColumnDefinitions="*, Auto">
-                              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="🔒" FontSize="14" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}" 
-                                           ToolTip.Tip="Day is Finalized (Locked)"/>
-                                <TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
-                                <TextBlock Text="(Finalized - Read Only)" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}"/>
-                              </StackPanel>
+	<Grid ColumnDefinitions="*, Auto">
+		<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+			<Path Data="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"
+				  Width="14" Height="14"
+				  Stretch="Uniform"
+				  Fill="{StaticResource ActionAccent}"
+				  VerticalAlignment="Center"
+				  IsVisible="{Binding IsFinalized}"
+				  ToolTip.Tip="Day is Finalized (Locked)"/>
+			<TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+			<TextBlock Text="(Finalized - Read Only)" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}"/>
+		</StackPanel>
                             </Grid>
 
                             <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
@@ -255,12 +260,17 @@
                     <ColumnDefinition Width="Auto"/>
                   </Grid.ColumnDefinitions>
 
-                  <!-- Title & Day Info Button -->
-                  <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
-                               ToolTip.Tip="Day is Finalized (Locked)"/>
-                    <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
-                               FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+	<!-- Title & Day Info Button -->
+	<StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+		<Path Data="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"
+			  Width="24" Height="24"
+			  Stretch="Uniform"
+			  Fill="{StaticResource LockYellow}"
+			  VerticalAlignment="Center"
+			  IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
+			  ToolTip.Tip="Day is Finalized (Locked)"/>
+		<TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}"
+				   FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     
                     <!-- Day Info Button -->
                     <Button Command="{Binding AppViewModel.CurrentDay.OpenDayInfoCommand}"
@@ -268,7 +278,6 @@
                             Padding="8,4" CornerRadius="6" VerticalAlignment="Center"
                             ToolTip.Tip="Day Info Summary">
                       <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="ℹ️" FontSize="16" VerticalAlignment="Center"/>
                         <TextBlock Text="INFO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                       </StackPanel>
                     </Button>
