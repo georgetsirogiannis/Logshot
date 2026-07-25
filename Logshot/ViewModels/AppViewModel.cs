@@ -185,6 +185,11 @@ public partial class AppViewModel : ViewModelBase
     [ObservableProperty]
     private ProjectViewModel? _projectToDelete;
 
+    // ADD THIS NEW PROPERTY
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmDeleteProjectCommand))]
+    private string _deleteProjectConfirmationText = string.Empty;
+
     // --- Day Dialog & Deletion State ---
     [ObservableProperty]
     private bool _isDayPopupOpen = false;
@@ -406,10 +411,19 @@ public partial class AppViewModel : ViewModelBase
         if (target is null) return;
 
         ProjectToDelete = target;
+        DeleteProjectConfirmationText = string.Empty; // Reset text field
         IsDeleteConfirmationOpen = true;
+        IsProjectPopupOpen = false; // Hide the Edit modal when the confirmation pops up
     }
 
-    [RelayCommand]
+    private bool CanConfirmDeleteProject()
+    {
+        // Only allow deletion if the typed text matches the project name (case-insensitive)
+        return ProjectToDelete != null &&
+               string.Equals(DeleteProjectConfirmationText?.Trim(), ProjectToDelete.Name?.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanConfirmDeleteProject))]
     public async Task ConfirmDeleteProject()
     {
         if (ProjectToDelete != null)
@@ -418,6 +432,7 @@ public partial class AppViewModel : ViewModelBase
         }
         IsDeleteConfirmationOpen = false;
         ProjectToDelete = null;
+        DeleteProjectConfirmationText = string.Empty;
     }
 
     [RelayCommand]
@@ -425,6 +440,7 @@ public partial class AppViewModel : ViewModelBase
     {
         IsDeleteConfirmationOpen = false;
         ProjectToDelete = null;
+        DeleteProjectConfirmationText = string.Empty;
     }
 
     [RelayCommand]

@@ -57,22 +57,14 @@
                     PlaceholderText="Select a Project"
                     Margin="0,0,0,8"/>
 
-          <!-- Project Edit & Delete Buttons -->
-          <Grid Grid.Row="3" ColumnDefinitions="*,*" Margin="0,0,0,20">
-            <Button Grid.Column="0" Content="EDIT PROJECT" FontSize="11" Padding="4,6" Margin="0,0,3,0"
-                    Command="{Binding AppViewModel.OpenEditProjectDialogCommand}"
-                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-            <Button Grid.Column="1" Content="DELETE" FontSize="11" Padding="4,6" Margin="3,0,0,0"
-                    Foreground="{StaticResource FailRed}"
-                    Command="{Binding AppViewModel.PromptDeleteProjectCommand}"
-                    CommandParameter="{Binding AppViewModel.CurrentProject}"
-                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-          </Grid>
+          <!-- Project Edit / Delete Button -->
+          <Button Grid.Row="3" Content="EDIT / DELETE PROJECT" FontSize="11" Padding="4,6" Margin="0,0,0,20"
+                  Command="{Binding AppViewModel.OpenEditProjectDialogCommand}"
+                  IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
 
           <!-- Targeted Episode & Scene Search Bar -->
-          <TextBlock Grid.Row="4" Text="EP/SC SEARCH (e.g. 1/5)" FontSize="12" 
+          <TextBlock Grid.Row="4" Text="EP/SC SEARCH" FontSize="12" 
                      Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
           <Grid Grid.Row="5" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
             <TextBox Grid.Column="0" Text="{Binding AppViewModel.SearchQuery}" PlaceholderText="e.g. 1/5 or 10.32" 
@@ -197,17 +189,22 @@
                         <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
                                 BorderThickness="1" CornerRadius="6" Padding="16">
                           <StackPanel Spacing="12">
-                            <Grid ColumnDefinitions="*, Auto">
-                              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="🔒" FontSize="14" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}" 
-                                           ToolTip.Tip="Day is Finalized (Locked)"/>
-                                <TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
-                                <TextBlock Text="(Finalized - Read Only)" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}"/>
-                              </StackPanel>
+	<Grid ColumnDefinitions="*, Auto">
+		<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+			<Path Data="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"
+				  Width="14" Height="14"
+				  Stretch="Uniform"
+				  Fill="{StaticResource ActionAccent}"
+				  VerticalAlignment="Center"
+				  IsVisible="{Binding IsFinalized}"
+				  ToolTip.Tip="Day is Finalized (Locked)"/>
+			<TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+			<TextBlock Text="(Finalized - Read Only)" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" IsVisible="{Binding IsFinalized}"/>
+		</StackPanel>
                             </Grid>
 
                             <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
-                                    CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True" Height="340">
+                                    CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True" >
                               <views:TakeGridView />
                             </Border>
                           </StackPanel>
@@ -255,12 +252,17 @@
                     <ColumnDefinition Width="Auto"/>
                   </Grid.ColumnDefinitions>
 
-                  <!-- Title & Day Info Button -->
-                  <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <TextBlock Text="🔒" FontSize="24" VerticalAlignment="Center" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
-                               ToolTip.Tip="Day is Finalized (Locked)"/>
-                    <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}" 
-                               FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+	<!-- Title & Day Info Button -->
+	<StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+		<Path Data="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"
+			  Width="24" Height="24"
+			  Stretch="Uniform"
+			  Fill="{StaticResource LockYellow}"
+			  VerticalAlignment="Center"
+			  IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}"
+			  ToolTip.Tip="Day is Finalized (Locked)"/>
+		<TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}'}"
+				   FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     
                     <!-- Day Info Button -->
                     <Button Command="{Binding AppViewModel.CurrentDay.OpenDayInfoCommand}"
@@ -268,7 +270,6 @@
                             Padding="8,4" CornerRadius="6" VerticalAlignment="Center"
                             ToolTip.Tip="Day Info Summary">
                       <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="ℹ️" FontSize="16" VerticalAlignment="Center"/>
                         <TextBlock Text="INFO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                       </StackPanel>
                     </Button>
@@ -435,10 +436,23 @@
             <TextBox Text="{Binding AppViewModel.PopupScriptSupervisor}" PlaceholderText="Script supervisor name"/>
           </StackPanel>
 
-          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="Cancel" Command="{Binding AppViewModel.CancelProjectDialogCommand}" Width="100" HorizontalContentAlignment="Center"/>
-            <Button Content="Save Project" Command="{Binding AppViewModel.SaveProjectDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" Width="130" HorizontalContentAlignment="Center" FontWeight="Bold"/>
-          </StackPanel>
+          <Grid ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,12,0,0">
+            <!-- Left Side: Delete Button (Visible only when editing) -->
+            <Button Grid.Column="0" Content="Delete Project" 
+                    Command="{Binding AppViewModel.PromptDeleteProjectCommand}"
+                    IsVisible="{Binding AppViewModel.IsEditingProjectModal}"
+                    Background="Transparent" BorderBrush="{StaticResource FailRed}" BorderThickness="1" Foreground="{StaticResource FailRed}" 
+                    Padding="12,6" HorizontalContentAlignment="Center"/>
+
+            <!-- Right Side: Cancel & Save -->
+            <Button Grid.Column="2" Content="Cancel" 
+                    Command="{Binding AppViewModel.CancelProjectDialogCommand}" 
+                    Width="100" HorizontalContentAlignment="Center" Margin="0,0,10,0"/>
+            <Button Grid.Column="3" Content="Save Project" 
+                    Command="{Binding AppViewModel.SaveProjectDialogCommand}" 
+                    Background="{StaticResource ActionAccent}" Foreground="#121212" 
+                    Width="130" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </Grid>
         </StackPanel>
       </Border>
     </Grid>
@@ -451,6 +465,13 @@
           <TextBlock Text="Delete Project?" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
           <TextBlock Text="Are you sure you want to delete this project? This action cannot be undone and will permanently delete all associated shoot days and takes."
                      TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}"/>
+          
+          <StackPanel Spacing="4" Margin="0,8,0,0">
+            <TextBlock Text="Please type the project name to confirm:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBlock Text="{Binding AppViewModel.ProjectToDelete.Name}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+            <TextBox Text="{Binding AppViewModel.DeleteProjectConfirmationText}" PlaceholderText="Type project name here" Margin="0,4,0,0"/>
+          </StackPanel>
+
           <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteProjectCommand}" Width="100" HorizontalContentAlignment="Center"/>
             <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteProjectCommand}" Background="{StaticResource FailRed}" Foreground="White" Width="100" HorizontalContentAlignment="Center" FontWeight="Bold"/>
