@@ -212,7 +212,7 @@
                             </Grid>
 
                             <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1" 
-                                    CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True" Height="340">
+                                    CornerRadius="4" Background="{StaticResource CardBackground}" ClipToBounds="True" >
                               <views:TakeGridView />
                             </Border>
                           </StackPanel>
