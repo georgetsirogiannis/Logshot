@@ -111,8 +111,9 @@ public class ContinuityService
             var takeEpisodes = DatabaseService.GetTokens(t.Episode);
             var takeScenes = DatabaseService.GetTokens(t.Scene);
 
-            bool episodeMatch = !queryEpisodes.Any() || !takeEpisodes.Any() || takeEpisodes.Intersect(queryEpisodes, StringComparer.OrdinalIgnoreCase).Any();
-            bool sceneMatch = !queryScenes.Any() || !takeScenes.Any() || takeScenes.Intersect(queryScenes, StringComparer.OrdinalIgnoreCase).Any();
+            // BUG FIX: Removed '!takeEpisodes.Any()' and '!takeScenes.Any()' for consistency with search filtering.
+            bool episodeMatch = !queryEpisodes.Any() || takeEpisodes.Intersect(queryEpisodes, StringComparer.OrdinalIgnoreCase).Any();
+            bool sceneMatch = !queryScenes.Any() || takeScenes.Intersect(queryScenes, StringComparer.OrdinalIgnoreCase).Any();
 
             return episodeMatch && sceneMatch;
         }).OrderByDescending(t => t.CreatedAt).ToList();

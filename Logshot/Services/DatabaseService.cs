@@ -349,8 +349,11 @@ public class DatabaseService
             {
                 var takeEpisodes = GetTokens(t.Episode);
                 var takeScenes = GetTokens(t.Scene);
-                bool episodeMatch = !queryEpisodes.Any() || !takeEpisodes.Any() || takeEpisodes.Intersect(queryEpisodes, StringComparer.OrdinalIgnoreCase).Any();
-                bool sceneMatch = !queryScenes.Any() || !takeScenes.Any() || takeScenes.Intersect(queryScenes, StringComparer.OrdinalIgnoreCase).Any();
+
+                // BUG FIX: Removed '!takeEpisodes.Any()' and '!takeScenes.Any()' so empty fields do not falsely match.
+                bool episodeMatch = !queryEpisodes.Any() || takeEpisodes.Intersect(queryEpisodes, StringComparer.OrdinalIgnoreCase).Any();
+                bool sceneMatch = !queryScenes.Any() || takeScenes.Intersect(queryScenes, StringComparer.OrdinalIgnoreCase).Any();
+
                 return episodeMatch && sceneMatch;
             })
             .OrderByDescending(t => t.CreatedAt)
