@@ -5,11 +5,12 @@
     <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
 	<TargetOSPlatformVersion>34.0</TargetOSPlatformVersion>
     <Nullable>enable</Nullable>
-    <ApplicationId>com.CompanyName.Logshot</ApplicationId>
+    <ApplicationId>com.georgetsirogiannis.Logshot</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+	<RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,11 +19,12 @@
     </AndroidResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Avalonia.Android" />
-    <PackageReference Include="Tmds.DBus.Protocol" />
-    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia.Android" />
+		<PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
+		<PackageReference Include="Xamarin.AndroidX.Core" />
+		<PackageReference Include="Xamarin.AndroidX.Core.Core.Ktx" ExcludeAssets="all" PrivateAssets="all" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Logshot\Logshot.csproj" />

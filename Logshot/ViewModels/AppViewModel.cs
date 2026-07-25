@@ -630,13 +630,15 @@ public partial class AppViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isPdfExportErrorOpen = false;
 
+    public bool IsPdfExportSupported => Services.PdfExportServiceRegistry.Instance?.IsSupported ?? false;
+
     // Delegate to ask the View to open the Save File Dialog
     public Action? RequestPdfFilePicker;
 
     [RelayCommand]
     public void ExportDayToPdf()
     {
-        if (CurrentDay is null) return;
+        if (CurrentDay is null || !IsPdfExportSupported) return;
 
         // Ensure the user has finalized the day
         if (!CurrentDay.IsFinalized)
@@ -661,14 +663,15 @@ public partial class AppViewModel : ViewModelBase
     /// </summary>
     public async Task GeneratePdfAsync(System.IO.Stream stream)
     {
+        var exporter = Services.PdfExportServiceRegistry.Instance;
+        if (exporter == null || !IsPdfExportSupported) return;
+
         IsLoading = true;
         try
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                // Activate the PDF Export Engine
-                var service = new PdfExportService(CurrentProject!, CurrentDay!);
-                service.Generate(stream);
+                await exporter.GeneratePdfAsync(CurrentProject!, CurrentDay!, stream);
             });
         }
         catch (Exception ex)
