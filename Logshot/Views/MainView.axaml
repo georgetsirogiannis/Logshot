@@ -57,19 +57,11 @@
                     PlaceholderText="Select a Project"
                     Margin="0,0,0,8"/>
 
-          <!-- Project Edit & Delete Buttons -->
-          <Grid Grid.Row="3" ColumnDefinitions="*,*" Margin="0,0,0,20">
-            <Button Grid.Column="0" Content="EDIT PROJECT" FontSize="11" Padding="4,6" Margin="0,0,3,0"
-                    Command="{Binding AppViewModel.OpenEditProjectDialogCommand}"
-                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-            <Button Grid.Column="1" Content="DELETE" FontSize="11" Padding="4,6" Margin="3,0,0,0"
-                    Foreground="{StaticResource FailRed}"
-                    Command="{Binding AppViewModel.PromptDeleteProjectCommand}"
-                    CommandParameter="{Binding AppViewModel.CurrentProject}"
-                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-          </Grid>
+          <!-- Project Edit / Delete Button -->
+          <Button Grid.Row="3" Content="EDIT / DELETE PROJECT" FontSize="11" Padding="4,6" Margin="0,0,0,20"
+                  Command="{Binding AppViewModel.OpenEditProjectDialogCommand}"
+                  IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
 
           <!-- Targeted Episode & Scene Search Bar -->
           <TextBlock Grid.Row="4" Text="EP/SC SEARCH (e.g. 1/5)" FontSize="12" 
@@ -444,10 +436,23 @@
             <TextBox Text="{Binding AppViewModel.PopupScriptSupervisor}" PlaceholderText="Script supervisor name"/>
           </StackPanel>
 
-          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="Cancel" Command="{Binding AppViewModel.CancelProjectDialogCommand}" Width="100" HorizontalContentAlignment="Center"/>
-            <Button Content="Save Project" Command="{Binding AppViewModel.SaveProjectDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" Width="130" HorizontalContentAlignment="Center" FontWeight="Bold"/>
-          </StackPanel>
+          <Grid ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,12,0,0">
+            <!-- Left Side: Delete Button (Visible only when editing) -->
+            <Button Grid.Column="0" Content="Delete Project" 
+                    Command="{Binding AppViewModel.PromptDeleteProjectCommand}"
+                    IsVisible="{Binding AppViewModel.IsEditingProjectModal}"
+                    Background="Transparent" BorderBrush="{StaticResource FailRed}" BorderThickness="1" Foreground="{StaticResource FailRed}" 
+                    Padding="12,6" HorizontalContentAlignment="Center"/>
+
+            <!-- Right Side: Cancel & Save -->
+            <Button Grid.Column="2" Content="Cancel" 
+                    Command="{Binding AppViewModel.CancelProjectDialogCommand}" 
+                    Width="100" HorizontalContentAlignment="Center" Margin="0,0,10,0"/>
+            <Button Grid.Column="3" Content="Save Project" 
+                    Command="{Binding AppViewModel.SaveProjectDialogCommand}" 
+                    Background="{StaticResource ActionAccent}" Foreground="#121212" 
+                    Width="130" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+          </Grid>
         </StackPanel>
       </Border>
     </Grid>
@@ -460,6 +465,13 @@
           <TextBlock Text="Delete Project?" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
           <TextBlock Text="Are you sure you want to delete this project? This action cannot be undone and will permanently delete all associated shoot days and takes."
                      TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}"/>
+          
+          <StackPanel Spacing="4" Margin="0,8,0,0">
+            <TextBlock Text="Please type the project name to confirm:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBlock Text="{Binding AppViewModel.ProjectToDelete.Name}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+            <TextBox Text="{Binding AppViewModel.DeleteProjectConfirmationText}" PlaceholderText="Type project name here" Margin="0,4,0,0"/>
+          </StackPanel>
+
           <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteProjectCommand}" Width="100" HorizontalContentAlignment="Center"/>
             <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteProjectCommand}" Background="{StaticResource FailRed}" Foreground="White" Width="100" HorizontalContentAlignment="Center" FontWeight="Bold"/>
