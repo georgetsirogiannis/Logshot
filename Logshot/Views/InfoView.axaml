@@ -28,7 +28,7 @@
                   BorderThickness="1" CornerRadius="8" Padding="24">
             <StackPanel Spacing="16">
               <Grid ColumnDefinitions="*, Auto">
-                <TextBlock Grid.Column="0" Text="SPELLING AUTOCORRECT" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="SPELLING AUTOCORRECT" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                 <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAutocorrectEnabled}" OnContent="ON" OffContent="OFF"/>
               </Grid>
               
@@ -46,7 +46,7 @@
           <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
                   BorderThickness="1" CornerRadius="8" Padding="24">
             <StackPanel Spacing="16">
-              <TextBlock Text="DATABASE EXPORT &amp; IMPORT" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+              <TextBlock Text="DATABASE EXPORT &amp; IMPORT" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
               
               <TextBlock Text="Transfer your database between devices without an internet connection."
                          FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
