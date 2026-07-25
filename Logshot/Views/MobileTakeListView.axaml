@@ -55,7 +55,7 @@
 	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}">
 	    <ItemsControl.ItemTemplate>
 		  <DataTemplate x:DataType="vm:SetupGroupViewModel">
-		    <Border Margin="10,6" CornerRadius="6" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Background="{StaticResource CardBackground}" ClipToBounds="True">
+		    <Border Margin="0,0,0,12" Background="{StaticResource CardBackground}">
 			  <StackPanel>
 			    <Button Classes="collapse-btn" Command="{Binding ToggleCollapsedCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
 				  <Grid ColumnDefinitions="Auto,*">
