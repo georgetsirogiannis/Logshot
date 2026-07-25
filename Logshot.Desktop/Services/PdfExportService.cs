@@ -3,18 +3,40 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using Avalonia.Platform;
 using Logshot.Models;
+using Logshot.Services;
 using Logshot.ViewModels;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace Logshot.Services;
+namespace Logshot.Desktop.Services;
 
-public class PdfExportService
+public class PdfExportService : IPdfExportService
 {
-    private readonly ProjectViewModel _project;
-    private readonly DayViewModel _day;
+    public bool IsSupported => true;
+
+    private static bool _isInitialized = false;
+
+    private static void EnsureInitialized()
+    {
+        if (_isInitialized) return;
+        _isInitialized = true;
+
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        try
+        {
+            using var fontStream = AssetLoader.Open(new Uri("avares://Logshot/Assets/Fonts/RobotoCondensed-VariableFont_wght.ttf"));
+            QuestPDF.Drawing.FontManager.RegisterFont(fontStream);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load Roboto Condensed for PDF: {ex.Message}");
+        }
+    }
 
     private const string CrossHatchSvg =
         "<svg viewBox='0 0 400 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>" +
@@ -37,24 +59,17 @@ public class PdfExportService
         "<line x1='28' y1='8' x2='8' y2='28' stroke='#B3B3B3' stroke-width='1.5'/>" +
         "</svg>";
 
-    public PdfExportService(ProjectViewModel project, DayViewModel day)
-    {
-        _project = project;
-        _day = day;
-    }
-
-    /// <summary>
-    /// Replaces the shorthand '-->' with the unicode right arrow '→' across PDF text.
-    /// </summary>
     private static string FormatText(string? text)
     {
         if (string.IsNullOrEmpty(text)) return string.Empty;
         return text.Replace("-->", "→");
     }
 
-    public void Generate(Stream stream)
+    public Task GeneratePdfAsync(ProjectViewModel project, DayViewModel day, Stream stream)
     {
-        _day.UpdateRowVisibilities();
+        EnsureInitialized();
+
+        day.UpdateRowVisibilities();
 
         Document.Create(container =>
         {
@@ -66,18 +81,20 @@ public class PdfExportService
 
                 page.DefaultTextStyle(x => x.FontFamily("Roboto Condensed").FontSize(8.5f).FontColor(Colors.Black));
 
-                page.Header().Element(ComposeHeader);
-                page.Content().Element(ComposeContent);
+                page.Header().Element(c => ComposeHeader(c, project, day));
+                page.Content().Element(c => ComposeContent(c, project, day));
             });
         })
         .GeneratePdf(stream);
+
+        return Task.CompletedTask;
     }
 
-    private void ComposeHeader(IContainer container)
+    private void ComposeHeader(IContainer container, ProjectViewModel project, DayViewModel day)
     {
         container.PaddingBottom(8).Column(column =>
         {
-            string projectName = FormatText(_project.Name)?.ToUpper() ?? "UNTITLED PROJECT";
+            string projectName = FormatText(project.Name)?.ToUpper() ?? "UNTITLED PROJECT";
             column.Item().AlignCenter().Text(text =>
             {
                 text.Span($"{projectName} - ΔΕΛΤΙΟ ΛΗΨΕΩΝ").FontSize(14).Bold();
@@ -89,61 +106,61 @@ public class PdfExportService
 
                 // Director
                 t.Span("ΣΚΗΝΟΘΕΣΙΑ: ").SemiBold();
-                t.Span(FormatText(_project.Director ?? ""));
+                t.Span(FormatText(project.Director ?? ""));
 
                 // Separator
                 t.Span("       •       ").SemiBold();
 
                 // Production
                 t.Span("ΠΑΡΑΓΩΓΗ: ").SemiBold();
-                t.Span(FormatText(_project.ProductionCompany ?? ""));
+                t.Span(FormatText(project.ProductionCompany ?? ""));
 
                 // Separator
                 t.Span("       •       ").SemiBold();
 
                 // DOP
                 t.Span("ΔΙΕΥΘΥΝΣΗ ΦΩΤΟΓΡΑΦΙΑΣ: ").SemiBold();
-                t.Span(FormatText(_project.Dop ?? ""));
+                t.Span(FormatText(project.Dop ?? ""));
             });
 
             column.Item().PaddingTop(16).Border(0.5f).BorderColor(Colors.Grey.Lighten1)
                       .Background(Colors.Grey.Lighten4).PaddingHorizontal(12).PaddingVertical(6).Row(row =>
-            {
-                row.RelativeItem(1).AlignLeft().Text(t =>
-                {
-                    t.Span("ΗΜΕΡΟΜΗΝΙΑ: ").FontSize(10).SemiBold();
-                    t.Span(_day.CalendarDate.ToString("dd/MM/yyyy")).FontSize(10);
-                });
-                row.RelativeItem(1).AlignCenter().Text(t =>
-                {
-                    t.Span("ΗΜΕΡΑ ΓΥΡΙΣΜΑΤΟΣ: ").FontSize(10).SemiBold();
-                    t.Span(FormatText(_day.ShootDayNumber?.ToString() ?? "")).FontSize(10);
-                });
-                row.RelativeItem(1).AlignRight().Text(t =>
-                {
-                    t.Span("ΣΕΛΙΔΑ: ").FontSize(10).SemiBold();
-                    t.CurrentPageNumber().FontSize(10);
-                    t.Span(" / ").FontSize(10);
-                    t.TotalPages().FontSize(10);
-                });
-            });
+                      {
+                          row.RelativeItem(1).AlignLeft().Text(t =>
+                          {
+                              t.Span("ΗΜΕΡΟΜΗΝΙΑ: ").FontSize(10).SemiBold();
+                              t.Span(day.CalendarDate.ToString("dd/MM/yyyy")).FontSize(10);
+                          });
+                          row.RelativeItem(1).AlignCenter().Text(t =>
+                          {
+                              t.Span("ΗΜΕΡΑ ΓΥΡΙΣΜΑΤΟΣ: ").FontSize(10).SemiBold();
+                              t.Span(FormatText(day.ShootDayNumber?.ToString() ?? "")).FontSize(10);
+                          });
+                          row.RelativeItem(1).AlignRight().Text(t =>
+                          {
+                              t.Span("ΣΕΛΙΔΑ: ").FontSize(10).SemiBold();
+                              t.CurrentPageNumber().FontSize(10);
+                              t.Span(" / ").FontSize(10);
+                              t.TotalPages().FontSize(10);
+                          });
+                      });
 
             // General Notes - only on first page
-            if (!string.IsNullOrWhiteSpace(_day.GeneralNotes))
+            if (!string.IsNullOrWhiteSpace(day.GeneralNotes))
             {
                 column.Item().ShowIf(x => x.PageNumber == 1).PaddingTop(4).Border(0.5f).BorderColor(Colors.Grey.Lighten1)
                       .Background(Colors.Grey.Lighten5).Padding(6).Text(t =>
                       {
                           t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ: ").Bold().FontSize(8f);
-                          t.Span(FormatText(_day.GeneralNotes)).FontSize(8f);
+                          t.Span(FormatText(day.GeneralNotes)).FontSize(8f);
                       });
             }
         });
     }
 
-    private void ComposeContent(IContainer container)
+    private void ComposeContent(IContainer container, ProjectViewModel project, DayViewModel day)
     {
-        var extraCameras = _day.ExtraActiveCameras?.ToList() ?? new();
+        var extraCameras = day.ExtraActiveCameras?.ToList() ?? new();
         int extraCount = extraCameras.Count;
         int totalColumnsCount = 2 + extraCount + 6;
 
@@ -211,9 +228,9 @@ public class PdfExportService
                     IContainer NotesHeaderStyle(IContainer c) => c.Background("#505050").Border(0.5f).BorderColor(Colors.Black).PaddingVertical(3).PaddingHorizontal(6).AlignLeft().AlignMiddle();
                 });
 
-                if (_day.Takes != null && _day.Takes.Any())
+                if (day.Takes != null && day.Takes.Any())
                 {
-                    foreach (var take in _day.Takes)
+                    foreach (var take in day.Takes)
                     {
                         RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
                             showRoll: take.ShowCamARoll, rollVal: take.CamARoll,
@@ -253,11 +270,11 @@ public class PdfExportService
                 }
             });
 
-            if (_day.IsFinalized && _day.Takes != null && _day.Takes.Any())
+            if (day.IsFinalized && day.Takes != null && day.Takes.Any())
             {
                 column.Item().BorderTop(0).Border(0.5f).BorderColor(Colors.Black).Background(Colors.White)
                       .PaddingVertical(6).AlignCenter().AlignMiddle()
-                      .Text(FormatText($"— END DAY {_day.ShootDayNumber} —")).FontSize(11f).Bold().LetterSpacing(0.15f);
+                      .Text(FormatText($"— END DAY {day.ShootDayNumber} —")).FontSize(11f).Bold().LetterSpacing(0.15f);
             }
         });
     }
@@ -295,7 +312,6 @@ public class PdfExportService
             var sb = new StringBuilder();
             sb.Append($"<svg viewBox='0 0 {w.ToString(CultureInfo.InvariantCulture)} {h.ToString(CultureInfo.InvariantCulture)}' xmlns='http://www.w3.org/2000/svg'>");
 
-            // 1. Top-left to bottom-right lines (\): x - y = C
             for (float c = -h; c <= w; c += step)
             {
                 float x1 = c >= 0 ? c : 0;
@@ -310,7 +326,6 @@ public class PdfExportService
                 }
             }
 
-            // 2. Top-right to bottom-left lines (/): x + y = C
             for (float c = 0; c <= w + h; c += step)
             {
                 float x1 = c <= w ? c : w;
