@@ -6,6 +6,7 @@ using Avalonia.Platform;
 using Logshot.Services;
 using Logshot.ViewModels;
 using Logshot.Views;
+using Logshot.Views.Android;
 
 namespace Logshot;
 
@@ -29,7 +30,7 @@ public partial class App : Application
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
-            singleViewPlatform.MainView = new MainView
+            singleViewPlatform.MainView = new AndroidMainView
             {
                 DataContext = new MainViewModel(dbService)
             };
