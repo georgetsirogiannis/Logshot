@@ -8,6 +8,17 @@
              x:Class="Logshot.Views.Android.AndroidTakeListView"
              x:DataType="vm:DayViewModel">
 
+    <UserControl.Styles>
+    <Style Selector="Button">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ToggleButton">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
   <DockPanel>
     <!-- SETUP GROUPS FEED -->
     <ScrollViewer Name="AndroidScrollViewer" BringIntoViewOnFocusChange="False">

@@ -87,7 +87,7 @@
             <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
         </Style>
 
-        <!-- Ensure all core text elements inherit Roboto Condensed automatically -->
+        <!-- Ensure all core text elements inherit Roboto Condensed automatically and that all buttons and toggle buttons are centered -->
         <Style Selector="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
         </Style>
@@ -96,6 +96,13 @@
         </Style>
         <Style Selector="Button">
             <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ToggleButton">
+            <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
 
         <!-- Prevent disabled controls from fading or dimming in appearance -->

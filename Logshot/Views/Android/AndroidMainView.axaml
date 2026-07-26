@@ -12,6 +12,17 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
+  <UserControl.Styles>
+    <Style Selector="Button">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ToggleButton">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
   <Grid Background="{StaticResource WorkspaceBackground}">
     <!-- Top-level loading bar & Contextual Message -->
     <StackPanel VerticalAlignment="Top" HorizontalAlignment="Stretch" ZIndex="300" IsVisible="{Binding AppViewModel.IsLoading}">
