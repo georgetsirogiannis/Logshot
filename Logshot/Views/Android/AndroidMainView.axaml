@@ -76,7 +76,7 @@
             <!-- Targeted Episode & Scene Search -->
             <TextBlock Grid.Row="4" Text="EP/SC SEARCH" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
             <Grid Grid.Row="5" ColumnDefinitions="*, Auto" Margin="0,0,0,18">
-              <TextBox Grid.Column="0" Text="{Binding AppViewModel.SearchQuery}" PlaceholderText="e.g. 1/5 or 10.32" 
+              <TextBox Grid.Column="0" Text="{Binding AppViewModel.SearchQuery}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 1/5 or 10.32"
                        MinHeight="48" VerticalContentAlignment="Center"
                        IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"/>
               <Button Grid.Column="1" Content="✕" Margin="6,0,0,0" MinHeight="48" Width="48"
@@ -426,8 +426,8 @@
       <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
         <StackPanel Spacing="14">
           <TextBlock Text="New Scene Setup" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
-          <StackPanel Spacing="4"><TextBlock Text="Episode (ΕΠ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewEpisode}" PlaceholderText="e.g. 1"/></StackPanel>
-          <StackPanel Spacing="4"><TextBlock Text="Scene (ΣΚ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewScene}" PlaceholderText="e.g. 32"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Episode (ΕΠ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewEpisode}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 1"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Scene (ΣΚ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewScene}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 32"/></StackPanel>
           <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,8,0,0">
             <Button Grid.Column="0" Content="+ Wild" Command="{Binding AppViewModel.ConfirmAddWildShotDialogCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" MinHeight="48" Padding="10,6"/>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">

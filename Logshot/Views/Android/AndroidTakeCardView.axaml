@@ -51,7 +51,8 @@
              <StackPanel Spacing="4">
                 <TextBlock Text="ΠΛΑΝΟ" FontSize="11" Foreground="{StaticResource TextSecondary}" FontWeight="Bold" HorizontalAlignment="Center"/>
                 <TextBox Text="{Binding DisplayShot}" 
-                         FontSize="20" 
+                         TextInputOptions.ContentType="Digits"
+                         FontSize="20"
                          FontWeight="Bold" 
                          Width="70" 
                          Height="48" 
@@ -83,6 +84,7 @@
 
                    <!-- Take Number Input -->
                    <TextBox Text="{Binding DisplayTakeNumber}" 
+                            TextInputOptions.ContentType="Digits"
                             FontSize="20" 
                             FontWeight="Bold" 
                             Foreground="{StaticResource ActionAccent}" 
@@ -128,11 +130,11 @@
               <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                  <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Text="ΕΠ" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBox Text="{Binding Episode}" MinWidth="38" Height="36" Padding="0" FontSize="13" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="6" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
+                    <TextBox Text="{Binding Episode}" TextInputOptions.ContentType="Digits" MinWidth="38" Height="36" Padding="0" FontSize="13" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="6" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
                  </StackPanel>
                  <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Text="ΣΚ" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBox Text="{Binding Scene}" MinWidth="38" Height="36" Padding="0" FontSize="13" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="6" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsWildOrSoundOnly}"/>
+                    <TextBox Text="{Binding Scene}" TextInputOptions.ContentType="Digits" MinWidth="38" Height="36" Padding="0" FontSize="13" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="6" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsWildOrSoundOnly}"/>
                  </StackPanel>
               </StackPanel>
 
