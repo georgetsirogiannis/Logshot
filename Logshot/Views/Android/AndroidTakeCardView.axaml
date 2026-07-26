@@ -36,6 +36,7 @@
           Margin="0,0,0,12"
           Padding="16" 
           MinHeight="{Binding RowMinHeight}" 
+          PointerPressed="Background_PointerPressed"
           IsHitTestVisible="{Binding !$parent[views:AndroidTakeListView].((vm:DayViewModel)DataContext).IsFinalized}">
     
     <Grid>

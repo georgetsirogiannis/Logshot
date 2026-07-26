@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:Logshot"
+             xmlns:behaviors="using:Logshot.Behaviors"
              x:Class="Logshot.App"
              RequestedThemeVariant="Dark">
     <!-- Forced to "Dark" ThemeVariant to match the Dark-Mode-First project vision -->
@@ -92,6 +93,7 @@
         </Style>
         <Style Selector="TextBox">
             <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
+            <Setter Property="behaviors:TouchScrollBehavior.EnableTouchScrollProtection" Value="True" />
         </Style>
         <Style Selector="Button">
             <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />

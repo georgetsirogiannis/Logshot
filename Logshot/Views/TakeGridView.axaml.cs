@@ -7,6 +7,8 @@ using Avalonia.VisualTree;
 using Logshot.ViewModels;
 using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 
 namespace Logshot.Views;
 
@@ -26,24 +28,87 @@ public partial class TakeGridView : UserControl
             if (_dayVm != null)
             {
                 _dayVm.Takes.CollectionChanged -= Takes_CollectionChanged;
+                _dayVm.PropertyChanged -= DayVm_PropertyChanged;
             }
             if (DataContext is DayViewModel dayVm)
             {
                 _dayVm = dayVm;
                 _dayVm.Takes.CollectionChanged += Takes_CollectionChanged;
+                _dayVm.PropertyChanged += DayVm_PropertyChanged;
             }
         };
+    }
+
+    private void DayVm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DayViewModel.Takes) && _dayVm != null)
+        {
+            _dayVm.Takes.CollectionChanged -= Takes_CollectionChanged;
+            _dayVm.Takes.CollectionChanged += Takes_CollectionChanged;
+        }
     }
 
     private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes && _dayVm.Takes.Count > 0)
         {
+            int lastIndex = _dayVm.Takes.Count - 1;
+            var lastTake = _dayVm.Takes[lastIndex];
+
+            // Post at Loaded priority so Avalonia updates the ListBox layout and item containers first
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                TakesListBox?.ScrollIntoView(_dayVm.Takes[_dayVm.Takes.Count - 1]);
+                if (TakesListBox != null)
+                {
+                    // 1. Request ListBox to scroll item into view
+                    TakesListBox.ScrollIntoView(lastIndex);
+                    TakesListBox.ScrollIntoView(lastTake);
+
+                    // 2. Set ScrollViewer Offset Y to max to guarantee scrolling to the bottom
+                    var scrollViewer = TakesListBox.FindDescendantOfType<ScrollViewer>();
+                    if (scrollViewer != null)
+                    {
+                        scrollViewer.Offset = new Vector(scrollViewer.Offset.X, double.MaxValue);
+                    }
+                }
+
+                // 3. Auto-focus the first camera input box in the newly added row
+                TryFocusFirstInputInContainer(lastTake);
             }, Avalonia.Threading.DispatcherPriority.Loaded);
         }
+    }
+
+    private void TryFocusFirstInputInContainer(TakeViewModel take)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            var container = TakesListBox?.ContainerFromItem(take) as Control;
+            if (container != null)
+            {
+                container.BringIntoView();
+
+                var firstTextBox = container.GetVisualDescendants()
+                    .OfType<TextBox>()
+                    .FirstOrDefault(tb => !tb.IsReadOnly && tb.IsEffectivelyVisible);
+
+                firstTextBox?.Focus();
+            }
+            else
+            {
+                // Retry if container is being virtualized/realized
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    var c = TakesListBox?.ContainerFromItem(take) as Control;
+                    c?.BringIntoView();
+
+                    var firstTextBox = c?.GetVisualDescendants()
+                        .OfType<TextBox>()
+                        .FirstOrDefault(tb => !tb.IsReadOnly && tb.IsEffectivelyVisible);
+
+                    firstTextBox?.Focus();
+                }, Avalonia.Threading.DispatcherPriority.Loaded);
+            }
+        }, Avalonia.Threading.DispatcherPriority.Loaded);
     }
 
     private async void AddCamera_Click(object sender, RoutedEventArgs e)

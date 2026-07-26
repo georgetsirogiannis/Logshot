@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Logshot.ViewModels;
@@ -11,6 +12,15 @@ public partial class AndroidTakeCardView : UserControl
     public AndroidTakeCardView()
     {
         InitializeComponent();
+    }
+
+    private void Background_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is Avalonia.Visual sourceVisual && sourceVisual.FindAncestorOfType<TextBox>() != null)
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        topLevel?.FocusManager?.Focus(null);
     }
 
     private void DeleteTake_Click(object sender, RoutedEventArgs e)

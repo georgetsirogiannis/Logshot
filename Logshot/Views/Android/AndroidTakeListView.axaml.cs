@@ -1,7 +1,10 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using Logshot.ViewModels;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace Logshot.Views.Android;
 
@@ -27,6 +30,15 @@ public partial class AndroidTakeListView : UserControl
         };
     }
 
+    private void Background_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is Avalonia.Visual sourceVisual && sourceVisual.FindAncestorOfType<TextBox>() != null)
+            return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        topLevel?.FocusManager?.Focus(null);
+    }
+
     private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes)
@@ -34,6 +46,23 @@ public partial class AndroidTakeListView : UserControl
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 AndroidScrollViewer?.ScrollToEnd();
+
+                // Focus the first camera input box in the newly created card
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    var lastCard = this.GetVisualDescendants()
+                        .OfType<AndroidTakeCardView>()
+                        .LastOrDefault();
+
+                    if (lastCard != null)
+                    {
+                        var firstTextBox = lastCard.GetVisualDescendants()
+                            .OfType<TextBox>()
+                            .FirstOrDefault(tb => !tb.IsReadOnly && tb.IsEffectivelyVisible);
+
+                        firstTextBox?.Focus();
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Render);
             }, Avalonia.Threading.DispatcherPriority.Loaded);
         }
     }
