@@ -13,6 +13,7 @@ namespace Logshot.ViewModels;
 public partial class AppViewModel : ViewModelBase
 {
     private readonly DatabaseService _databaseService;
+    private readonly System.Threading.SemaphoreSlim _loadLock = new(1, 1);
 
     [ObservableProperty]
     private ObservableCollection<ProjectViewModel> _projects = new();
@@ -316,6 +317,7 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAllProjects()
     {
+        await _loadLock.WaitAsync();
         IsLoading = true;
         try
         {
@@ -333,6 +335,7 @@ public partial class AppViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+            _loadLock.Release();
         }
     }
 
@@ -687,5 +690,95 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task SyncToSupabase()
     {
+    }
+
+    /// <summary>
+    /// Non-intrusive in-place merge of cloud data into active ViewModels.
+    /// Preserves current selections, focus, and open views without duplicates.
+    /// </summary>
+    public async Task MergeCloudDataAsync()
+    {
+        await _loadLock.WaitAsync();
+        try
+        {
+            var dbProjects = await _databaseService.GetAllProjectsAsync();
+            foreach (var pModel in dbProjects)
+            {
+                var existingProj = Projects.FirstOrDefault(p => p.Id == pModel.Id);
+                if (existingProj == null)
+                {
+                    var newProjVm = new ProjectViewModel(_databaseService);
+                    newProjVm.LoadFromModel(pModel);
+                    await newProjVm.LoadDaysCommand.ExecuteAsync(null);
+                    Projects.Add(newProjVm);
+                }
+                else
+                {
+                    existingProj.Name = pModel.Name;
+                    existingProj.Director = pModel.Director;
+                    existingProj.Dop = pModel.Dop;
+                    existingProj.ProductionCompany = pModel.ProductionCompany;
+                    existingProj.ScriptSupervisor = pModel.ScriptSupervisor;
+                }
+            }
+
+            // Clean up any projects deleted on another device
+            var dbProjectIds = dbProjects.Select(p => p.Id).ToHashSet();
+            for (int i = Projects.Count - 1; i >= 0; i--)
+            {
+                if (!dbProjectIds.Contains(Projects[i].Id))
+                {
+                    if (CurrentProject?.Id == Projects[i].Id)
+                    {
+                        CurrentProject = null;
+                        CurrentDay = null;
+                    }
+                    Projects.RemoveAt(i);
+                }
+            }
+
+            if (CurrentProject == null) return;
+
+            var dbDays = await _databaseService.GetDaysForProjectAsync(CurrentProject.Id);
+            foreach (var dModel in dbDays)
+            {
+                var existingDay = CurrentProject.Days.FirstOrDefault(d => d.Id == dModel.Id);
+                if (existingDay == null)
+                {
+                    var newDayVm = new DayViewModel(_databaseService);
+                    newDayVm.LoadFromModel(dModel);
+                    CurrentProject.Days.Add(newDayVm);
+                    CurrentProject.SortDays();
+                }
+                else
+                {
+                    existingDay.ShootDayNumber = dModel.ShootDayNumber;
+                    existingDay.CalendarDate = dModel.CalendarDate;
+                    existingDay.IsFinalized = dModel.IsFinalized;
+                }
+            }
+
+            // Clean up any days deleted on another device
+            var dbDayIds = dbDays.Select(d => d.Id).ToHashSet();
+            for (int i = CurrentProject.Days.Count - 1; i >= 0; i--)
+            {
+                if (!dbDayIds.Contains(CurrentProject.Days[i].Id))
+                {
+                    if (CurrentDay?.Id == CurrentProject.Days[i].Id)
+                    {
+                        CurrentDay = null;
+                    }
+                    CurrentProject.Days.RemoveAt(i);
+                }
+            }
+
+            if (CurrentDay == null) return;
+
+            await CurrentDay.MergeTakesFromCloudAsync();
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 }

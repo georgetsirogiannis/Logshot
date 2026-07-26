@@ -125,10 +125,17 @@
 
           <!-- Cloud Sync Status & Settings Cog -->
           <Grid Grid.Row="8" Margin="0,20,0,0" VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left" ToolTip.Tip="Cloud Sync Status">
-              <TextBlock Text="{Binding SyncIcon}" FontSize="14" VerticalAlignment="Center"/>
-              <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-            </StackPanel>
+            <Button Command="{Binding ManualSyncCommand}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,2"
+                    HorizontalAlignment="Left"
+                    ToolTip.Tip="Click to Sync Now">
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="{Binding SyncIcon}" FontSize="14" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Button>
 
             <Button HorizontalAlignment="Right"
                     Command="{Binding ToggleInfoViewCommand}"

@@ -237,28 +237,38 @@ public class DatabaseService
     public async Task<int> DeleteDayAsync(Day day)
     {
         await InitAsync();
-        var takes = await GetTakesForDayAsync(day.Id);
-        foreach (var take in takes)
+        return await Task.Run(async () =>
         {
-            await _db.DeleteAsync(take);
-            await QueueSyncAction("Take", take.Id, "Delete");
-        }
-        var result = await _db.DeleteAsync(day);
-        await QueueSyncAction("Day", day.Id, "Delete");
-        return result;
+            int deleted = 0;
+            await _db.RunInTransactionAsync(tran =>
+            {
+                tran.Execute("DELETE FROM Takes WHERE DayId = ?", day.Id);
+                deleted = tran.Delete(day);
+                tran.Insert(new SyncQueueItem { EntityType = "Day", EntityId = day.Id, Action = "Delete" });
+            });
+
+            OnDataChanged?.Invoke();
+            return deleted;
+        });
     }
 
     public async Task<int> DeleteProjectAsync(Project project)
     {
         await InitAsync();
-        var days = await GetDaysForProjectAsync(project.Id);
-        foreach (var day in days)
+        return await Task.Run(async () =>
         {
-            await DeleteDayAsync(day);
-        }
-        var result = await _db.DeleteAsync(project);
-        await QueueSyncAction("Project", project.Id, "Delete");
-        return result;
+            int deleted = 0;
+            await _db.RunInTransactionAsync(tran =>
+            {
+                tran.Execute("DELETE FROM Takes WHERE DayId IN (SELECT Id FROM Days WHERE ProjectId = ?)", project.Id);
+                tran.Execute("DELETE FROM Days WHERE ProjectId = ?", project.Id);
+                deleted = tran.Delete(project);
+                tran.Insert(new SyncQueueItem { EntityType = "Project", EntityId = project.Id, Action = "Delete" });
+            });
+
+            OnDataChanged?.Invoke();
+            return deleted;
+        });
     }
 
     // --- NEW: Single Entity Retrievals for Sync Worker ---
@@ -370,5 +380,65 @@ public class DatabaseService
     {
         await InitAsync();
         return await _db.Table<Project>().OrderBy(p => p.Name).ToListAsync();
+    }
+
+    /// <summary>
+    /// Saves cloud data received from Supabase directly into SQLite without 
+    /// re-queueing to SyncQueue, preventing infinite sync loops.
+    /// Also purges local records that were deleted on other devices.
+    /// </summary>
+    public async Task<(int updatedProjects, int updatedDays, int updatedTakes)> SaveCloudDataAsync(
+        List<Project> projects, List<Day> days, List<Take> takes)
+    {
+        await InitAsync();
+        int updatedProjects = 0, updatedDays = 0, updatedTakes = 0;
+
+        var remoteProjectIds = projects.Select(p => p.Id).ToHashSet();
+        var remoteDayIds = days.Select(d => d.Id).ToHashSet();
+        var remoteTakeIds = takes.Select(t => t.Id).ToHashSet();
+
+        await _db.RunInTransactionAsync(tran =>
+        {
+            // 1. Purge local records that were deleted on another device
+            var localProjects = tran.Table<Project>().ToList();
+            foreach (var lp in localProjects)
+            {
+                if (!remoteProjectIds.Contains(lp.Id))
+                    tran.Delete(lp);
+            }
+
+            var localDays = tran.Table<Day>().ToList();
+            foreach (var ld in localDays)
+            {
+                if (!remoteDayIds.Contains(ld.Id))
+                    tran.Delete(ld);
+            }
+
+            var localTakes = tran.Table<Take>().ToList();
+            foreach (var lt in localTakes)
+            {
+                if (!remoteTakeIds.Contains(lt.Id))
+                    tran.Delete(lt);
+            }
+
+            // 2. Insert or replace updated cloud records
+            foreach (var p in projects)
+            {
+                tran.InsertOrReplace(p);
+                updatedProjects++;
+            }
+            foreach (var d in days)
+            {
+                tran.InsertOrReplace(d);
+                updatedDays++;
+            }
+            foreach (var t in takes)
+            {
+                tran.InsertOrReplace(t);
+                updatedTakes++;
+            }
+        });
+
+        return (updatedProjects, updatedDays, updatedTakes);
     }
 }

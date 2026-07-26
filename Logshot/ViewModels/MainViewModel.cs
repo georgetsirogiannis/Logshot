@@ -1,10 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.IO;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Logshot.Services;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Logshot.ViewModels;
 
@@ -284,6 +285,15 @@ public partial class MainViewModel : ViewModelBase
             });
         };
 
+        // Listen for cloud pull events and perform non-intrusive in-place UI merge
+        _supabaseService.OnCloudDataReceived += () =>
+        {
+            Dispatcher.UIThread.Post(async () =>
+            {
+                await AppViewModel.MergeCloudDataAsync();
+            });
+        };
+
         IsAutocorrectEnabled = AutocorrectionManager.Instance.IsEnabled;
 
         _appViewModel = new AppViewModel(databaseService);
@@ -319,5 +329,11 @@ public partial class MainViewModel : ViewModelBase
         {
             StatusMessage = $"Error: {ex.Message}";
         }
+    }
+
+    [RelayCommand]
+    public async Task ManualSync()
+    {
+        await _supabaseService.ManualSyncAsync();
     }
 }

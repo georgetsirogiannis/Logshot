@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace Logshot.Services;
 
 // --- Supabase DTO Models ---
-// (These map exactly to the Postgres tables created in the SQL Editor)
 
 [Table("projects")]
 public class SupabaseProject : BaseModel
@@ -72,12 +71,13 @@ public class SupabaseService
     private readonly DatabaseService _databaseService;
     private bool _isInitialized = false;
     private CancellationTokenSource? _debounceCts;
+    private readonly SemaphoreSlim _syncSemaphore = new(1, 1);
 
-    // UI Event to notify the ViewModel of state changes (Icon, Text)
     public event Action<string, string>? OnSyncStatusChanged;
+    public event Action? OnCloudDataReceived;
 
     private const string SupabaseUrl = "https://wcddchyqorejtashswsu.supabase.co";
-    private const string SupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZGRjaHlxb3JlanRhc2hzd3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAyMzksImV4cCI6MjEwMDMzNjIzOX0.cZrcrRAIEEvAYOEbiTcorBGPgx04tcLfuQH3suFn3IE"; // Keep your working JWT anon key here
+    private const string SupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZGRjaHlxb3JlanRhc2hzd3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAyMzksImV4cCI6MjEwMDMzNjIzOX0.cZrcrRAIEEvAYOEbiTcorBGPgx04tcLfuQH3suFn3IE";
 
     public SupabaseService(DatabaseService databaseService)
     {
@@ -96,13 +96,13 @@ public class SupabaseService
             var options = new SupabaseOptions { AutoConnectRealtime = true };
             _client = new Client(SupabaseUrl, SupabaseKey, options);
 
-            // Wrap initialization in a 5-second timeout so it never hangs indefinitely
             await ExecuteWithTimeout(async () => await _client.InitializeAsync(), 5000);
 
             OnSyncStatusChanged?.Invoke("☁️", "Synced");
 
-            // On app load, trigger a sync to clear out anything logged while offline
+            await PullFromCloudAsync();
             TriggerSync();
+            StartPeriodicPull();
         }
         catch (Exception ex)
         {
@@ -112,12 +112,45 @@ public class SupabaseService
     }
 
     /// <summary>
-    /// Starts the 3-second debounce timer. 
-    /// If called again before 3 seconds, the timer restarts.
+    /// Forces an immediate manual sync process (pulling remote changes and pushing local outbox items).
+    /// Guarded with a semaphore to handle rapid tapping and prevent concurrent runs.
+    /// </summary>
+    public async Task ManualSyncAsync()
+    {
+        if (!_isInitialized) return;
+
+        _debounceCts?.Cancel();
+
+        if (!await _syncSemaphore.WaitAsync(0))
+        {
+            return; // Already syncing
+        }
+
+        try
+        {
+            OnSyncStatusChanged?.Invoke("🔄", "Syncing...");
+            await PullFromCloudAsync();
+            await ProcessSyncQueueInternalAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Manual Sync Error: {ex.Message}");
+            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+        }
+        finally
+        {
+            _syncSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Starts or resets the 3-second debounce timer when local data changes.
     /// </summary>
     public void TriggerSync()
     {
         if (!_isInitialized) return;
+
+        OnSyncStatusChanged?.Invoke("⏳", "Pending Changes");
 
         _debounceCts?.Cancel();
         _debounceCts = new CancellationTokenSource();
@@ -130,14 +163,14 @@ public class SupabaseService
                 await Task.Delay(3000, token);
                 if (!token.IsCancellationRequested)
                 {
-                    await ProcessSyncQueueAsync();
+                    await ManualSyncAsync();
                 }
             }
-            catch (TaskCanceledException) { /* Ignored, timer reset */ }
+            catch (TaskCanceledException) { /* Timer reset */ }
         }, token);
     }
 
-    private async Task ProcessSyncQueueAsync()
+    private async Task ProcessSyncQueueInternalAsync()
     {
         _syncedProjectIds.Clear();
         _syncedDayIds.Clear();
@@ -149,14 +182,12 @@ public class SupabaseService
             return;
         }
 
-        OnSyncStatusChanged?.Invoke("🔄", "Syncing...");
         bool hasError = false;
 
         foreach (var item in pendingItems)
         {
             try
             {
-                // Wrap each item sync operation in a strict 5-second timeout
                 await ExecuteWithTimeout(async () =>
                 {
                     if (item.Action == "Upsert")
@@ -169,7 +200,6 @@ public class SupabaseService
                     }
                 }, 5000);
 
-                // If successful, remove it from the local outbox queue
                 await _databaseService.DeleteSyncItemAsync(item);
             }
             catch (Exception ex)
@@ -307,5 +337,97 @@ public class SupabaseService
                 await _client.From<SupabaseTake>().Where(x => x.Id == item.EntityId).Delete();
                 break;
         }
+    }
+
+    public async Task PullFromCloudAsync()
+    {
+        if (!_isInitialized) return;
+
+        var pending = await _databaseService.GetPendingSyncItemsAsync();
+        if (pending.Count > 0) return; // Skip pull if local edits are queued
+
+        try
+        {
+            var responseProjects = await _client.From<SupabaseProject>().Get();
+            var responseDays = await _client.From<SupabaseDay>().Get();
+            var responseTakes = await _client.From<SupabaseTake>().Get();
+
+            var remoteProjects = responseProjects.Models.Select(sp => new Project
+            {
+                Id = sp.Id,
+                Name = sp.Name,
+                Director = sp.Director,
+                Dop = sp.Dop,
+                ProductionCompany = sp.ProductionCompany,
+                ScriptSupervisor = sp.ScriptSupervisor,
+                CreatedAt = sp.CreatedAt
+            }).ToList();
+
+            var remoteDays = responseDays.Models.Select(sd => new Day
+            {
+                Id = sd.Id,
+                ProjectId = sd.ProjectId,
+                ShootDayNumber = sd.ShootDayNumber,
+                CalendarDate = sd.CalendarDate,
+                GeneralNotes = sd.GeneralNotes,
+                IsFinalized = sd.IsFinalized,
+                CreatedAt = sd.CreatedAt
+            }).ToList();
+
+            var remoteTakes = responseTakes.Models.Select(st => new Take
+            {
+                Id = st.Id,
+                DayId = st.DayId,
+                SequenceOrder = st.SequenceOrder,
+                Episode = st.Episode,
+                Scene = st.Scene,
+                Shot = st.Shot,
+                TakeNumber = st.TakeNumber,
+                CameraData = st.CameraData,
+                SoundNotes = st.SoundNotes,
+                IsSoundNoRoll = st.IsSoundNoRoll,
+                TakeNotes = st.TakeNotes,
+                FalseStartCount = st.FalseStartCount,
+                IsLongStart = st.IsLongStart,
+                IsCircled = st.IsCircled,
+                IsFailed = st.IsFailed,
+                IsPickup = st.IsPickup,
+                IsBlooper = st.IsBlooper,
+                IsNoBoard = st.IsNoBoard,
+                IsEndBoard = st.IsEndBoard,
+                IsWildShot = st.IsWildShot,
+                VoidCameraLabels = st.VoidCameraLabels,
+                CreatedAt = st.CreatedAt
+            }).ToList();
+
+            var (pCount, dCount, tCount) = await _databaseService.SaveCloudDataAsync(remoteProjects, remoteDays, remoteTakes);
+            if (pCount > 0 || dCount > 0 || tCount > 0)
+            {
+                OnCloudDataReceived?.Invoke();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Cloud Pull Error: {ex.Message}");
+        }
+    }
+
+    private void StartPeriodicPull()
+    {
+        Task.Run(async () =>
+        {
+            while (_isInitialized)
+            {
+                try
+                {
+                    await Task.Delay(15000);
+                    if (_isInitialized)
+                    {
+                        await PullFromCloudAsync();
+                    }
+                }
+                catch { /* Ignore */ }
+            }
+        });
     }
 }

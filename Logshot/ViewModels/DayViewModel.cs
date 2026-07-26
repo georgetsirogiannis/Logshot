@@ -1299,9 +1299,55 @@ public partial class DayViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Smoothly merges remote take changes from SQLite into memory without 
+    /// replacing ViewModel instances, keeping focus and screen state intact.
+    /// </summary>
+    public async Task MergeTakesFromCloudAsync()
+    {
+        var pendingItems = await _databaseService.GetPendingSyncItemsAsync();
+        var pendingTakeIds = pendingItems.Where(i => i.EntityType == "Take").Select(i => i.EntityId).ToHashSet();
 
+        var dbTakes = await _databaseService.GetTakesForDayAsync(Id);
+        bool structureChanged = false;
 
+        foreach (var tModel in dbTakes)
+        {
+            var existingTake = Takes.FirstOrDefault(t => t.Id == tModel.Id);
+            if (existingTake == null)
+            {
+                var newTakeVm = new TakeViewModel(_databaseService, _cameraDataManager);
+                newTakeVm.LoadFromModel(tModel);
+                await newTakeVm.RefreshCameraDataCommand.ExecuteAsync(null);
+                Takes.Add(newTakeVm);
+                structureChanged = true;
+            }
+            else if (!pendingTakeIds.Contains(tModel.Id))
+            {
+                existingTake.LoadFromModel(tModel);
+                await existingTake.RefreshCameraDataCommand.ExecuteAsync(null);
+            }
+        }
 
+        var dbTakeIds = dbTakes.Select(t => t.Id).ToHashSet();
+        for (int i = Takes.Count - 1; i >= 0; i--)
+        {
+            if (!dbTakeIds.Contains(Takes[i].Id) && !pendingTakeIds.Contains(Takes[i].Id))
+            {
+                Takes.RemoveAt(i);
+                structureChanged = true;
+            }
+        }
+
+        if (structureChanged)
+        {
+            RefreshAllExtraCameraRolls();
+            await UpdateTotalTakesCommand.ExecuteAsync(null);
+            await UpdateCurrentShotCommand.ExecuteAsync(null);
+            UpdateRowVisibilities();
+            BuildHierarchicalGroups();
+        }
+    }
 }
 
 public partial class CameraClipGroupViewModel : ObservableObject
