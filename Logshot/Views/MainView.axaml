@@ -156,7 +156,7 @@
         <!-- Mobile Top Bar with Persistent Hamburger -->
         <Border Grid.Row="0" Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1" Padding="12,8"
                 IsVisible="{Binding IsMobileLayout}">
-          <Button Content="&#9776;" FontSize="16" Padding="8,4"
+          <Button Content="&#9776;" FontSize="16" Padding="8,4" Background="Transparent"
                   Command="{Binding ToggleSidebarCommand}"
                   VerticalAlignment="Center"/>
         </Border>

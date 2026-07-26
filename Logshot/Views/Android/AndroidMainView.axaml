@@ -52,6 +52,7 @@
             <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
               <TextBlock Grid.Column="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
               <Button Grid.Column="1" Content="✕" FontSize="18" Padding="10,6" MinHeight="44"
+                      Background="Transparent"
                       Command="{Binding ToggleSidebarCommand}"/>
             </Grid>
 
@@ -166,6 +167,7 @@
               
               <!-- Drawer Toggle Button -->
               <Button Grid.Column="0" Content="☰" FontSize="20" Padding="10,6" MinHeight="44" MinWidth="44"
+                      Background="Transparent"
                       Command="{Binding ToggleSidebarCommand}" VerticalAlignment="Center"/>
 
               <!-- Screen Title -->
@@ -187,7 +189,7 @@
                 <!-- Cloud Sync Status Icon -->
                 <Button Command="{Binding ManualSyncCommand}"
                         Background="Transparent" Padding="8,6" MinHeight="40">
-                  <Path Data="{Binding SyncIcon}" Width="20" Height="15" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                  <Path Data="{Binding SyncIcon}" Width="20" Height="15" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center" Margin="0,0,0,0"/>
                 </Button>
 
                 <!-- Settings / Info Button -->
