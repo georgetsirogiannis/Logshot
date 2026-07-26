@@ -126,7 +126,7 @@
                         Padding="6,4" MinHeight="44"
                         HorizontalAlignment="Left" VerticalAlignment="Center">
                   <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <Path Data="{Binding SyncIcon}" Width="18" Height="18" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center"/>
+                    <Path Data="{Binding SyncIcon}" Width="18" Height="18" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center" Margin="0,2,0,0"/>
                     <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                   </StackPanel>
                 </Button>
@@ -175,10 +175,8 @@
 
                 <!-- Cloud Sync Status Icon -->
                 <Button Command="{Binding ManualSyncCommand}"
-                        Background="Transparent"
-                        Padding="6,4" MinHeight="40"
-                        VerticalAlignment="Center">
-                  <Path Data="{Binding SyncIcon}" Width="18" Height="18" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center"/>
+                        Background="Transparent" Padding="8,6" MinHeight="40">
+                  <Path Data="{Binding SyncIcon}" Width="20" Height="15" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center" Margin="0,-2,0,0"/>
                 </Button>
 
                 <!-- Settings / Info Button -->
