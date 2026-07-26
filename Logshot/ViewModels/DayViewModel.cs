@@ -450,27 +450,36 @@ public partial class DayViewModel : ViewModelBase
     {
         IsLoadingTakes = true; // Block scrolling while loading
 
-        var takes = await _databaseService.GetTakesForDayAsync(Id);
-
-        Takes.Clear();
-        foreach (var take in takes.OrderBy(t => t.SequenceOrder))
+        // 1. Pure background thread execution with zero UI thread dispatching
+        var (takesVmList, discoveredCameras) = await Task.Run(async () =>
         {
-            var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
-            takeVM.LoadFromModel(take);
-            await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
-            Takes.Add(takeVM);
-        }
+            var rawTakes = await _databaseService.GetTakesForDayAsync(Id);
+            var list = new List<TakeViewModel>();
 
-        // Merge active camera labels discovered across all takes with the defaults
-        var discoveredCameras = takes
-            .SelectMany(t => _cameraDataManager.GetActiveCameraLabels(_cameraDataManager.ParseCameraData(t.CameraData)))
-            .Distinct();
+            foreach (var take in rawTakes.OrderBy(t => t.SequenceOrder))
+            {
+                var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
+                takeVM.LoadFromModel(take);
+                takeVM.RefreshCameraDataSync();
+                list.Add(takeVM);
+            }
+
+            var cameras = rawTakes
+                .SelectMany(t => _cameraDataManager.GetActiveCameraLabels(_cameraDataManager.ParseCameraData(t.CameraData)))
+                .Distinct()
+                .ToList();
+
+            return (list, cameras);
+        });
 
         foreach (var camera in discoveredCameras)
         {
             if (!ActiveCameras.Contains(camera))
                 ActiveCameras.Add(camera);
         }
+
+        // 2. Single atomic assignment triggers 1 layout pass instead of N passes
+        Takes = new ObservableCollection<TakeViewModel>(takesVmList);
 
         RefreshAllExtraCameraRolls();
         await UpdateTotalTakesCommand.ExecuteAsync(null);
@@ -479,7 +488,7 @@ public partial class DayViewModel : ViewModelBase
         UpdateRowVisibilities();
         BuildHierarchicalGroups();
 
-        IsLoadingTakes = false; // Re-enable scrolling for manual user additions
+        IsLoadingTakes = false; // Re-enable scrolling
     }
 
     [RelayCommand]
@@ -1318,14 +1327,14 @@ public partial class DayViewModel : ViewModelBase
             {
                 var newTakeVm = new TakeViewModel(_databaseService, _cameraDataManager);
                 newTakeVm.LoadFromModel(tModel);
-                await newTakeVm.RefreshCameraDataCommand.ExecuteAsync(null);
+                newTakeVm.RefreshCameraDataSync();
                 Takes.Add(newTakeVm);
                 structureChanged = true;
             }
             else if (!pendingTakeIds.Contains(tModel.Id))
             {
                 existingTake.LoadFromModel(tModel);
-                await existingTake.RefreshCameraDataCommand.ExecuteAsync(null);
+                existingTake.RefreshCameraDataSync();
             }
         }
 

@@ -137,7 +137,7 @@ public partial class AppViewModel : ViewModelBase
             {
                 var takeVM = new TakeViewModel(_databaseService);
                 takeVM.LoadFromModel(take);
-                await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
+                takeVM.RefreshCameraDataSync();
                 groupVM.Takes.Add(takeVM);
             }
 
@@ -278,6 +278,30 @@ public partial class AppViewModel : ViewModelBase
             newValue.PropertyChanged += CurrentDay_PropertyChanged;
         }
         OnPropertyChanged(nameof(IsTakeDeleteConfirmationOpen));
+
+        if (newValue != null)
+        {
+            _ = LoadDayTakesAsync(newValue);
+        }
+    }
+
+    private async Task LoadDayTakesAsync(DayViewModel day)
+    {
+        LoadingMessage = $"Loading Day {day.ShootDayNumber}...";
+        IsLoading = true;
+
+        // Force Avalonia to render the loading progress bar before execution starts
+        await Task.Yield();
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Render);
+
+        try
+        {
+            await day.LoadTakesCommand.ExecuteAsync(null);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private void CurrentDay_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -592,8 +616,9 @@ public partial class AppViewModel : ViewModelBase
         ClearSearch();
         CurrentDay = day;
 
-        LoadingMessage = "Loading days and takes...";
+        LoadingMessage = $"Loading Day {day.ShootDayNumber}...";
         IsLoading = true;
+        await Task.Yield(); // Allows Avalonia to render the loading indicator immediately
         try
         {
             await CurrentDay.LoadTakesCommand.ExecuteAsync(null);

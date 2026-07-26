@@ -321,19 +321,21 @@ public partial class MainViewModel : ViewModelBase
             {
                 try
                 {
-                    await _supabaseService.InitializeAsync();
-
-                    // One-time: push any data that existed before cloud sync was added
                     string backfillMarker = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                         "logshot_backfill_done.txt");
 
                     if (!File.Exists(backfillMarker))
                     {
-                        await _databaseService.EnqueueAllExistingDataForSyncAsync();
+                        var localProjects = await _databaseService.GetAllProjectsAsync();
+                        if (localProjects.Count > 0)
+                        {
+                            await _databaseService.EnqueueAllExistingDataForSyncAsync();
+                        }
                         File.WriteAllText(backfillMarker, "done");
-                        _supabaseService.TriggerSync();
                     }
+
+                    await _supabaseService.InitializeAsync();
                 }
                 catch (Exception ex)
                 {

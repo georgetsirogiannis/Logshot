@@ -685,8 +685,7 @@ public partial class TakeViewModel : ViewModelBase
         return data.Cameras.TryGetValue(cameraLabel, out var state) && selector(state);
     }
 
-    [RelayCommand]
-    public async Task RefreshCameraData()
+    public void RefreshCameraDataSync()
     {
         var cameraData = _cameraDataManager.ParseCameraData(CameraData);
         var cameras = _cameraDataManager.GetActiveCameraLabels(cameraData);
@@ -702,6 +701,12 @@ public partial class TakeViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(IsCamANoRoll));
         OnPropertyChanged(nameof(IsCamBNoRoll));
+    }
+
+    [RelayCommand]
+    public async Task RefreshCameraData()
+    {
+        RefreshCameraDataSync();
     }
 
     public bool IsCameraStrikethrough(string cameraLabel)

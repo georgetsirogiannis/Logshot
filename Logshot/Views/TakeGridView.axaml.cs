@@ -37,11 +37,11 @@ public partial class TakeGridView : UserControl
 
     private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes)
+        if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes && _dayVm.Takes.Count > 0)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                TakesScrollViewer?.ScrollToEnd();
+                TakesListBox?.ScrollIntoView(_dayVm.Takes[_dayVm.Takes.Count - 1]);
             }, Avalonia.Threading.DispatcherPriority.Loaded);
         }
     }

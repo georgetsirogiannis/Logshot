@@ -427,11 +427,13 @@ public class DatabaseService
                 tran.InsertOrReplace(p);
                 updatedProjects++;
             }
+
             foreach (var d in days)
             {
                 tran.InsertOrReplace(d);
                 updatedDays++;
             }
+
             foreach (var t in takes)
             {
                 tran.InsertOrReplace(t);

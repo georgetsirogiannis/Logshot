@@ -101,10 +101,18 @@ public class SupabaseService
 
             await ExecuteWithTimeout(async () => await _client.InitializeAsync(), 5000);
 
-            OnSyncStatusChanged?.Invoke("☁️", "Synced");
-
             await PullFromCloudAsync();
-            TriggerSync();
+
+            var pending = await _databaseService.GetPendingSyncItemsAsync();
+            if (pending.Count == 0)
+            {
+                OnSyncStatusChanged?.Invoke("☁️", "Synced");
+            }
+            else
+            {
+                TriggerSync();
+            }
+
             StartPeriodicPull();
         }
         catch (Exception ex)
@@ -132,8 +140,8 @@ public class SupabaseService
         try
         {
             OnSyncStatusChanged?.Invoke("🔄", "Syncing...");
-            await PullFromCloudAsync();
             await ProcessSyncQueueInternalAsync();
+            await PullFromCloudAsync();
         }
         catch (Exception ex)
         {
@@ -344,20 +352,36 @@ public class SupabaseService
         }
     }
 
+    private async Task<List<T>> FetchAllPaginatedAsync<T>() where T : BaseModel, new()
+    {
+        var allItems = new List<T>();
+        int pageSize = 1000;
+        int from = 0;
+
+        while (true)
+        {
+            var response = await _client.From<T>().Range(from, from + pageSize - 1).Get();
+            if (response.Models == null || response.Models.Count == 0)
+                break;
+
+            allItems.AddRange(response.Models);
+
+            if (response.Models.Count < pageSize)
+                break;
+
+            from += pageSize;
+        }
+
+        return allItems;
+    }
+
     public async Task PullFromCloudAsync()
     {
         if (!_isInitialized) return;
 
-        var pending = await _databaseService.GetPendingSyncItemsAsync();
-        if (pending.Count > 0) return; // Skip pull if local edits are queued
-
         try
         {
-            var responseProjects = await _client.From<SupabaseProject>().Get();
-            var responseDays = await _client.From<SupabaseDay>().Get();
-            var responseTakes = await _client.From<SupabaseTake>().Get();
-
-            var remoteProjects = responseProjects.Models.Select(sp => new Project
+            var remoteProjects = (await FetchAllPaginatedAsync<SupabaseProject>()).Select(sp => new Project
             {
                 Id = sp.Id,
                 Name = sp.Name,
@@ -369,7 +393,7 @@ public class SupabaseService
                 CreatedAt = sp.CreatedAt
             }).ToList();
 
-            var remoteDays = responseDays.Models.Select(sd => new Day
+            var remoteDays = (await FetchAllPaginatedAsync<SupabaseDay>()).Select(sd => new Day
             {
                 Id = sd.Id,
                 ProjectId = sd.ProjectId,
@@ -381,7 +405,7 @@ public class SupabaseService
                 CreatedAt = sd.CreatedAt
             }).ToList();
 
-            var remoteTakes = responseTakes.Models.Select(st => new Take
+            var remoteTakes = (await FetchAllPaginatedAsync<SupabaseTake>()).Select(st => new Take
             {
                 Id = st.Id,
                 DayId = st.DayId,
