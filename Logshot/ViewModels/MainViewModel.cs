@@ -254,7 +254,10 @@ public partial class MainViewModel : ViewModelBase
 
     // --- Cloud Sync UI Properties ---
     [ObservableProperty]
-    private string _syncIcon = "☁️";
+    private string _syncIcon = SupabaseService.SyncIconPaths.Synced;
+
+    [ObservableProperty]
+    private string _syncIconColor = "#A1A1AA";
 
     [ObservableProperty]
     private string _syncText = "Waiting...";
@@ -279,11 +282,14 @@ public partial class MainViewModel : ViewModelBase
         _databaseService.OnDataChanged += () => _supabaseService.TriggerSync();
 
         // Listen for status changes from the Sync Engine and update the UI securely
-        _supabaseService.OnSyncStatusChanged += (icon, text) =>
+        _supabaseService.OnSyncStatusChanged += (iconPath, text) =>
         {
             Dispatcher.UIThread.Post(() =>
             {
-                SyncIcon = icon;
+                SyncIcon = iconPath;
+                SyncIconColor = (iconPath == SupabaseService.SyncIconPaths.Warning)
+                    ? "#EAB308"
+                    : "#A1A1AA";
                 SyncText = text;
             });
         };

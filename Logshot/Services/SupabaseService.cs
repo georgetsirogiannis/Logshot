@@ -66,10 +66,19 @@ public class SupabaseTake : BaseModel
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
 
+
 // --- The Service & Sync Engine ---
 
 public class SupabaseService
 {
+    public static class SyncIconPaths
+    {
+        public const string Synced = "M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zm-8.64 6.25c-.39.39-1.02.39-1.41 0L7.2 14.2c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L10 14.18l4.48-4.48c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41l-5.18 5.18z";
+        public const string Syncing = "M12 4V2.21c0-.45-.54-.67-.85-.35l-2.8 2.79c-.2.2-.2.51 0 .71l2.79 2.79c.32.31.86.09.86-.36V6c3.31 0 6 2.69 6 6 0 .79-.15 1.56-.44 2.25-.15.36-.04.77.23 1.04.51.51 1.37.33 1.64-.34.37-.91.57-1.91.57-2.95 0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-.79.15-1.56.44-2.25.15-.36.04-.77-.23-1.04-.51-.51-1.37-.33-1.64.34C4.2 9.96 4 10.96 4 12c0 4.42 3.58 8 8 8v1.79c0 .45.54.67.85.35l2.79-2.79c.2-.2.2-.51 0-.71l-2.79-2.79c-.31-.31-.85-.09-.85.36V18z";
+        public const string Pending = "M7,17h6c0.55,0,1-0.45,1-1v-2.59c0-0.27-0.11-0.52-0.29-0.71L11,10l2.71-2.71C13.89,7.11,14,6.85,14,6.59V4 c0-0.55-0.45-1-1-1H7C6.45,3,6,3.45,6,4v2.59c0,0.27,0.11,0.52,0.29,0.71L9,10l-2.71,2.71C6.11,12.89,6,13.15,6,13.41V16 C6,16.55,6.45,17,7,17z M7,6.59V4.5C7,4.22,7.22,4,7.5,4h5C12.78,4,13,4.22,13,4.5v2.09l-3,3L7,6.59z";
+        public const string Warning = "M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3zM12 14c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm1 4h-2v-2h2v2z";
+    }
+
     private Client _client = null!;
     private readonly DatabaseService _databaseService;
     private bool _isInitialized = false;
@@ -92,7 +101,7 @@ public class SupabaseService
         if (_isInitialized) return;
 
         _isInitialized = true;
-        OnSyncStatusChanged?.Invoke("🔄", "Connecting...");
+        OnSyncStatusChanged?.Invoke(SyncIconPaths.Syncing, "Connecting...");
 
         try
         {
@@ -106,7 +115,7 @@ public class SupabaseService
             var pending = await _databaseService.GetPendingSyncItemsAsync();
             if (pending.Count == 0)
             {
-                OnSyncStatusChanged?.Invoke("☁️", "Synced");
+                OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
             }
             else
             {
@@ -118,7 +127,7 @@ public class SupabaseService
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Supabase Init Error: {ex.Message}");
-            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Pending)");
         }
     }
 
@@ -146,7 +155,7 @@ public class SupabaseService
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Manual Sync Error: {ex.Message}");
-            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Pending)");
         }
         finally
         {
@@ -161,7 +170,7 @@ public class SupabaseService
     {
         if (!_isInitialized) return;
 
-        OnSyncStatusChanged?.Invoke("⏳", "Pending Changes");
+        OnSyncStatusChanged?.Invoke(SyncIconPaths.Pending, "Pending Changes");
 
         _debounceCts?.Cancel();
         _debounceCts = new CancellationTokenSource();
@@ -189,7 +198,7 @@ public class SupabaseService
         var pendingItems = await _databaseService.GetPendingSyncItemsAsync();
         if (pendingItems.Count == 0)
         {
-            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
             return;
         }
 
@@ -222,11 +231,11 @@ public class SupabaseService
 
         if (hasError)
         {
-            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Pending)");
         }
         else
         {
-            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
         }
     }
 

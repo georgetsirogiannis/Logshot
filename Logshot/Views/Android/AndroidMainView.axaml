@@ -89,7 +89,7 @@
                                FontWeight="Bold" FontSize="15" Margin="0,0,10,0"/>
                     <TextBlock Grid.Column="1" Text="{Binding CalendarDate, StringFormat='{}{0:MMM dd, yyyy}'}" 
                                Foreground="{StaticResource TextSecondary}" FontSize="13" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="🔒" FontSize="12" IsVisible="{Binding IsFinalized}" VerticalAlignment="Center"/>
+                    <Path Grid.Column="2" Data="{StaticResource IconLocked}" Width="14" Height="14" Stretch="Uniform" Fill="{StaticResource LockYellow}" IsVisible="{Binding IsFinalized}" VerticalAlignment="Center"/>
 
                     <Grid.ContextMenu>
                       <ContextMenu>
@@ -126,7 +126,7 @@
                         Padding="6,4" MinHeight="44"
                         HorizontalAlignment="Left" VerticalAlignment="Center">
                   <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding SyncIcon}" FontSize="16" VerticalAlignment="Center"/>
+                    <Path Data="{Binding SyncIcon}" Width="18" Height="18" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                   </StackPanel>
                 </Button>
@@ -134,7 +134,7 @@
                 <Button HorizontalAlignment="Right"
                         Command="{Binding ToggleInfoViewCommand}"
                         Background="Transparent" Padding="10,6" MinHeight="44">
-                  <TextBlock Text="⚙" FontSize="18" Foreground="{StaticResource TextSecondary}"/>
+                  <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                 </Button>
               </Grid>
             </Grid>
@@ -161,7 +161,7 @@
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0,0,0">
                 <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}', FallbackValue='LOGSHOT'}" 
                            FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
-                <TextBlock Text="🔒" FontSize="14" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized, FallbackValue=False}" VerticalAlignment="Center"/>
+                <Path Data="{StaticResource IconLocked}" Width="16" Height="16" Stretch="Uniform" Fill="{StaticResource LockYellow}" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized, FallbackValue=False}" VerticalAlignment="Center"/>
               </StackPanel>
 
               <!-- Top Right Action Icons -->
@@ -170,7 +170,7 @@
                 <Button Command="{Binding AppViewModel.CurrentDay.OpenDayInfoCommand, FallbackValue=null}"
                         Background="Transparent" Padding="8,6" MinHeight="40"
                         IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNotNull}}">
-                  <TextBlock Text="ℹ" FontSize="18" Foreground="{StaticResource ActionAccent}"/>
+                  <Path Data="{StaticResource IconInfo}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
                 </Button>
 
                 <!-- Cloud Sync Status Icon -->
@@ -178,12 +178,12 @@
                         Background="Transparent"
                         Padding="6,4" MinHeight="40"
                         VerticalAlignment="Center">
-                  <TextBlock Text="{Binding SyncIcon}" FontSize="16" VerticalAlignment="Center"/>
+                  <Path Data="{Binding SyncIcon}" Width="18" Height="18" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center"/>
                 </Button>
 
                 <!-- Settings / Info Button -->
                 <Button Command="{Binding ToggleInfoViewCommand}" Background="Transparent" Padding="8,6" MinHeight="40">
-                  <TextBlock Text="⚙" FontSize="18" Foreground="{StaticResource TextSecondary}"/>
+                  <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                 </Button>
               </StackPanel>
 

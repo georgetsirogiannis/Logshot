@@ -131,7 +131,7 @@
                     HorizontalAlignment="Left"
                     ToolTip.Tip="Click to Sync Now">
               <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <TextBlock Text="{Binding SyncIcon}" FontSize="14" VerticalAlignment="Center"/>
+                <Path Data="{Binding SyncIcon}" Width="16" Height="16" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
               </StackPanel>
             </Button>
@@ -141,7 +141,7 @@
                     Background="Transparent"
                     Padding="6,4"
                     ToolTip.Tip="Info / Settings">
-              <TextBlock Text="⚙" FontSize="16" Foreground="{StaticResource TextSecondary}"/>
+              <Path Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
             </Button>
           </Grid>
 
