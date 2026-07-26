@@ -21,6 +21,7 @@ public class SupabaseProject : BaseModel
     [Column("dop")] public string Dop { get; set; } = string.Empty;
     [Column("production_company")] public string ProductionCompany { get; set; } = string.Empty;
     [Column("script_supervisor")] public string ScriptSupervisor { get; set; } = string.Empty;
+    [Column("is_deleted")] public bool IsDeleted { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
 
@@ -33,6 +34,7 @@ public class SupabaseDay : BaseModel
     [Column("calendar_date")] public DateTime CalendarDate { get; set; }
     [Column("general_notes")] public string GeneralNotes { get; set; } = string.Empty;
     [Column("is_finalized")] public bool IsFinalized { get; set; }
+    [Column("is_deleted")] public bool IsDeleted { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
 
@@ -60,6 +62,7 @@ public class SupabaseTake : BaseModel
     [Column("is_end_board")] public bool IsEndBoard { get; set; }
     [Column("is_wild_shot")] public bool IsWildShot { get; set; }
     [Column("void_camera_labels")] public string VoidCameraLabels { get; set; } = string.Empty;
+    [Column("is_deleted")] public bool IsDeleted { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
 
@@ -206,7 +209,6 @@ public class SupabaseService
             {
                 System.Diagnostics.Debug.WriteLine($"Cloud Sync Error on [{item.EntityType} {item.EntityId}]: {ex.Message}");
                 hasError = true;
-                break;
             }
         }
 
@@ -249,6 +251,7 @@ public class SupabaseService
             Dop = project.Dop,
             ProductionCompany = project.ProductionCompany,
             ScriptSupervisor = project.ScriptSupervisor,
+            IsDeleted = project.IsDeleted,
             CreatedAt = project.CreatedAt
         });
         _syncedProjectIds.Add(projectId);
@@ -270,6 +273,7 @@ public class SupabaseService
             CalendarDate = day.CalendarDate,
             GeneralNotes = day.GeneralNotes,
             IsFinalized = day.IsFinalized,
+            IsDeleted = day.IsDeleted,
             CreatedAt = day.CreatedAt
         });
         _syncedDayIds.Add(dayId);
@@ -316,6 +320,7 @@ public class SupabaseService
                         IsEndBoard = take.IsEndBoard,
                         IsWildShot = take.IsWildShot,
                         VoidCameraLabels = take.VoidCameraLabels,
+                        IsDeleted = take.IsDeleted,
                         CreatedAt = take.CreatedAt
                     });
                 }
@@ -360,6 +365,7 @@ public class SupabaseService
                 Dop = sp.Dop,
                 ProductionCompany = sp.ProductionCompany,
                 ScriptSupervisor = sp.ScriptSupervisor,
+                IsDeleted = sp.IsDeleted,
                 CreatedAt = sp.CreatedAt
             }).ToList();
 
@@ -371,6 +377,7 @@ public class SupabaseService
                 CalendarDate = sd.CalendarDate,
                 GeneralNotes = sd.GeneralNotes,
                 IsFinalized = sd.IsFinalized,
+                IsDeleted = sd.IsDeleted,
                 CreatedAt = sd.CreatedAt
             }).ToList();
 
@@ -397,6 +404,7 @@ public class SupabaseService
                 IsEndBoard = st.IsEndBoard,
                 IsWildShot = st.IsWildShot,
                 VoidCameraLabels = st.VoidCameraLabels,
+                IsDeleted = st.IsDeleted,
                 CreatedAt = st.CreatedAt
             }).ToList();
 

@@ -43,6 +43,7 @@ public class Take
     // False Clip Tracking
     public string VoidCameraLabels { get; set; } = "[]"; // JSON array for specific voided cameras
 
+    public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>

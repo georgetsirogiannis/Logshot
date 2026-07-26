@@ -13,12 +13,11 @@
   </Design.DataContext>
 
   <Grid Background="{StaticResource WorkspaceBackground}">
-    <!-- Indeterminate Loading Indicator -->
-    <ProgressBar IsIndeterminate="{Binding AppViewModel.IsLoading}" 
-                 VerticalAlignment="Top" HorizontalAlignment="Stretch" 
-                 Height="4" ZIndex="300" 
-                 IsVisible="{Binding AppViewModel.IsLoading}"
-                 Foreground="{StaticResource ActionAccent}"/>
+    <!-- Top-level loading bar & Contextual Message -->
+    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Stretch" ZIndex="300" IsVisible="{Binding AppViewModel.IsLoading}">
+        <ProgressBar IsIndeterminate="True" Height="4" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Stretch"/>
+        <TextBlock Text="{Binding AppViewModel.LoadingMessage}" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,2,12,0" />
+    </StackPanel>
 
     <!-- Main Navigation Drawer Layout -->
     <SplitView IsPaneOpen="{Binding IsSidebarOpen, Mode=TwoWay}"

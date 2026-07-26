@@ -17,7 +17,7 @@ public class Day
     public DateTime CalendarDate { get; set; } = DateTime.Today;
     public string GeneralNotes { get; set; } = string.Empty;
     public bool IsFinalized { get; set; } = false;
-
+    public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public static string GetSortableDayNumber(string? shootDayNumber)

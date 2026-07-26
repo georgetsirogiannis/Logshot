@@ -30,6 +30,9 @@ public partial class AppViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoading = false;
 
+    [ObservableProperty]
+    private string _loadingMessage = "Loading...";
+
     // --- Targeted Episode & Scene Search State ---
     [ObservableProperty]
     private string _searchQuery = string.Empty;
@@ -318,6 +321,7 @@ public partial class AppViewModel : ViewModelBase
     public async Task LoadAllProjects()
     {
         await _loadLock.WaitAsync();
+        LoadingMessage = "Loading projects...";
         IsLoading = true;
         try
         {
@@ -587,7 +591,17 @@ public partial class AppViewModel : ViewModelBase
         if (day == null) return;
         ClearSearch();
         CurrentDay = day;
-        await CurrentDay.LoadTakesCommand.ExecuteAsync(null);
+
+        LoadingMessage = "Loading days and takes...";
+        IsLoading = true;
+        try
+        {
+            await CurrentDay.LoadTakesCommand.ExecuteAsync(null);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -668,7 +682,8 @@ public partial class AppViewModel : ViewModelBase
     {
         var exporter = Services.PdfExportServiceRegistry.Instance;
         if (exporter == null || !IsPdfExportSupported) return;
-
+        
+        LoadingMessage = "Exporting PDF...";
         IsLoading = true;
         try
         {

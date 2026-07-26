@@ -15,6 +15,6 @@ public class Project
     public string ProductionCompany { get; set; } = string.Empty;
 
     public string ScriptSupervisor { get; set; } = string.Empty;
-
+    public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

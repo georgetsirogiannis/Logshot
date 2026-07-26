@@ -152,6 +152,7 @@ public partial class MainViewModel : ViewModelBase
 
     public async Task ProcessExportDbAsync(string destPath)
     {
+        AppViewModel.LoadingMessage = "Exporting database...";
         AppViewModel.IsLoading = true;
         try
         {
@@ -169,6 +170,7 @@ public partial class MainViewModel : ViewModelBase
 
     public async Task ProcessImportDbAsync(string sourcePath)
     {
+        AppViewModel.LoadingMessage = "Analyzing import...";
         AppViewModel.IsLoading = true;
         try
         {
@@ -202,6 +204,7 @@ public partial class MainViewModel : ViewModelBase
     public async Task ConfirmImport()
     {
         IsImportConfirmOpen = false;
+        AppViewModel.LoadingMessage = "Merging database...";
         AppViewModel.IsLoading = true;
         try
         {
@@ -304,26 +307,39 @@ public partial class MainViewModel : ViewModelBase
     {
         try
         {
-            StatusMessage = "Connecting to cloud...";
-            await _supabaseService.InitializeAsync();
-
-            // One-time: push any data that existed before cloud sync was added
-            string backfillMarker = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "logshot_backfill_done.txt");
-
-            if (!File.Exists(backfillMarker))
-            {
-                await _databaseService.EnqueueAllExistingDataForSyncAsync();
-                File.WriteAllText(backfillMarker, "done");
-                _supabaseService.TriggerSync();
-            }
-
             StatusMessage = "Loading application...";
+            AppViewModel.LoadingMessage = "Loading projects...";
+
+            // 1. Load Local UI First (Instant Startup)
             await AppViewModel.InitializeAppCommand.ExecuteAsync(null);
 
             IsInitialized = true;
             StatusMessage = "Ready";
+
+            // 2. Offload cloud connection to a background thread to prevent blocking
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _supabaseService.InitializeAsync();
+
+                    // One-time: push any data that existed before cloud sync was added
+                    string backfillMarker = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "logshot_backfill_done.txt");
+
+                    if (!File.Exists(backfillMarker))
+                    {
+                        await _databaseService.EnqueueAllExistingDataForSyncAsync();
+                        File.WriteAllText(backfillMarker, "done");
+                        _supabaseService.TriggerSync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Background Sync Init Error: {ex.Message}");
+                }
+            });
         }
         catch (Exception ex)
         {
