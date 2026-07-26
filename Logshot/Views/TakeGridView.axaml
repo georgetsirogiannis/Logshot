@@ -222,6 +222,7 @@
     <!-- SCROLLABLE TAKES ROWS WORKSPACE (VIRTUALIZED) -->
     <ListBox Grid.Row="2" 
              Name="TakesListBox"
+             KeyboardNavigation.TabNavigation="Continue"
              ItemsSource="{Binding Takes}"
              Background="Transparent"
              BorderThickness="0"
@@ -244,7 +245,7 @@
       </ListBox.Styles>
       <ListBox.ItemTemplate>
         <DataTemplate x:DataType="vm:TakeViewModel">
-          <Border Background="{StaticResource CardBackground}" Classes="row-border" PointerMoved="Row_PointerMoved" PointerPressed="Row_PointerPressed" PointerReleased="Row_PointerReleased" Tag="{Binding}">
+          <Border Background="{StaticResource CardBackground}" Classes="row-border" KeyboardNavigation.TabNavigation="Local" PointerMoved="Row_PointerMoved" PointerPressed="Row_PointerPressed" PointerReleased="Row_PointerReleased" Tag="{Binding}">
             <Grid>
               <!-- Main Row Content Grid -->
               <Grid MinHeight="{Binding RowMinHeight}">

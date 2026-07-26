@@ -26,6 +26,7 @@
       <!-- LEFT SIDEBAR: Project & Day Browser          -->
       <!-- ========================================== -->
       <Border Grid.Column="0"
+              KeyboardNavigation.TabNavigation="Local"
               Background="{StaticResource HeaderBackground}"
               BorderBrush="{StaticResource BorderColor}"
               BorderThickness="0,0,1,0"

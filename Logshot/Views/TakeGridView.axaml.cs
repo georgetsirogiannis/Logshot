@@ -164,7 +164,6 @@ public partial class TakeGridView : UserControl
             {
                 if (textBox.DataContext is TakeViewModel takeVm)
                 {
-                    // This handles CAM A and CAM B
                     string camLabel = textBox.Tag?.ToString() ?? "";
                     if (!string.IsNullOrEmpty(camLabel))
                     {
@@ -173,9 +172,17 @@ public partial class TakeGridView : UserControl
                 }
                 else if (textBox.DataContext is CameraRollCell extraCell)
                 {
-                    // This handles dynamically added Extra Cameras
                     await extraCell.ToggleNoRollCommand.ExecuteAsync(null);
                 }
+            }
+
+            if (textBox.DataContext is TakeViewModel vm)
+            {
+                await vm.SaveTakeCommand.ExecuteAsync(null);
+            }
+            else if (textBox.DataContext is CameraRollCell cell)
+            {
+                await cell.OwnerSaveAsync();
             }
         }
     }
@@ -189,10 +196,13 @@ public partial class TakeGridView : UserControl
             {
                 if (textBox.DataContext is TakeViewModel takeVm)
                 {
-                    // Triggers your Sound No-Roll command
-                    // Note: If your command is named differently in TakeViewModel, update the name below!
                     await takeVm.ToggleSoundNoRollCommand.ExecuteAsync(null);
                 }
+            }
+
+            if (textBox.DataContext is TakeViewModel vm)
+            {
+                await vm.SaveTakeCommand.ExecuteAsync(null);
             }
         }
     }
