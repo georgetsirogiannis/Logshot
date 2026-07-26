@@ -162,7 +162,7 @@
         </Border>
 
         <!-- Content Container -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Name="WorkspaceViewport">
           
           <!-- Workspace Views (Visible when Info/Settings is closed) -->
           <Grid IsVisible="{Binding IsInfoViewOpen, Converter={x:Static BoolConverters.Not}}">

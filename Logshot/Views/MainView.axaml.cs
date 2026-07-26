@@ -1,6 +1,9 @@
 using System;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Logshot.ViewModels;
 
@@ -44,6 +47,55 @@ public partial class MainView : UserControl
         UpdateLayoutMode(Bounds.Width);
     }
 
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.InputPane != null)
+        {
+            topLevel.InputPane.StateChanged += InputPane_StateChanged;
+        }
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.InputPane != null)
+        {
+            topLevel.InputPane.StateChanged -= InputPane_StateChanged;
+        }
+    }
+
+    private void InputPane_StateChanged(object? sender, InputPaneStateEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        double keyboardHeight = topLevel.InputPane.OccludedRect.Height;
+
+        var workspaceViewport = this.FindControl<Grid>("WorkspaceViewport");
+        if (workspaceViewport != null)
+        {
+            workspaceViewport.Margin = new Thickness(0, 0, 0, keyboardHeight);
+        }
+
+        if (keyboardHeight > 0)
+        {
+            var focusedControl = topLevel.FocusManager?.GetFocusedElement() as Control;
+            if (focusedControl != null)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+                {
+                    await Task.Delay(100);
+                    focusedControl.BringIntoView(new Rect(0, 0, Math.Max(focusedControl.Bounds.Width, 100), Math.Max(focusedControl.Bounds.Height, 40) + 30));
+                }, Avalonia.Threading.DispatcherPriority.Render);
+            }
+        }
+    }
+
     private async void OnRequestPdfFilePicker()
     {
         if (_boundViewModel?.AppViewModel.CurrentProject == null || _boundViewModel?.AppViewModel.CurrentDay == null)
@@ -56,7 +108,6 @@ public partial class MainView : UserControl
         var dayNum = _boundViewModel.AppViewModel.CurrentDay.ShootDayNumber;
         var suggestedName = $"{projectName}_DAY_{dayNum}.pdf";
 
-        // Native File Picker (Works on Desktop and Mobile)
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "Export Day Report to PDF",
@@ -72,7 +123,6 @@ public partial class MainView : UserControl
         {
             try
             {
-                // Get a writable stream from the chosen destination and pass it to the generator
                 await using var stream = await file.OpenWriteAsync();
                 await _boundViewModel.AppViewModel.GeneratePdfAsync(stream);
             }

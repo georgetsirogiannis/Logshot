@@ -51,8 +51,8 @@
 	  <Button Content="+ CAM" FontSize="11" Padding="6,2" VerticalAlignment="Center" Click="AddCamera_Click"/>
 	</StackPanel>
 
-	<ScrollViewer Name="MobileScrollViewer" BringIntoViewOnFocusChange="False">
-	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}">
+	<ScrollViewer Name="MobileScrollViewer" BringIntoViewOnFocusChange="True">
+	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}" Margin="0,0,0,250">
 	    <ItemsControl.ItemTemplate>
 		  <DataTemplate x:DataType="vm:SetupGroupViewModel">
 		    <Border Margin="0,0,0,12" Background="{StaticResource CardBackground}">
