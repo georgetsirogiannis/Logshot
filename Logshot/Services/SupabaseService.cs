@@ -148,7 +148,7 @@ public class SupabaseService
 
         try
         {
-            OnSyncStatusChanged?.Invoke("🔄", "Syncing...");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Syncing, "Syncing...");
             await ProcessSyncQueueInternalAsync();
             await PullFromCloudAsync();
         }
