@@ -15,7 +15,7 @@ public partial class AndroidTakeCardView : UserControl
 
     private void DeleteTake_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem menuItem && menuItem.DataContext is TakeViewModel takeVm)
+        if (sender is Control ctrl && ctrl.DataContext is TakeViewModel takeVm)
         {
             Control? curr = this;
             while (curr != null)
@@ -31,6 +31,7 @@ public partial class AndroidTakeCardView : UserControl
                 curr = curr.Parent as Control ?? curr.GetVisualParent() as Control;
             }
         }
+        CloseFlyout_Click(sender, e);
     }
 
     private void CloseFlyout_Click(object sender, RoutedEventArgs e)

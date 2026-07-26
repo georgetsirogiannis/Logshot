@@ -141,13 +141,15 @@
               <!-- Take Context Menu -->
               <Button Content="⋮" FontSize="24" FontWeight="Bold" Background="Transparent" Padding="8,4" MinHeight="48" MinWidth="48" VerticalAlignment="Center">
                  <Button.Flyout>
-                    <MenuFlyout>
-                       <MenuItem Header="Mark Circled" Command="{Binding MarkCircledCommand}"/>
-                       <MenuItem Header="Mark Failed" Command="{Binding MarkFailedCommand}"/>
-                       <MenuItem Header="Toggle Pickup (PU)" Command="{Binding TogglePickupCommand}"/>
-                       <Separator/>
-                       <MenuItem Header="Delete Take" Click="DeleteTake_Click" Foreground="{StaticResource FailRed}"/>
-                    </MenuFlyout>
+                    <Flyout Placement="BottomEdgeAlignedRight">
+                       <StackPanel Spacing="8" Width="200">
+                          <Button Content="Mark Circled" Command="{Binding MarkCircledCommand}" Click="CloseFlyout_Click" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12" MinHeight="48"/>
+                          <Button Content="Mark Failed" Command="{Binding MarkFailedCommand}" Click="CloseFlyout_Click" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12" MinHeight="48"/>
+                          <Button Content="Toggle Pickup (PU)" Command="{Binding TogglePickupCommand}" Click="CloseFlyout_Click" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12" MinHeight="48"/>
+                          <Separator Background="{StaticResource BorderColor}"/>
+                          <Button Content="Delete Take" Click="DeleteTake_Click" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Foreground="{StaticResource FailRed}" Padding="12" MinHeight="48"/>
+                       </StackPanel>
+                    </Flyout>
                  </Button.Flyout>
               </Button>
           </StackPanel>
