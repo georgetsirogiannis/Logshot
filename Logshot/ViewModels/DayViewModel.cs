@@ -74,6 +74,9 @@ public partial class DayViewModel : ViewModelBase
     private bool _isFinalized = false;
 
     [ObservableProperty]
+    private bool _isGeneralNotesOpen = false;
+
+    [ObservableProperty]
     private bool _isLoadingTakes = false;
 
     partial void OnIsFinalizedChanged(bool value)
