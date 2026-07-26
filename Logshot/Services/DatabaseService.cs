@@ -420,24 +420,39 @@ public class DatabaseService
         await InitAsync();
         int updatedProjects = 0, updatedDays = 0, updatedTakes = 0;
 
+        // Fetch pending sync items to protect local un-synced data from being overwritten by stale cloud data
+        var pendingItems = await _db.Table<SyncQueueItem>().ToListAsync();
+        var pendingProjectIds = pendingItems.Where(i => i.EntityType == "Project").Select(i => i.EntityId).ToHashSet();
+        var pendingDayIds = pendingItems.Where(i => i.EntityType == "Day").Select(i => i.EntityId).ToHashSet();
+        var pendingTakeIds = pendingItems.Where(i => i.EntityType == "Take").Select(i => i.EntityId).ToHashSet();
+
         await _db.RunInTransactionAsync(tran =>
         {
             foreach (var p in projects)
             {
-                tran.InsertOrReplace(p);
-                updatedProjects++;
+                if (!pendingProjectIds.Contains(p.Id))
+                {
+                    tran.InsertOrReplace(p);
+                    updatedProjects++;
+                }
             }
 
             foreach (var d in days)
             {
-                tran.InsertOrReplace(d);
-                updatedDays++;
+                if (!pendingDayIds.Contains(d.Id))
+                {
+                    tran.InsertOrReplace(d);
+                    updatedDays++;
+                }
             }
 
             foreach (var t in takes)
             {
-                tran.InsertOrReplace(t);
-                updatedTakes++;
+                if (!pendingTakeIds.Contains(t.Id))
+                {
+                    tran.InsertOrReplace(t);
+                    updatedTakes++;
+                }
             }
         });
 
