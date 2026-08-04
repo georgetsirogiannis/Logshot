@@ -25,17 +25,18 @@
         <!-- 2. Dark Mode Color Palette (Neutral Charcoal & Distinct Warm Spectrum) -->
 
 <!-- Backgrounds (Pure neutral charcoal greys) -->
-<SolidColorBrush x:Key="WorkspaceBackground">#0F0F10</SolidColorBrush>
-<SolidColorBrush x:Key="CardBackground">#19191C</SolidColorBrush>
-<SolidColorBrush x:Key="HeaderBackground">#232327</SolidColorBrush>
+ <SolidColorBrush x:Key="WorkspaceBackground">#0B0B0D</SolidColorBrush>
+ <SolidColorBrush x:Key="CardBackground">#151518</SolidColorBrush>
+ <SolidColorBrush x:Key="HeaderBackground">#111114</SolidColorBrush>
+ <SolidColorBrush x:Key="InputBackground">#1A1A1F</SolidColorBrush>
 
 <!-- Text Colors (High clarity, crisp whites) -->
 <SolidColorBrush x:Key="TextPrimary">#F4F4F5</SolidColorBrush>
 <SolidColorBrush x:Key="TextSecondary">#A1A1AA</SolidColorBrush>
 
 <!-- Grid & Borders (Subtle, neutral structure) -->
-<SolidColorBrush x:Key="GridLineColor">#27272A</SolidColorBrush>
-<SolidColorBrush x:Key="BorderColor">#3F3F46</SolidColorBrush>
+ <SolidColorBrush x:Key="GridLineColor">#222228</SolidColorBrush>
+ <SolidColorBrush x:Key="BorderColor">#303038</SolidColorBrush>
 
 <!-- Semantic Colors (Saturated, modern accents) -->
 <SolidColorBrush x:Key="FailRed">#EF4444</SolidColorBrush>
@@ -46,6 +47,7 @@
 <SolidColorBrush x:Key="EndBoardAmber">#EAB308</SolidColorBrush>
 <SolidColorBrush x:Key="ActionAccent">#38BDF8</SolidColorBrush>
 <SolidColorBrush x:Key="LockYellow">#FACC15</SolidColorBrush>
+ <SolidColorBrush x:Key="QuietInteraction">#1938BDF8</SolidColorBrush>
 
         <!-- Cross-Stitch Pattern Brush for Voided/AKYRO Rows -->
         <DrawingBrush x:Key="CrossStitchPatternBrush" TileMode="Tile" SourceRect="0,0 12,12" DestinationRect="0,0 12,12">
@@ -99,6 +101,16 @@
             <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.quiet /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.quiet:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource QuietInteraction}" />
+        </Style>
+        <Style Selector="Button.quiet:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource QuietInteraction}" />
+            <Setter Property="Opacity" Value="0.72" />
         </Style>
         <Style Selector="ToggleButton">
             <Setter Property="FontFamily" Value="{StaticResource RobotoCondensed}" />

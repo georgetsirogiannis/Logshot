@@ -22,6 +22,12 @@
       <Setter Property="VerticalContentAlignment" Value="Center" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
     </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="{StaticResource InputBackground}" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="Background" Value="{StaticResource InputBackground}" />
+    </Style>
   </UserControl.Styles>
 
   <Grid Background="{StaticResource WorkspaceBackground}">
@@ -41,9 +47,9 @@
 <TextBlock Text="{Binding AuthErrorMessage}" Foreground="{StaticResource FailRed}" IsVisible="{Binding AuthErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" HorizontalAlignment="Center"/>
             
             <Button Content="SIGN IN" Command="{Binding SignInCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48" HorizontalAlignment="Stretch"/>
-             <Button Content="CREATE ACCOUNT" Command="{Binding OpenAccountCreationCommand}" MinHeight="48" HorizontalAlignment="Stretch" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"/>
+             <Button Classes="quiet" Content="CREATE ACCOUNT" Command="{Binding OpenAccountCreationCommand}" MinHeight="48" HorizontalAlignment="Stretch" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"/>
             
-            <Button Content="CONTINUE OFFLINE" Command="{Binding ContinueOfflineCommand}" MinHeight="48" HorizontalAlignment="Stretch" Background="Transparent" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0"/>
+            <Button Classes="quiet" Content="CONTINUE OFFLINE" Command="{Binding ContinueOfflineCommand}" MinHeight="48" HorizontalAlignment="Stretch" Background="Transparent" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0"/>
 
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthLoading}" Margin="0,10,0,0"/>
         </StackPanel>
@@ -80,7 +86,7 @@
             <!-- App brand and drawer close -->
             <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
               <TextBlock Grid.Column="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
-              <Button Grid.Column="1" Content="&#10005;" FontSize="18" Padding="10,6" MinHeight="44" VerticalAlignment="Center"
+              <Button Grid.Column="1" Content="&#10005;" Classes="quiet" FontSize="18" Padding="10,6" MinHeight="44" VerticalAlignment="Center"
                       Background="Transparent"
                       Command="{Binding ToggleSidebarCommand}"/>
             </Grid>
@@ -108,7 +114,7 @@
               <TextBox Grid.Column="0" Text="{Binding AppViewModel.SearchQuery}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 1/5 or 10.32"
                        MinHeight="48" VerticalContentAlignment="Center"
                        IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-              <Button Grid.Column="1" Content="&#10005;" Margin="6,0,0,0" MinHeight="48" Width="48"
+               <Button Grid.Column="1" Content="&#10005;" Classes="quiet" Margin="6,0,0,0" MinHeight="48" Width="48"
                       Command="{Binding AppViewModel.ClearSearchCommand}"
                       IsVisible="{Binding AppViewModel.IsSearchActive}"
                       VerticalAlignment="Center"/>
@@ -162,7 +168,7 @@
               </StackPanel>
 
               <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto" Margin="0,16,0,0" VerticalAlignment="Center">
-                <Button Command="{Binding ManualSyncCommand}"
+                <Button Classes="quiet" Command="{Binding ManualSyncCommand}"
                         Grid.Column="0"
                         Background="Transparent"
                         Padding="6,4" MinHeight="44"
@@ -173,7 +179,7 @@
                   </StackPanel>
                 </Button>
 
-                <Button Grid.Column="1" Content="SIGN IN"
+                <Button Classes="quiet" Grid.Column="1" Content="SIGN IN"
                         Command="{Binding OpenLoginCommand}"
                         IsVisible="{Binding !IsLoggedIn}"
                         Background="Transparent"
@@ -186,7 +192,7 @@
                         Margin="6,0,0,0"
                         ToolTip.Tip="Sign in to sync your work"/>
 
-                <Button Grid.Column="1" Content="SIGN OUT"
+                <Button Classes="quiet" Grid.Column="1" Content="SIGN OUT"
                         Command="{Binding SignOutCommand}"
                         IsVisible="{Binding IsLoggedIn}"
                         Background="Transparent"
@@ -199,7 +205,7 @@
                         Margin="6,0,0,0"
                         ToolTip.Tip="Sign out of cloud sync"/>
 
-                <Button Grid.Column="2"
+                <Button Classes="quiet" Grid.Column="2"
                         Command="{Binding ToggleInfoViewCommand}"
                         Background="Transparent" Padding="10,6" MinHeight="44">
                   <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
@@ -223,7 +229,7 @@
             <Grid ColumnDefinitions="Auto, *, Auto">
               
               <!-- Drawer Toggle Button -->
-              <Button Grid.Column="0" Content="&#9776;" FontSize="20" Padding="10,6" MinHeight="44" MinWidth="44"
+              <Button Classes="quiet" Grid.Column="0" Content="&#9776;" FontSize="20" Padding="10,6" MinHeight="44" MinWidth="44"
                       Background="Transparent"
                       Command="{Binding ToggleSidebarCommand}" VerticalAlignment="Center"/>
 
@@ -237,20 +243,20 @@
               <!-- Top Right Action Icons -->
               <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                 <!-- Day Info Button -->
-                <Button Command="{Binding AppViewModel.CurrentDay.OpenDayInfoCommand, FallbackValue=null}"
+                <Button Classes="quiet" Command="{Binding AppViewModel.CurrentDay.OpenDayInfoCommand, FallbackValue=null}"
                         Background="Transparent" Padding="8,6" MinHeight="40"
                         IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNotNull}}">
                   <Path Data="{StaticResource IconInfo}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
                 </Button>
 
                 <!-- Cloud Sync Status Icon -->
-                <Button Command="{Binding ManualSyncCommand}"
+                <Button Classes="quiet" Command="{Binding ManualSyncCommand}"
                         Background="Transparent" Padding="8,6" MinHeight="40">
                   <Path Data="{Binding SyncIcon}" Width="20" Height="15" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center" Margin="0,0,0,0"/>
                 </Button>
 
                 <!-- Settings / Info Button -->
-                <Button Command="{Binding ToggleInfoViewCommand}" Background="Transparent" Padding="8,6" MinHeight="40">
+                <Button Classes="quiet" Command="{Binding ToggleInfoViewCommand}" Background="Transparent" Padding="8,6" MinHeight="40">
                   <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                 </Button>
               </StackPanel>
@@ -392,7 +398,7 @@
                   <Grid ColumnDefinitions="*, *, *">
                     <Button Grid.Column="0" Content="+ SCENE" Command="{Binding AppViewModel.OpenAddSceneDialogCommand}" IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48" Margin="0,0,4,0"/>
                     <Button Grid.Column="1" Content="+ SHOT" Command="{Binding AppViewModel.CurrentDay.AddShotCommand}" IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48" Margin="2,0,2,0"/>
-                    <Button Grid.Column="2" Content="+ TAKE" Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}" IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48" Margin="4,0,0,0" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
+                    <Button Grid.Column="2" Content="+ TAKE" Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}" IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48" Margin="4,0,0,0"/>
                   </Grid>
                 </Border>
 
@@ -486,7 +492,7 @@
           <StackPanel Spacing="4"><TextBlock Text="Episode (&#917;&#928;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewEpisode}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 1"/></StackPanel>
           <StackPanel Spacing="4"><TextBlock Text="Scene (&#931;&#922;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewScene}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 32"/></StackPanel>
           <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,8,0,0">
-            <Button Grid.Column="0" Content="+ Wild" Command="{Binding AppViewModel.ConfirmAddWildShotDialogCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" MinHeight="48" Padding="10,6"/>
+            <Button Classes="quiet" Grid.Column="0" Content="+ Wild" Command="{Binding AppViewModel.ConfirmAddWildShotDialogCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" MinHeight="48" Padding="10,6"/>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
               <Button Content="Cancel" Command="{Binding AppViewModel.CancelAddSceneDialogCommand}" MinHeight="48" Padding="12,8"/>
               <Button Content="Initialize" Command="{Binding AppViewModel.ConfirmAddSceneDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48" Padding="14,8"/>
@@ -518,9 +524,9 @@
           <TextBlock Text="{Binding AppViewModel.CurrentDay.ContinuityMessage}" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" FontSize="14" LineHeight="20"/>
           <StackPanel Spacing="10">
             <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption1Text}" Command="{Binding AppViewModel.CurrentDay.ConfirmContinuityNewShotCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48"/>
-            <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption2Text}" Command="{Binding AppViewModel.CurrentDay.ConfirmContinuitySameShotCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48"/>
+          <Button Classes="quiet" Content="{Binding AppViewModel.CurrentDay.ContinuityOption2Text}" Command="{Binding AppViewModel.CurrentDay.ConfirmContinuitySameShotCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48"/>
           </StackPanel>
-          <Button Content="Cancel" Command="{Binding AppViewModel.CurrentDay.CancelContinuityPromptCommand}" Background="Transparent" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
+          <Button Classes="quiet" Content="Cancel" Command="{Binding AppViewModel.CurrentDay.CancelContinuityPromptCommand}" Background="Transparent" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
         </StackPanel>
       </Border>
     </Grid>
