@@ -51,7 +51,7 @@
             <!-- App Brand & Drawer Close -->
             <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
               <TextBlock Grid.Column="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
-              <Button Grid.Column="1" Content="✕" FontSize="18" Padding="10,6" MinHeight="44"
+              <Button Grid.Column="1" Content="✕" FontSize="18" Padding="10,6" MinHeight="44" VerticalAlignment="Center"
                       Background="Transparent"
                       Command="{Binding ToggleSidebarCommand}"/>
             </Grid>
