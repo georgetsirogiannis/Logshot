@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Logshot.ViewModels;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Logshot.Views.Android;
@@ -21,13 +22,24 @@ public partial class AndroidTakeListView : UserControl
             if (_dayVm != null)
             {
                 _dayVm.Takes.CollectionChanged -= Takes_CollectionChanged;
+                _dayVm.PropertyChanged -= DayVm_PropertyChanged;
             }
             if (DataContext is DayViewModel dayVm)
             {
                 _dayVm = dayVm;
                 _dayVm.Takes.CollectionChanged += Takes_CollectionChanged;
+                _dayVm.PropertyChanged += DayVm_PropertyChanged;
             }
         };
+    }
+
+    private void DayVm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DayViewModel.Takes) && _dayVm != null)
+        {
+            _dayVm.Takes.CollectionChanged -= Takes_CollectionChanged;
+            _dayVm.Takes.CollectionChanged += Takes_CollectionChanged;
+        }
     }
 
     private void Background_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -41,22 +53,33 @@ public partial class AndroidTakeListView : UserControl
 
     private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes)
+        var addedTake = e.Action == NotifyCollectionChangedAction.Add
+            ? e.NewItems?.OfType<TakeViewModel>().FirstOrDefault()
+            : null;
+
+        if (addedTake != null && _dayVm != null && !_dayVm.IsLoadingTakes)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                AndroidScrollViewer?.ScrollToEnd();
+                var listItem = _dayVm.FlatTakeList
+                    .OfType<TakeListTakeViewModel>()
+                    .FirstOrDefault(item => ReferenceEquals(item.Take, addedTake));
 
-                // Focus the first camera input box in the newly created card
+                if (listItem == null || AndroidTakeListBox == null)
+                    return;
+
+                AndroidTakeListBox.ScrollIntoView(listItem);
+
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    var lastCard = this.GetVisualDescendants()
-                        .OfType<AndroidTakeCardView>()
-                        .LastOrDefault();
+                    AndroidTakeListBox.ScrollIntoView(listItem);
 
-                    if (lastCard != null)
+                    var container = AndroidTakeListBox.ContainerFromItem(listItem) as Control;
+                    container?.BringIntoView();
+
+                    if (container != null)
                     {
-                        var firstTextBox = lastCard.GetVisualDescendants()
+                        var firstTextBox = container.GetVisualDescendants()
                             .OfType<TextBox>()
                             .FirstOrDefault(tb => !tb.IsReadOnly && tb.IsEffectivelyVisible);
 

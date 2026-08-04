@@ -58,7 +58,7 @@
   <DockPanel Background="Transparent" PointerPressed="Background_PointerPressed">
     <!-- SETUP GROUPS FEED -->
     <ScrollViewer Name="AndroidScrollViewer" BringIntoViewOnFocusChange="True">
-      <ListBox ItemsSource="{Binding FlatTakeList}" Margin="0,0,0,250"
+      <ListBox Name="AndroidTakeListBox" ItemsSource="{Binding FlatTakeList}" Margin="0,0,0,250"
                Background="Transparent" BorderThickness="0">
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
