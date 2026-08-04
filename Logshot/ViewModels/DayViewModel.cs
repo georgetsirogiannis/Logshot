@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -40,6 +41,7 @@ public partial class DayViewModel : ViewModelBase
     private readonly CameraDataManager _cameraDataManager;
     private readonly ContinuityService _continuityService;
     private bool _isSuppressingSave = false;
+    private CancellationTokenSource? _loadTakesCancellation;
 
     [ObservableProperty]
     private string _id = string.Empty;
@@ -67,6 +69,18 @@ public partial class DayViewModel : ViewModelBase
         if (!_isSuppressingSave)
         {
             _ = SaveDayCommand.ExecuteAsync(null);
+        }
+    }
+
+    public void SetGroupCollapsed(string setupKey, bool isCollapsed)
+    {
+        foreach (var group in MobileSetupGroups)
+        {
+            if ($"{group.Episode}|{group.Scene}" == setupKey)
+            {
+                group.IsCollapsed = isCollapsed;
+                break;
+            }
         }
     }
 
@@ -451,47 +465,72 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadTakes()
     {
+        PerformanceDiagnostics.Instance.Start("Day.LoadTakes");
         IsLoadingTakes = true; // Block scrolling while loading
+        _loadTakesCancellation?.Cancel();
+        _loadTakesCancellation?.Dispose();
+        var loadCancellation = new CancellationTokenSource();
+        _loadTakesCancellation = loadCancellation;
 
-        // 1. Pure background thread execution with zero UI thread dispatching
-        var (takesVmList, discoveredCameras) = await Task.Run(async () =>
+        try
         {
-            var rawTakes = await _databaseService.GetTakesForDayAsync(Id);
-            var list = new List<TakeViewModel>();
-
-            foreach (var take in rawTakes.OrderBy(t => t.SequenceOrder))
+            // 1. Pure background thread execution with zero UI thread dispatching
+            var (takesVmList, discoveredCameras) = await Task.Run(async () =>
             {
-                var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
-                takeVM.LoadFromModel(take);
-                takeVM.RefreshCameraDataSync();
-                list.Add(takeVM);
-            }
+                var rawTakes = await _databaseService.GetTakesForDayAsync(Id);
+                var list = new List<TakeViewModel>();
 
-            var cameras = rawTakes
-                .SelectMany(t => _cameraDataManager.GetActiveCameraLabels(_cameraDataManager.ParseCameraData(t.CameraData)))
+                foreach (var take in rawTakes.OrderBy(t => t.SequenceOrder))
+                {
+                    loadCancellation.Token.ThrowIfCancellationRequested();
+                    var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
+                    takeVM.LoadFromModel(take);
+                    takeVM.RefreshCameraDataSync();
+                    list.Add(takeVM);
+                }
+
+                var cameras = list
+                    .SelectMany(t => t.ActiveCameras)
                 .Distinct()
                 .ToList();
 
-            return (list, cameras);
-        });
+                return (list, cameras);
+            }, loadCancellation.Token);
 
-        foreach (var camera in discoveredCameras)
-        {
-            if (!ActiveCameras.Contains(camera))
-                ActiveCameras.Add(camera);
+            loadCancellation.Token.ThrowIfCancellationRequested();
+
+            foreach (var camera in discoveredCameras)
+            {
+                if (!ActiveCameras.Contains(camera))
+                    ActiveCameras.Add(camera);
+            }
+
+            // 2. Single atomic assignment triggers 1 layout pass instead of N passes
+            Takes = new ObservableCollection<TakeViewModel>(takesVmList);
+
+            RefreshAllExtraCameraRolls();
+            await UpdateTotalTakesCommand.ExecuteAsync(null);
+            await UpdateCurrentShotCommand.ExecuteAsync(null);
+
+            UpdateRowVisibilities();
+            BuildHierarchicalGroups();
+
+            System.Diagnostics.Debug.WriteLine($"[PERF] Loaded {takesVmList.Count} takes in {PerformanceDiagnostics.Instance.GetAverage("Day.LoadTakes"):F0}ms");
         }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            if (ReferenceEquals(_loadTakesCancellation, loadCancellation))
+            {
+                _loadTakesCancellation = null;
+                IsLoadingTakes = false;
+            }
 
-        // 2. Single atomic assignment triggers 1 layout pass instead of N passes
-        Takes = new ObservableCollection<TakeViewModel>(takesVmList);
-
-        RefreshAllExtraCameraRolls();
-        await UpdateTotalTakesCommand.ExecuteAsync(null);
-        await UpdateCurrentShotCommand.ExecuteAsync(null);
-
-        UpdateRowVisibilities();
-        BuildHierarchicalGroups();
-
-        IsLoadingTakes = false; // Re-enable scrolling
+            loadCancellation.Dispose();
+            PerformanceDiagnostics.Instance.Stop("Day.LoadTakes");
+        }
     }
 
     [RelayCommand]
@@ -865,6 +904,29 @@ public partial class DayViewModel : ViewModelBase
         CurrentShot = continuityData.NextShotNumber;
     }
 
+    /// <summary>
+    /// Delegate command for flat take list: adds a new shot to the specified setup.
+    /// </summary>
+    [RelayCommand]
+    public async Task AddShotToSetup((string Episode, string Scene) setup)
+    {
+        await CreateTakeWithContinuity(setup.Episode, setup.Scene);
+    }
+
+    /// <summary>
+    /// Delegate command for flat take list: adds a new take to the specified setup.
+    /// </summary>
+    [RelayCommand]
+    public async Task AddTakeToSetup((string Episode, string Scene) setup)
+    {
+        // Find the existing group and delegate to its logic
+        var group = MobileSetupGroups.FirstOrDefault(g => g.Episode == setup.Episode && g.Scene == setup.Scene);
+        if (group != null)
+        {
+            group.AddTakeCommand.Execute(null);
+        }
+    }
+
     public async Task<ContinuityService.ContinuityData> GetContinuityInfoAsync(string episode, string scene)
     {
         if (string.IsNullOrWhiteSpace(ProjectId))
@@ -1166,6 +1228,12 @@ public partial class DayViewModel : ViewModelBase
     public ObservableCollection<SetupGroupViewModel> MobileSetupGroups { get; } = new();
 
     /// <summary>
+    /// Flattened list of group headers and takes for virtualization support.
+    /// Alternates between TakeListGroupHeaderViewModel and TakeListTakeViewModel items.
+    /// </summary>
+    public ObservableCollection<TakeListItemViewModel> FlatTakeList { get; } = new();
+
+    /// <summary>
     /// Rebuilds the MobileSetupGroups collection sequentially based on logging order during the day.
     /// Consecutive takes for the same setup are grouped together. Returning to a scene shot earlier 
     /// creates a new group marked as 'IsContinued = true'.
@@ -1175,6 +1243,7 @@ public partial class DayViewModel : ViewModelBase
         if (Takes == null || !Takes.Any())
         {
             MobileSetupGroups.Clear();
+            FlatTakeList.Clear();
             return;
         }
 
@@ -1220,6 +1289,35 @@ public partial class DayViewModel : ViewModelBase
         foreach (var group in updatedGroups)
         {
             MobileSetupGroups.Add(group);
+        }
+
+        // Build flattened list for virtualization
+        RebuildFlatTakeList();
+    }
+
+    /// <summary>
+    /// Rebuilds FlatTakeList from MobileSetupGroups, flattening headers and takes.
+    /// Called after BuildHierarchicalGroups or when collapse state changes.
+    /// </summary>
+    public void RebuildFlatTakeList()
+    {
+        FlatTakeList.Clear();
+
+        foreach (var group in MobileSetupGroups)
+        {
+            var headerVm = new TakeListGroupHeaderViewModel(this, group)
+            {
+                IsCollapsed = group.IsCollapsed
+            };
+            FlatTakeList.Add(headerVm);
+
+            if (!group.IsCollapsed)
+            {
+                foreach (var take in group.GroupedTakes)
+                {
+                    FlatTakeList.Add(new TakeListTakeViewModel(take));
+                }
+            }
         }
     }
 

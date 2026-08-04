@@ -13,6 +13,7 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly DatabaseService _databaseService;
     private readonly SupabaseService _supabaseService;
+    private int _cloudMergeScheduled;
 
     public DatabaseService DatabaseService => _databaseService;
 
@@ -297,9 +298,19 @@ public partial class MainViewModel : ViewModelBase
         // Listen for cloud pull events and perform non-intrusive in-place UI merge
         _supabaseService.OnCloudDataReceived += () =>
         {
+            if (System.Threading.Interlocked.Exchange(ref _cloudMergeScheduled, 1) != 0)
+                return;
+
             Dispatcher.UIThread.Post(async () =>
             {
-                await AppViewModel.MergeCloudDataAsync();
+                try
+                {
+                    await AppViewModel.MergeCloudDataAsync();
+                }
+                finally
+                {
+                    System.Threading.Interlocked.Exchange(ref _cloudMergeScheduled, 0);
+                }
             });
         };
 
@@ -311,6 +322,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task InitializeApplication()
     {
+        PerformanceDiagnostics.Instance.Start("App.Startup");
         try
         {
             StatusMessage = "Loading application...";
@@ -321,12 +333,17 @@ public partial class MainViewModel : ViewModelBase
 
             IsInitialized = true;
             StatusMessage = "Ready";
+            PerformanceDiagnostics.Instance.Stop("App.Startup");
+            System.Diagnostics.Debug.WriteLine($"[PERF] Startup completed in {PerformanceDiagnostics.Instance.GetAverage("App.Startup"):F0}ms");
 
             // 2. Offload cloud connection to a background thread to prevent blocking
             _ = Task.Run(async () =>
             {
                 try
                 {
+                    // Let the first usable frame render before network and backfill work begins.
+                    await Task.Delay(1000);
+
                     string backfillMarker = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                         "logshot_backfill_done.txt");
@@ -352,6 +369,7 @@ public partial class MainViewModel : ViewModelBase
         catch (Exception ex)
         {
             StatusMessage = $"Error: {ex.Message}";
+            PerformanceDiagnostics.Instance.Stop("App.Startup");
         }
     }
 

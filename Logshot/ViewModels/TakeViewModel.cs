@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,6 +17,14 @@ public partial class TakeViewModel : ViewModelBase
     private readonly DatabaseService _databaseService;
     private readonly CameraDataManager _cameraDataManager;
     private bool _isSuppressingSave = false;
+    private CancellationTokenSource? _textSaveCancellation;
+    private Task? _pendingTextSaveTask;
+    private bool _textSavePending;
+    private const int TextSaveDelayMilliseconds = 250;
+    private string? _parsedCameraDataSource;
+    private CameraDataManager.CameraDataStructure? _parsedCameraData;
+    private string? _voidLabelsSource;
+    private HashSet<string>? _voidLabels;
 
     [ObservableProperty]
     private string _id = string.Empty;
@@ -154,7 +163,7 @@ public partial class TakeViewModel : ViewModelBase
             if (string.IsNullOrWhiteSpace(SoundNotes))
                 return false;
 
-            var data = _cameraDataManager.ParseCameraData(CameraData);
+            var data = GetCameraDataCached();
             if (data.Cameras.Count == 0)
                 return false;
 
@@ -185,12 +194,23 @@ public partial class TakeViewModel : ViewModelBase
         _cameraDataManager = cameraDataManager;
     }
 
+    private CameraDataManager.CameraDataStructure GetCameraDataCached()
+    {
+        if (!ReferenceEquals(_parsedCameraDataSource, CameraData) || _parsedCameraData is null)
+        {
+            _parsedCameraDataSource = CameraData;
+            _parsedCameraData = _cameraDataManager.ParseCameraData(CameraData);
+        }
+
+        return _parsedCameraData;
+    }
+
     partial void OnEpisodeChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayEpisode));
         if (!_isSuppressingSave)
         {
-            _ = SaveTakeCommand.ExecuteAsync(null);
+            QueueTextSave();
         }
     }
 
@@ -199,7 +219,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayScene));
         if (!_isSuppressingSave)
         {
-            _ = SaveTakeCommand.ExecuteAsync(null);
+            QueueTextSave();
         }
     }
 
@@ -208,7 +228,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayShot));
         if (!_isSuppressingSave)
         {
-            _ = SaveTakeCommand.ExecuteAsync(null);
+            QueueTextSave();
         }
     }
 
@@ -340,7 +360,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowSoundNormal));
         if (!_isSuppressingSave)
         {
-            _ = SaveTakeCommand.ExecuteAsync(null);
+            QueueTextSave();
         }
     }
 
@@ -416,9 +436,67 @@ public partial class TakeViewModel : ViewModelBase
         };
     }
 
+    private void QueueTextSave()
+    {
+        _textSaveCancellation?.Cancel();
+        var cancellation = new CancellationTokenSource();
+        _textSaveCancellation = cancellation;
+        _textSavePending = true;
+        _pendingTextSaveTask = SaveTextAfterDelayAsync(cancellation);
+    }
+
+    public async Task FlushPendingTextSaveAsync()
+    {
+        var pendingTask = _pendingTextSaveTask;
+        if (pendingTask is null)
+            return;
+
+        _textSaveCancellation?.Cancel();
+
+        try
+        {
+            await pendingTask;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+
+        var shouldFlush = _textSavePending;
+        _pendingTextSaveTask = null;
+        _textSavePending = false;
+
+        if (shouldFlush)
+        {
+            await SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    private async Task SaveTextAfterDelayAsync(CancellationTokenSource cancellation)
+    {
+        try
+        {
+            await Task.Delay(TextSaveDelayMilliseconds, cancellation.Token);
+            _textSavePending = false;
+            await SaveTakeCommand.ExecuteAsync(null);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            if (ReferenceEquals(_textSaveCancellation, cancellation))
+            {
+                _textSaveCancellation = null;
+            }
+
+            cancellation.Dispose();
+        }
+    }
+
     [RelayCommand]
     public async Task SaveTake()
     {
+        PerformanceDiagnostics.Instance.Increment("Take.SaveCount");
         await _databaseService.SaveTakeAsync(ToModel());
     }
 
@@ -488,19 +566,31 @@ public partial class TakeViewModel : ViewModelBase
 
     private List<string> GetVoidCameraLabelsList()
     {
+        if (ReferenceEquals(_voidLabelsSource, VoidCameraLabels) && _voidLabels is not null)
+            return _voidLabels.ToList();
+
+        _voidLabelsSource = VoidCameraLabels;
+        _voidLabels = new HashSet<string>(StringComparer.Ordinal);
+
         if (string.IsNullOrWhiteSpace(VoidCameraLabels))
             return new List<string>();
+
         try
         {
-            return JsonSerializer.Deserialize<List<string>>(VoidCameraLabels) ?? new List<string>();
+            var labels = JsonSerializer.Deserialize<List<string>>(VoidCameraLabels);
+            if (labels is not null)
+            {
+                _voidLabels.UnionWith(labels);
+            }
         }
         catch
         {
-            return new List<string>();
         }
+
+        return _voidLabels.ToList();
     }
 
-    public bool HasVoidedCameras => GetVoidCameraLabelsList().Count > 0;
+    public bool HasVoidedCameras => GetVoidLabels().Count > 0;
     public double RowHeight => HasVoidedCameras ? 16 : double.NaN;
     public double RowMinHeight => HasVoidedCameras ? 16 : 30;
 
@@ -521,7 +611,16 @@ public partial class TakeViewModel : ViewModelBase
 
     public const string CrossStitchPattern = "XXXXXXXXXXXXXXXXXXXX";
 
-    public bool IsCameraVoided(string cameraLabel) => GetVoidCameraLabelsList().Contains(cameraLabel);
+    public bool IsCameraVoided(string cameraLabel) => GetVoidLabels().Contains(cameraLabel);
+
+    private HashSet<string> GetVoidLabels()
+    {
+        if (ReferenceEquals(_voidLabelsSource, VoidCameraLabels) && _voidLabels is not null)
+            return _voidLabels;
+
+        GetVoidCameraLabelsList();
+        return _voidLabels!;
+    }
 
     [RelayCommand]
     public async Task ToggleVoidCamera(string cameraLabel)
@@ -533,7 +632,7 @@ public partial class TakeViewModel : ViewModelBase
         {
             list.Add(cameraLabel);
 
-            var data = _cameraDataManager.ParseCameraData(CameraData);
+            var data = GetCameraDataCached();
 
             // Fix: When a row becomes an ΑΚΥΡΟ CLIP row, no cameras can have a no-roll.
             foreach (var kvp in data.Cameras)
@@ -575,6 +674,8 @@ public partial class TakeViewModel : ViewModelBase
 
     partial void OnVoidCameraLabelsChanged(string value)
     {
+        _voidLabelsSource = null;
+        _voidLabels = null;
         OnPropertyChanged(nameof(HasVoidedCameras));
         OnPropertyChanged(nameof(ShowRowCrossed));
         OnPropertyChanged(nameof(RowHeight));
@@ -598,10 +699,6 @@ public partial class TakeViewModel : ViewModelBase
             cell.NotifyRollChanged();
         }
 
-        if (!_isSuppressingSave)
-        {
-            _ = SaveTakeCommand.ExecuteAsync(null);
-        }
     }
 
     public bool IsCamANoRoll => !HasVoidedCameras && (GetCameraFlag("CAM A", s => s.NoRoll) || IsCameraStrikethrough("CAM A"));
@@ -613,7 +710,7 @@ public partial class TakeViewModel : ViewModelBase
         // Fix: Prevent toggling No-Roll if the row is currently an ΑΚΥΡΟ CLIP row
         if (HasVoidedCameras) return;
 
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+            var data = GetCameraDataCached();
         if (!data.Cameras.TryGetValue(cameraLabel, out var state))
         {
             data = _cameraDataManager.AddCamera(data, cameraLabel);
@@ -652,7 +749,7 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task ApplyRollChange(string cameraLabel)
     {
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+        var data = GetCameraDataCached();
         if (!data.Cameras.TryGetValue(cameraLabel, out var state))
         {
             data = _cameraDataManager.AddCamera(data, cameraLabel);
@@ -666,7 +763,7 @@ public partial class TakeViewModel : ViewModelBase
     [RelayCommand]
     public async Task RemoveRollChange(string cameraLabel)
     {
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+        var data = GetCameraDataCached();
         if (data.Cameras.TryGetValue(cameraLabel, out var state))
         {
             state.RollChangeMarker = false;
@@ -681,13 +778,13 @@ public partial class TakeViewModel : ViewModelBase
 
     internal bool GetCameraFlagPublic(string cameraLabel, Func<Services.CameraDataManager.CameraState, bool> selector)
     {
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+        var data = GetCameraDataCached();
         return data.Cameras.TryGetValue(cameraLabel, out var state) && selector(state);
     }
 
     public void RefreshCameraDataSync()
     {
-        var cameraData = _cameraDataManager.ParseCameraData(CameraData);
+        var cameraData = GetCameraDataCached();
         var cameras = _cameraDataManager.GetActiveCameraLabels(cameraData);
 
         ActiveCameras = new ObservableCollection<string>(cameras);
@@ -711,13 +808,13 @@ public partial class TakeViewModel : ViewModelBase
 
     public bool IsCameraStrikethrough(string cameraLabel)
     {
-        var cameraData = _cameraDataManager.ParseCameraData(CameraData);
+        var cameraData = GetCameraDataCached();
         return _cameraDataManager.IsCameraStrikethrough(cameraData, cameraLabel);
     }
 
     public bool IsCameraActive(string cameraLabel)
     {
-        var cameraData = _cameraDataManager.ParseCameraData(CameraData);
+        var cameraData = GetCameraDataCached();
         return _cameraDataManager.IsCameraActive(cameraData, cameraLabel);
     }
 
@@ -747,7 +844,7 @@ public partial class TakeViewModel : ViewModelBase
 
     internal string GetCameraRoll(string cameraLabel)
     {
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+        var data = GetCameraDataCached();
         return data.Cameras.TryGetValue(cameraLabel, out var state) ? state.Notes : string.Empty;
     }
 
@@ -758,7 +855,7 @@ public partial class TakeViewModel : ViewModelBase
             value = value.Replace("-->", "→");
         }
 
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+        var data = GetCameraDataCached();
         if (!data.Cameras.ContainsKey(cameraLabel))
         {
             data = _cameraDataManager.AddCamera(data, cameraLabel);
@@ -777,12 +874,12 @@ public partial class TakeViewModel : ViewModelBase
         }
 
         CameraData = _cameraDataManager.SerializeCameraData(data);
-        _ = SaveTakeCommand.ExecuteAsync(null);
+        QueueTextSave();
     }
 
     internal string GetCameraRollNumber(string cameraLabel)
     {
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+        var data = GetCameraDataCached();
         return data.Cameras.TryGetValue(cameraLabel, out var state) ? state.RollNumber : string.Empty;
     }
 
@@ -793,19 +890,21 @@ public partial class TakeViewModel : ViewModelBase
             value = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
         }
 
-        var data = _cameraDataManager.ParseCameraData(CameraData);
+        var data = GetCameraDataCached();
         if (!data.Cameras.ContainsKey(cameraLabel))
         {
             data = _cameraDataManager.AddCamera(data, cameraLabel);
         }
         data.Cameras[cameraLabel].RollNumber = value ?? string.Empty;
         CameraData = _cameraDataManager.SerializeCameraData(data);
-        _ = SaveTakeCommand.ExecuteAsync(null);
+        QueueTextSave();
         OnPropertyChanged(cameraLabel == "CAM A" ? nameof(CamARollNumber) : nameof(CamBRollNumber));
     }
 
     partial void OnCameraDataChanged(string value)
     {
+        _parsedCameraDataSource = null;
+        _parsedCameraData = null;
         _ = RefreshCameraData();
         OnPropertyChanged(nameof(CamARoll));
         OnPropertyChanged(nameof(CamBRoll));

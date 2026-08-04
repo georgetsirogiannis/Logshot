@@ -21,6 +21,31 @@
     </Style>
   </UserControl.Styles>
 
+  <UserControl.DataTemplates>
+	<DataTemplate DataType="vm:TakeListGroupHeaderViewModel" x:CompileBindings="False">
+	  <Border Margin="0,0,0,12" Background="{StaticResource CardBackground}">
+		<Button Classes="collapse-btn" Command="{Binding ToggleCollapsedCommand}"
+				HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+				Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
+		  <Grid ColumnDefinitions="Auto,*">
+			<Panel Grid.Column="0" Width="12" Margin="0,0,8,0" VerticalAlignment="Center">
+			  <TextBlock Text="&#9656;" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"
+						 IsVisible="{Binding IsCollapsed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+			  <TextBlock Text="&#9660;" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"
+						 IsVisible="{Binding !IsCollapsed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+			</Panel>
+			<TextBlock Grid.Column="1" Text="{Binding HeaderTitle}" FontWeight="Bold" FontSize="14"
+					   VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}"/>
+		  </Grid>
+		</Button>
+	  </Border>
+	</DataTemplate>
+
+	<DataTemplate DataType="vm:TakeListTakeViewModel" x:CompileBindings="False">
+	  <views:TakeCardView DataContext="{Binding Take}" />
+	</DataTemplate>
+  </UserControl.DataTemplates>
+
   <DockPanel>
 	<StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" Margin="10,10,10,0">
       
@@ -52,34 +77,14 @@
 	</StackPanel>
 
 	<ScrollViewer Name="MobileScrollViewer" BringIntoViewOnFocusChange="True">
-	  <ItemsControl ItemsSource="{Binding MobileSetupGroups}" Margin="0,0,0,250">
-	    <ItemsControl.ItemTemplate>
-		  <DataTemplate x:DataType="vm:SetupGroupViewModel">
-		    <Border Margin="0,0,0,12" Background="{StaticResource CardBackground}">
-			  <StackPanel>
-			    <Button Classes="collapse-btn" Command="{Binding ToggleCollapsedCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{StaticResource HeaderBackground}" BorderThickness="0" Padding="12,10">
-				  <Grid ColumnDefinitions="Auto,*">
-				    <Panel Grid.Column="0" Width="12" Margin="0,0,8,0" VerticalAlignment="Center">
-				      <!-- Collapsed: points right -->
-				      <TextBlock Text="&#9656;" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding IsCollapsed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-				      <!-- Expanded: points down -->
-				      <TextBlock Text="&#9660;" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" IsVisible="{Binding !IsCollapsed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-				    </Panel>
-				    <TextBlock Grid.Column="1" Text="{Binding HeaderTitle}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource TextPrimary}"/>
-				  </Grid>
-			    </Button>
-			    <ItemsControl ItemsSource="{Binding GroupedTakes}" IsVisible="{Binding !IsCollapsed}">
-				  <ItemsControl.ItemTemplate>
-				    <DataTemplate x:DataType="vm:TakeViewModel">
-					  <views:TakeCardView/>
-				    </DataTemplate>
-				  </ItemsControl.ItemTemplate>
-			    </ItemsControl>
-			  </StackPanel>
-		    </Border>
-		  </DataTemplate>
-	    </ItemsControl.ItemTemplate>
-	  </ItemsControl>
+	  <ListBox ItemsSource="{Binding FlatTakeList}" Margin="0,0,0,250"
+			   Background="Transparent" BorderThickness="0">
+		<ListBox.ItemsPanel>
+		  <ItemsPanelTemplate>
+			<VirtualizingStackPanel />
+		  </ItemsPanelTemplate>
+		</ListBox.ItemsPanel>
+	  </ListBox>
     </ScrollViewer>
   </DockPanel>
 </UserControl>

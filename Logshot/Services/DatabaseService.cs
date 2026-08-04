@@ -51,6 +51,10 @@ public class DatabaseService
         await _db.CreateTableAsync<Day>();
         await _db.CreateTableAsync<Take>();
         await _db.CreateTableAsync<SyncQueueItem>(); // New outbox table
+
+        await _db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Days_ProjectId_Active ON Days (ProjectId, IsDeleted)");
+        await _db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_Takes_DayId_SequenceOrder_Active ON Takes (DayId, SequenceOrder, IsDeleted)");
+        await _db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_SyncQueue_Entity ON SyncQueue (EntityType, EntityId)");
     }
 
     public async Task CloseAsync()
@@ -353,13 +357,12 @@ public class DatabaseService
 
         if (dayIds.Count == 0) return new List<Take>();
 
-        var takes = new List<Take>();
-        foreach (var dayId in dayIds)
-        {
-            var takesForDay = await _db.Table<Take>().Where(t => t.DayId == dayId && !t.IsDeleted).ToListAsync();
-            takes.AddRange(takesForDay);
-        }
-        return takes.OrderBy(t => t.CreatedAt).ToList();
+        var placeholders = string.Join(",", Enumerable.Repeat("?", dayIds.Count));
+        var takes = await _db.QueryAsync<Take>(
+            $"SELECT * FROM Takes WHERE IsDeleted = 0 AND DayId IN ({placeholders}) ORDER BY CreatedAt",
+            dayIds.Cast<object>().ToArray());
+
+        return takes;
     }
 
     public static List<string> GetTokens(string input)
