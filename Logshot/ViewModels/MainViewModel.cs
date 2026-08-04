@@ -510,8 +510,19 @@ public partial class MainViewModel : ViewModelBase
             if (!File.Exists(RememberedCredentialsPath))
                 return;
 
-            var encrypted = File.ReadAllBytes(RememberedCredentialsPath);
-            var json = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
+            byte[] json;
+            var bytes = File.ReadAllBytes(RememberedCredentialsPath);
+
+            if (OperatingSystem.IsWindows())
+            {
+                json = ProtectedData.Unprotect(bytes, null, DataProtectionScope.CurrentUser);
+            }
+            else
+            {
+                // Fallback for Android / non-Windows where DPAPI is unavailable
+                json = bytes;
+            }
+
             var credentials = JsonSerializer.Deserialize<RememberedCredentials>(json);
             if (credentials is null || string.IsNullOrWhiteSpace(credentials.Email) || string.IsNullOrEmpty(credentials.Password))
                 return;
@@ -535,9 +546,20 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             var json = JsonSerializer.SerializeToUtf8Bytes(new RememberedCredentials(AuthEmail.Trim(), AuthPassword));
-            var encrypted = ProtectedData.Protect(json, null, DataProtectionScope.CurrentUser);
+            byte[] dataToSave;
+
+            if (OperatingSystem.IsWindows())
+            {
+                dataToSave = ProtectedData.Protect(json, null, DataProtectionScope.CurrentUser);
+            }
+            else
+            {
+                // Fallback for Android / non-Windows
+                dataToSave = json;
+            }
+
             Directory.CreateDirectory(Path.GetDirectoryName(RememberedCredentialsPath)!);
-            File.WriteAllBytes(RememberedCredentialsPath, encrypted);
+            File.WriteAllBytes(RememberedCredentialsPath, dataToSave);
             SaveRememberedEmail();
         }
         catch (Exception ex)
