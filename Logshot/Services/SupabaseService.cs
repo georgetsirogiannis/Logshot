@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace Logshot.Services;
 
 // --- Supabase DTO Models ---
-// (These map exactly to the Postgres tables created in the SQL Editor)
 
 [Table("projects")]
 public class SupabaseProject : BaseModel
@@ -22,6 +21,7 @@ public class SupabaseProject : BaseModel
     [Column("dop")] public string Dop { get; set; } = string.Empty;
     [Column("production_company")] public string ProductionCompany { get; set; } = string.Empty;
     [Column("script_supervisor")] public string ScriptSupervisor { get; set; } = string.Empty;
+    [Column("is_deleted")] public bool IsDeleted { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
 
@@ -34,6 +34,7 @@ public class SupabaseDay : BaseModel
     [Column("calendar_date")] public DateTime CalendarDate { get; set; }
     [Column("general_notes")] public string GeneralNotes { get; set; } = string.Empty;
     [Column("is_finalized")] public bool IsFinalized { get; set; }
+    [Column("is_deleted")] public bool IsDeleted { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
 
@@ -61,23 +62,34 @@ public class SupabaseTake : BaseModel
     [Column("is_end_board")] public bool IsEndBoard { get; set; }
     [Column("is_wild_shot")] public bool IsWildShot { get; set; }
     [Column("void_camera_labels")] public string VoidCameraLabels { get; set; } = string.Empty;
+    [Column("is_deleted")] public bool IsDeleted { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; }
 }
+
 
 // --- The Service & Sync Engine ---
 
 public class SupabaseService
 {
+    public static class SyncIconPaths
+    {
+        public const string Synced = "M19.35 12.04C18.67 8.59 15.64 6 12 6 9.11 6 6.6 7.64 5.35 10.04 2.34 10.36 0 12.91 0 16c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zm-8.64 6.25c-.39.39-1.02.39-1.41 0L7.2 16.2c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L10 16.18l4.48-4.48c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41l-5.18 5.18z";
+        public const string Syncing = "M12 4V2.21c0-.45-.54-.67-.85-.35l-2.8 2.79c-.2.2-.2.51 0 .71l2.79 2.79c.32.31.86.09.86-.36V6c3.31 0 6 2.69 6 6 0 .79-.15 1.56-.44 2.25-.15.36-.04.77.23 1.04.51.51 1.37.33 1.64-.34.37-.91.57-1.91.57-2.95 0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-.79.15-1.56.44-2.25.15-.36.04-.77-.23-1.04-.51-.51-1.37-.33-1.64.34C4.2 9.96 4 10.96 4 12c0 4.42 3.58 8 8 8v1.79c0 .45.54.67.85.35l2.79-2.79c.2-.2.2-.51 0-.71l-2.79-2.79c-.31-.31-.85-.09-.85.36V18z";
+        public const string Pending = "M7,17h6c0.55,0,1-0.45,1-1v-2.59c0-0.27-0.11-0.52-0.29-0.71L11,10l2.71-2.71C13.89,7.11,14,6.85,14,6.59V4 c0-0.55-0.45-1-1-1H7C6.45,3,6,3.45,6,4v2.59c0,0.27,0.11,0.52,0.29,0.71L9,10l-2.71,2.71C6.11,12.89,6,13.15,6,13.41V16 C6,16.55,6.45,17,7,17z M7,6.59V4.5C7,4.22,7.22,4,7.5,4h5C12.78,4,13,4.22,13,4.5v2.09l-3,3L7,6.59z";
+        public const string Warning = "M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3zM12 14c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm1 4h-2v-2h2v2z";
+    }
+
     private Client _client = null!;
     private readonly DatabaseService _databaseService;
     private bool _isInitialized = false;
     private CancellationTokenSource? _debounceCts;
+    private readonly SemaphoreSlim _syncSemaphore = new(1, 1);
 
-    // UI Event to notify the ViewModel of state changes (Icon, Text)
     public event Action<string, string>? OnSyncStatusChanged;
+    public event Action? OnCloudDataReceived;
 
     private const string SupabaseUrl = "https://wcddchyqorejtashswsu.supabase.co";
-    private const string SupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZGRjaHlxb3JlanRhc2hzd3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAyMzksImV4cCI6MjEwMDMzNjIzOX0.cZrcrRAIEEvAYOEbiTcorBGPgx04tcLfuQH3suFn3IE"; // Keep your working JWT anon key here
+    private const string SupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZGRjaHlxb3JlanRhc2hzd3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAyMzksImV4cCI6MjEwMDMzNjIzOX0.cZrcrRAIEEvAYOEbiTcorBGPgx04tcLfuQH3suFn3IE";
 
     public SupabaseService(DatabaseService databaseService)
     {
@@ -89,35 +101,76 @@ public class SupabaseService
         if (_isInitialized) return;
 
         _isInitialized = true;
-        OnSyncStatusChanged?.Invoke("🔄", "Connecting...");
+        OnSyncStatusChanged?.Invoke(SyncIconPaths.Syncing, "Connecting...");
 
         try
         {
             var options = new SupabaseOptions { AutoConnectRealtime = true };
             _client = new Client(SupabaseUrl, SupabaseKey, options);
 
-            // Wrap initialization in a 5-second timeout so it never hangs indefinitely
             await ExecuteWithTimeout(async () => await _client.InitializeAsync(), 5000);
 
-            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+            await PullFromCloudAsync();
 
-            // On app load, trigger a sync to clear out anything logged while offline
-            TriggerSync();
+            var pending = await _databaseService.GetPendingSyncItemsAsync();
+            if (pending.Count == 0)
+            {
+                OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
+            }
+            else
+            {
+                TriggerSync();
+            }
+
+            StartPeriodicPull();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Supabase Init Error: {ex.Message}");
-            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Pending)");
         }
     }
 
     /// <summary>
-    /// Starts the 3-second debounce timer. 
-    /// If called again before 3 seconds, the timer restarts.
+    /// Forces an immediate manual sync process (pulling remote changes and pushing local outbox items).
+    /// Guarded with a semaphore to handle rapid tapping and prevent concurrent runs.
+    /// </summary>
+    public async Task ManualSyncAsync()
+    {
+        if (!_isInitialized) return;
+
+        _debounceCts?.Cancel();
+
+        if (!await _syncSemaphore.WaitAsync(0))
+        {
+            return; // Already syncing
+        }
+
+        try
+        {
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Syncing, "Syncing...");
+            await ProcessSyncQueueInternalAsync();
+            await PullFromCloudAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Manual Sync Error: {ex.Message}");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Pending)");
+        }
+        finally
+        {
+            _syncSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Starts or resets the 3-second debounce timer when local data changes.
     /// </summary>
     public void TriggerSync()
     {
         if (!_isInitialized) return;
+
+        OnSyncStatusChanged?.Invoke(SyncIconPaths.Pending, "Pending Changes");
 
         _debounceCts?.Cancel();
         _debounceCts = new CancellationTokenSource();
@@ -130,14 +183,14 @@ public class SupabaseService
                 await Task.Delay(3000, token);
                 if (!token.IsCancellationRequested)
                 {
-                    await ProcessSyncQueueAsync();
+                    await ManualSyncAsync();
                 }
             }
-            catch (TaskCanceledException) { /* Ignored, timer reset */ }
+            catch (TaskCanceledException) { /* Timer reset */ }
         }, token);
     }
 
-    private async Task ProcessSyncQueueAsync()
+    private async Task ProcessSyncQueueInternalAsync()
     {
         _syncedProjectIds.Clear();
         _syncedDayIds.Clear();
@@ -145,18 +198,16 @@ public class SupabaseService
         var pendingItems = await _databaseService.GetPendingSyncItemsAsync();
         if (pendingItems.Count == 0)
         {
-            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
             return;
         }
 
-        OnSyncStatusChanged?.Invoke("🔄", "Syncing...");
         bool hasError = false;
 
         foreach (var item in pendingItems)
         {
             try
             {
-                // Wrap each item sync operation in a strict 5-second timeout
                 await ExecuteWithTimeout(async () =>
                 {
                     if (item.Action == "Upsert")
@@ -169,24 +220,22 @@ public class SupabaseService
                     }
                 }, 5000);
 
-                // If successful, remove it from the local outbox queue
                 await _databaseService.DeleteSyncItemAsync(item);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Cloud Sync Error on [{item.EntityType} {item.EntityId}]: {ex.Message}");
                 hasError = true;
-                break;
             }
         }
 
         if (hasError)
         {
-            OnSyncStatusChanged?.Invoke("⚠️", "Offline (Pending)");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Pending)");
         }
         else
         {
-            OnSyncStatusChanged?.Invoke("☁️", "Synced");
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
         }
     }
 
@@ -219,6 +268,7 @@ public class SupabaseService
             Dop = project.Dop,
             ProductionCompany = project.ProductionCompany,
             ScriptSupervisor = project.ScriptSupervisor,
+            IsDeleted = project.IsDeleted,
             CreatedAt = project.CreatedAt
         });
         _syncedProjectIds.Add(projectId);
@@ -240,6 +290,7 @@ public class SupabaseService
             CalendarDate = day.CalendarDate,
             GeneralNotes = day.GeneralNotes,
             IsFinalized = day.IsFinalized,
+            IsDeleted = day.IsDeleted,
             CreatedAt = day.CreatedAt
         });
         _syncedDayIds.Add(dayId);
@@ -286,6 +337,7 @@ public class SupabaseService
                         IsEndBoard = take.IsEndBoard,
                         IsWildShot = take.IsWildShot,
                         VoidCameraLabels = take.VoidCameraLabels,
+                        IsDeleted = take.IsDeleted,
                         CreatedAt = take.CreatedAt
                     });
                 }
@@ -307,5 +359,116 @@ public class SupabaseService
                 await _client.From<SupabaseTake>().Where(x => x.Id == item.EntityId).Delete();
                 break;
         }
+    }
+
+    private async Task<List<T>> FetchAllPaginatedAsync<T>() where T : BaseModel, new()
+    {
+        var allItems = new List<T>();
+        int pageSize = 1000;
+        int from = 0;
+
+        while (true)
+        {
+            var response = await _client.From<T>().Range(from, from + pageSize - 1).Get();
+            if (response.Models == null || response.Models.Count == 0)
+                break;
+
+            allItems.AddRange(response.Models);
+
+            if (response.Models.Count < pageSize)
+                break;
+
+            from += pageSize;
+        }
+
+        return allItems;
+    }
+
+    public async Task PullFromCloudAsync()
+    {
+        if (!_isInitialized) return;
+
+        try
+        {
+            var remoteProjects = (await FetchAllPaginatedAsync<SupabaseProject>()).Select(sp => new Project
+            {
+                Id = sp.Id,
+                Name = sp.Name,
+                Director = sp.Director,
+                Dop = sp.Dop,
+                ProductionCompany = sp.ProductionCompany,
+                ScriptSupervisor = sp.ScriptSupervisor,
+                IsDeleted = sp.IsDeleted,
+                CreatedAt = sp.CreatedAt
+            }).ToList();
+
+            var remoteDays = (await FetchAllPaginatedAsync<SupabaseDay>()).Select(sd => new Day
+            {
+                Id = sd.Id,
+                ProjectId = sd.ProjectId,
+                ShootDayNumber = sd.ShootDayNumber,
+                CalendarDate = sd.CalendarDate,
+                GeneralNotes = sd.GeneralNotes,
+                IsFinalized = sd.IsFinalized,
+                IsDeleted = sd.IsDeleted,
+                CreatedAt = sd.CreatedAt
+            }).ToList();
+
+            var remoteTakes = (await FetchAllPaginatedAsync<SupabaseTake>()).Select(st => new Take
+            {
+                Id = st.Id,
+                DayId = st.DayId,
+                SequenceOrder = st.SequenceOrder,
+                Episode = st.Episode,
+                Scene = st.Scene,
+                Shot = st.Shot,
+                TakeNumber = st.TakeNumber,
+                CameraData = st.CameraData,
+                SoundNotes = st.SoundNotes,
+                IsSoundNoRoll = st.IsSoundNoRoll,
+                TakeNotes = st.TakeNotes,
+                FalseStartCount = st.FalseStartCount,
+                IsLongStart = st.IsLongStart,
+                IsCircled = st.IsCircled,
+                IsFailed = st.IsFailed,
+                IsPickup = st.IsPickup,
+                IsBlooper = st.IsBlooper,
+                IsNoBoard = st.IsNoBoard,
+                IsEndBoard = st.IsEndBoard,
+                IsWildShot = st.IsWildShot,
+                VoidCameraLabels = st.VoidCameraLabels,
+                IsDeleted = st.IsDeleted,
+                CreatedAt = st.CreatedAt
+            }).ToList();
+
+            var (pCount, dCount, tCount) = await _databaseService.SaveCloudDataAsync(remoteProjects, remoteDays, remoteTakes);
+            if (pCount > 0 || dCount > 0 || tCount > 0)
+            {
+                OnCloudDataReceived?.Invoke();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Cloud Pull Error: {ex.Message}");
+        }
+    }
+
+    private void StartPeriodicPull()
+    {
+        Task.Run(async () =>
+        {
+            while (_isInitialized)
+            {
+                try
+                {
+                    await Task.Delay(15000);
+                    if (_isInitialized)
+                    {
+                        await PullFromCloudAsync();
+                    }
+                }
+                catch { /* Ignore */ }
+            }
+        });
     }
 }

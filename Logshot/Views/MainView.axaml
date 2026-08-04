@@ -13,12 +13,11 @@
   </Design.DataContext>
 
   <Grid>
-    <!-- Top-level loading bar -->
-    <ProgressBar IsIndeterminate="{Binding AppViewModel.IsLoading}" 
-                 VerticalAlignment="Top" HorizontalAlignment="Stretch" 
-                 Height="4" ZIndex="300" 
-                 IsVisible="{Binding AppViewModel.IsLoading}"
-                 Foreground="{StaticResource ActionAccent}"/>
+    <!-- Top-level loading bar & Contextual Message -->
+    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Stretch" ZIndex="300" IsVisible="{Binding AppViewModel.IsLoading}">
+        <ProgressBar IsIndeterminate="True" Height="4" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Stretch"/>
+        <TextBlock Text="{Binding AppViewModel.LoadingMessage}" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,2,12,0" />
+    </StackPanel>
 
     <!-- Main Split Layout -->
     <Grid Name="RootSplitGrid" ColumnDefinitions="280, *" IsVisible="{Binding IsInitialized}">
@@ -27,6 +26,7 @@
       <!-- LEFT SIDEBAR: Project & Day Browser          -->
       <!-- ========================================== -->
       <Border Grid.Column="0"
+              KeyboardNavigation.TabNavigation="Local"
               Background="{StaticResource HeaderBackground}"
               BorderBrush="{StaticResource BorderColor}"
               BorderThickness="0,0,1,0"
@@ -125,17 +125,24 @@
 
           <!-- Cloud Sync Status & Settings Cog -->
           <Grid Grid.Row="8" Margin="0,20,0,0" VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left" ToolTip.Tip="Cloud Sync Status">
-              <TextBlock Text="{Binding SyncIcon}" FontSize="14" VerticalAlignment="Center"/>
-              <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-            </StackPanel>
+            <Button Command="{Binding ManualSyncCommand}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,2"
+                    HorizontalAlignment="Left"
+                    ToolTip.Tip="Click to Sync Now">
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Path Data="{Binding SyncIcon}" Width="16" Height="16" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Button>
 
             <Button HorizontalAlignment="Right"
                     Command="{Binding ToggleInfoViewCommand}"
                     Background="Transparent"
                     Padding="6,4"
                     ToolTip.Tip="Info / Settings">
-              <TextBlock Text="⚙" FontSize="16" Foreground="{StaticResource TextSecondary}"/>
+              <Path Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
             </Button>
           </Grid>
 
@@ -150,13 +157,13 @@
         <!-- Mobile Top Bar with Persistent Hamburger -->
         <Border Grid.Row="0" Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1" Padding="12,8"
                 IsVisible="{Binding IsMobileLayout}">
-          <Button Content="&#9776;" FontSize="16" Padding="8,4"
+          <Button Content="&#9776;" FontSize="16" Padding="8,4" Background="Transparent"
                   Command="{Binding ToggleSidebarCommand}"
                   VerticalAlignment="Center"/>
         </Border>
 
         <!-- Content Container -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Name="WorkspaceViewport">
           
           <!-- Workspace Views (Visible when Info/Settings is closed) -->
           <Grid IsVisible="{Binding IsInfoViewOpen, Converter={x:Static BoolConverters.Not}}">

@@ -9,7 +9,8 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <!-- Validated on the .NET 10 Android Release build; improves native startup/runtime optimization. -->
+    <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
 	<RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
   </PropertyGroup>
 

@@ -13,6 +13,7 @@ namespace Logshot.ViewModels;
 public partial class AppViewModel : ViewModelBase
 {
     private readonly DatabaseService _databaseService;
+    private readonly System.Threading.SemaphoreSlim _loadLock = new(1, 1);
 
     [ObservableProperty]
     private ObservableCollection<ProjectViewModel> _projects = new();
@@ -28,6 +29,9 @@ public partial class AppViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isLoading = false;
+
+    [ObservableProperty]
+    private string _loadingMessage = "Loading...";
 
     // --- Targeted Episode & Scene Search State ---
     [ObservableProperty]
@@ -133,7 +137,7 @@ public partial class AppViewModel : ViewModelBase
             {
                 var takeVM = new TakeViewModel(_databaseService);
                 takeVM.LoadFromModel(take);
-                await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
+                takeVM.RefreshCameraDataSync();
                 groupVM.Takes.Add(takeVM);
             }
 
@@ -274,6 +278,30 @@ public partial class AppViewModel : ViewModelBase
             newValue.PropertyChanged += CurrentDay_PropertyChanged;
         }
         OnPropertyChanged(nameof(IsTakeDeleteConfirmationOpen));
+
+        if (newValue != null)
+        {
+            _ = LoadDayTakesAsync(newValue);
+        }
+    }
+
+    private async Task LoadDayTakesAsync(DayViewModel day)
+    {
+        LoadingMessage = $"Loading Day {day.ShootDayNumber}...";
+        IsLoading = true;
+
+        // Force Avalonia to render the loading progress bar before execution starts
+        await Task.Yield();
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Render);
+
+        try
+        {
+            await day.LoadTakesCommand.ExecuteAsync(null);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private void CurrentDay_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -316,6 +344,8 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAllProjects()
     {
+        await _loadLock.WaitAsync();
+        LoadingMessage = "Loading projects...";
         IsLoading = true;
         try
         {
@@ -333,6 +363,7 @@ public partial class AppViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+            _loadLock.Release();
         }
     }
 
@@ -584,7 +615,18 @@ public partial class AppViewModel : ViewModelBase
         if (day == null) return;
         ClearSearch();
         CurrentDay = day;
-        await CurrentDay.LoadTakesCommand.ExecuteAsync(null);
+
+        LoadingMessage = $"Loading Day {day.ShootDayNumber}...";
+        IsLoading = true;
+        await Task.Yield(); // Allows Avalonia to render the loading indicator immediately
+        try
+        {
+            await CurrentDay.LoadTakesCommand.ExecuteAsync(null);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -665,7 +707,8 @@ public partial class AppViewModel : ViewModelBase
     {
         var exporter = Services.PdfExportServiceRegistry.Instance;
         if (exporter == null || !IsPdfExportSupported) return;
-
+        
+        LoadingMessage = "Exporting PDF...";
         IsLoading = true;
         try
         {
@@ -687,5 +730,95 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand]
     public async Task SyncToSupabase()
     {
+    }
+
+    /// <summary>
+    /// Non-intrusive in-place merge of cloud data into active ViewModels.
+    /// Preserves current selections, focus, and open views without duplicates.
+    /// </summary>
+    public async Task MergeCloudDataAsync()
+    {
+        await _loadLock.WaitAsync();
+        try
+        {
+            var dbProjects = await _databaseService.GetAllProjectsAsync();
+            foreach (var pModel in dbProjects)
+            {
+                var existingProj = Projects.FirstOrDefault(p => p.Id == pModel.Id);
+                if (existingProj == null)
+                {
+                    var newProjVm = new ProjectViewModel(_databaseService);
+                    newProjVm.LoadFromModel(pModel);
+                    await newProjVm.LoadDaysCommand.ExecuteAsync(null);
+                    Projects.Add(newProjVm);
+                }
+                else
+                {
+                    existingProj.Name = pModel.Name;
+                    existingProj.Director = pModel.Director;
+                    existingProj.Dop = pModel.Dop;
+                    existingProj.ProductionCompany = pModel.ProductionCompany;
+                    existingProj.ScriptSupervisor = pModel.ScriptSupervisor;
+                }
+            }
+
+            // Clean up any projects deleted on another device
+            var dbProjectIds = dbProjects.Select(p => p.Id).ToHashSet();
+            for (int i = Projects.Count - 1; i >= 0; i--)
+            {
+                if (!dbProjectIds.Contains(Projects[i].Id))
+                {
+                    if (CurrentProject?.Id == Projects[i].Id)
+                    {
+                        CurrentProject = null;
+                        CurrentDay = null;
+                    }
+                    Projects.RemoveAt(i);
+                }
+            }
+
+            if (CurrentProject == null) return;
+
+            var dbDays = await _databaseService.GetDaysForProjectAsync(CurrentProject.Id);
+            foreach (var dModel in dbDays)
+            {
+                var existingDay = CurrentProject.Days.FirstOrDefault(d => d.Id == dModel.Id);
+                if (existingDay == null)
+                {
+                    var newDayVm = new DayViewModel(_databaseService);
+                    newDayVm.LoadFromModel(dModel);
+                    CurrentProject.Days.Add(newDayVm);
+                    CurrentProject.SortDays();
+                }
+                else
+                {
+                    existingDay.ShootDayNumber = dModel.ShootDayNumber;
+                    existingDay.CalendarDate = dModel.CalendarDate;
+                    existingDay.IsFinalized = dModel.IsFinalized;
+                }
+            }
+
+            // Clean up any days deleted on another device
+            var dbDayIds = dbDays.Select(d => d.Id).ToHashSet();
+            for (int i = CurrentProject.Days.Count - 1; i >= 0; i--)
+            {
+                if (!dbDayIds.Contains(CurrentProject.Days[i].Id))
+                {
+                    if (CurrentDay?.Id == CurrentProject.Days[i].Id)
+                    {
+                        CurrentDay = null;
+                    }
+                    CurrentProject.Days.RemoveAt(i);
+                }
+            }
+
+            if (CurrentDay == null) return;
+
+            await CurrentDay.MergeTakesFromCloudAsync();
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 }

@@ -219,369 +219,386 @@
       </Grid>
     </Border>
 
-    <!-- SCROLLABLE TAKES ROWS WORKSPACE -->
-    <ScrollViewer Grid.Row="2" Name="TakesScrollViewer" VerticalScrollBarVisibility="Visible" BringIntoViewOnFocusChange="False">
-      <StackPanel Orientation="Vertical">
+    <!-- SCROLLABLE TAKES ROWS WORKSPACE (VIRTUALIZED) -->
+    <ListBox Grid.Row="2" 
+             Name="TakesListBox"
+             KeyboardNavigation.TabNavigation="Continue"
+             ItemsSource="{Binding Takes}"
+             Background="Transparent"
+             BorderThickness="0"
+             Padding="0"
+             ScrollViewer.VerticalScrollBarVisibility="Auto"
+             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+      <ListBox.Styles>
+        <Style Selector="ListBoxItem">
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="Margin" Value="0"/>
+          <Setter Property="MinHeight" Value="0"/>
+          <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+          <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+          <Setter Property="Background" Value="Transparent"/>
+        </Style>
+      </ListBox.Styles>
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:TakeViewModel">
+          <Border Background="{StaticResource CardBackground}" Classes="row-border" KeyboardNavigation.TabNavigation="Continue" PointerMoved="Row_PointerMoved" PointerPressed="Row_PointerPressed" PointerReleased="Row_PointerReleased" Tag="{Binding}">
+            <Grid>
+              <!-- Main Row Content Grid -->
+              <Grid MinHeight="{Binding RowMinHeight}">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="10*" />
+                  <ColumnDefinition Width="10*" />
+                  <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam1Width}" />
+                  <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam2Width}" />
+                  <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam3Width}" />
+                  <ColumnDefinition Width="6*" />
+                  <ColumnDefinition Width="4*" />
+                  <ColumnDefinition Width="4*" />
+                  <ColumnDefinition Width="5*" />
+                  <ColumnDefinition Width="5*" />
+                  <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).NotesWidth}" />
+                </Grid.ColumnDefinitions>
+                
+                <!-- Row Controls Column -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="0" Width="60">
+                  <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Command="{Binding $parent[UserControl].DataContext.PromptDeleteTakeCommand}" CommandParameter="{Binding}" Content="✕" FontSize="10" Padding="4,0"/>
+                  </StackPanel>
+                </Border>
 
-        <ItemsControl ItemsSource="{Binding Takes}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="vm:TakeViewModel">
-              <Border Background="{StaticResource CardBackground}" Classes="row-border" PointerMoved="Row_PointerMoved" PointerPressed="Row_PointerPressed" PointerReleased="Row_PointerReleased" Tag="{Binding}">
-                <Grid>
-                  <!-- Main Row Content Grid -->
-                  <Grid MinHeight="{Binding RowMinHeight}">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="10*" />
-                      <ColumnDefinition Width="10*" />
-                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam1Width}" />
-                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam2Width}" />
-                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).ExtraCam3Width}" />
-                      <ColumnDefinition Width="6*" />
-                      <ColumnDefinition Width="4*" />
-                      <ColumnDefinition Width="4*" />
-                      <ColumnDefinition Width="5*" />
-                      <ColumnDefinition Width="5*" />
-                      <ColumnDefinition Width="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).NotesWidth}" />
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Row Controls Column -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="0" Width="60">
-                      <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                        <Button Command="{Binding $parent[UserControl].DataContext.PromptDeleteTakeCommand}" CommandParameter="{Binding}" Content="✕" FontSize="10" Padding="4,0"/>
-                      </StackPanel>
-                    </Border>
+                <!-- CAM A -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="1" Padding="4" VerticalAlignment="Stretch">
+                  <Grid RowDefinitions="Auto,*">
+                    <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamARollChangeMarked}" Text="{Binding CamARollNumber}" TextDecorations="Underline"/>
+                    <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Stretch">
+                      <Grid.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A" Header="ΑΚΥΡΟ CLIP"/>
+                          <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A" Header="No Roll"/>
+                          <Separator/>
+                          <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                        </ContextMenu>
+                      </Grid.ContextMenu>
+                      <FlyoutBase.AttachedFlyout>
+                        <Flyout Placement="Bottom">
+                          <StackPanel Spacing="6" Width="160">
+                            <TextBlock FontSize="11" FontWeight="Bold" Text="CAM A Roll #"/>
+                            <TextBox AcceptsReturn="False" Text="{Binding CamARollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
+                            <Grid ColumnDefinitions="*,*">
+                              <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM A" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
+                              <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM A" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
+                            </Grid>
+                          </StackPanel>
+                        </Flyout>
+                      </FlyoutBase.AttachedFlyout>
 
-                    <!-- CAM A -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="1" Padding="4" VerticalAlignment="Stretch">
-                      <Grid RowDefinitions="Auto,*">
-                        <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamARollChangeMarked}" Text="{Binding CamARollNumber}" TextDecorations="Underline"/>
-                        <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Stretch">
-                          <Grid.ContextMenu>
+                      <!-- Panel visible when ShowCamANormal -->
+                      <Panel VerticalAlignment="Center" IsVisible="{Binding ShowCamANormal}">
+                        <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamARoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                        <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsReadOnly="{Binding IsCamANotEditable}" Text="{Binding CamARoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="..." Tag="CAM A" LostFocus="CameraRoll_LostFocus">
+                          <TextBox.Styles>
+                            <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                            <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                          </TextBox.Styles>
+                          <TextBox.ContextMenu>
                             <ContextMenu>
                               <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A" Header="ΑΚΥΡΟ CLIP"/>
                               <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A" Header="No Roll"/>
                               <Separator/>
                               <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
                             </ContextMenu>
-                          </Grid.ContextMenu>
-                          <FlyoutBase.AttachedFlyout>
-                            <Flyout Placement="Bottom">
-                              <StackPanel Spacing="6" Width="160">
-                                <TextBlock FontSize="11" FontWeight="Bold" Text="CAM A Roll #"/>
-                                <TextBox AcceptsReturn="False" Text="{Binding CamARollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
-                                <Grid ColumnDefinitions="*,*">
-                                  <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM A" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
-                                  <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM A" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
-                                </Grid>
-                              </StackPanel>
-                            </Flyout>
-                          </FlyoutBase.AttachedFlyout>
+                          </TextBox.ContextMenu>
+                        </TextBox>
+                      </Panel>
 
-                          <!-- Panel visible when ShowCamANormal -->
-                          <Panel VerticalAlignment="Center" IsVisible="{Binding ShowCamANormal}">
-                            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamARoll}" Text="{Binding CamARoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamARoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                            <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsReadOnly="{Binding IsCamANotEditable}" Text="{Binding CamARoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="..." Tag="CAM A" LostFocus="CameraRoll_LostFocus">
-                              <TextBox.Styles>
-                                <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
-                                <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
-                              </TextBox.Styles>
-                              <TextBox.ContextMenu>
-                                <ContextMenu>
-                                  <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A" Header="ΑΚΥΡΟ CLIP"/>
-                                  <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A" Header="No Roll"/>
-                                  <Separator/>
-                                  <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
-                                </ContextMenu>
-                              </TextBox.ContextMenu>
-                            </TextBox>
-                          </Panel>
+                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
+                      <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamACrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                      <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamANoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
+                    </Grid>
+                  </Grid>
+                </Border>
 
-                          <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
-                          <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamACrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                          <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamANoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
-                        </Grid>
-                      </Grid>
-                    </Border>
+                <!-- CAM B -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="2" Padding="4" VerticalAlignment="Stretch">
+                  <Grid RowDefinitions="Auto,*">
+                    <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamBRollChangeMarked}" Text="{Binding CamBRollNumber}" TextDecorations="Underline"/>
+                    <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Stretch">
+                      <Grid.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B" Header="ΑΚΥΡΟ CLIP"/>
+                          <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B" Header="No Roll"/>
+                          <Separator/>
+                          <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                        </ContextMenu>
+                      </Grid.ContextMenu>
+                      <FlyoutBase.AttachedFlyout>
+                        <Flyout Placement="Bottom">
+                          <StackPanel Spacing="6" Width="160">
+                            <TextBlock FontSize="11" FontWeight="Bold" Text="CAM B Roll #"/>
+                            <TextBox AcceptsReturn="False" Text="{Binding CamBRollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
+                            <Grid ColumnDefinitions="*,*">
+                              <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM B" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
+                              <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM B" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
+                            </Grid>
+                          </StackPanel>
+                        </Flyout>
+                      </FlyoutBase.AttachedFlyout>
 
-                    <!-- CAM B -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="2" Padding="4" VerticalAlignment="Stretch">
-                      <Grid RowDefinitions="Auto,*">
-                        <TextBlock FontSize="10" Foreground="{StaticResource ActionAccent}" Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsCamBRollChangeMarked}" Text="{Binding CamBRollNumber}" TextDecorations="Underline"/>
-                        <Grid Background="Transparent" Grid.Row="1" VerticalAlignment="Stretch">
-                          <Grid.ContextMenu>
+                      <!-- Panel visible when ShowCamBNormal -->
+                      <Panel VerticalAlignment="Center" IsVisible="{Binding ShowCamBNormal}">
+                        <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamBRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                        <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsReadOnly="{Binding IsCamBNotEditable}" Text="{Binding CamBRoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="..." Tag="CAM B" LostFocus="CameraRoll_LostFocus">
+                          <TextBox.Styles>
+                            <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                            <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                          </TextBox.Styles>
+                          <TextBox.ContextMenu>
                             <ContextMenu>
                               <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B" Header="ΑΚΥΡΟ CLIP"/>
                               <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B" Header="No Roll"/>
                               <Separator/>
                               <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
                             </ContextMenu>
-                          </Grid.ContextMenu>
-                          <FlyoutBase.AttachedFlyout>
-                            <Flyout Placement="Bottom">
-                              <StackPanel Spacing="6" Width="160">
-                                <TextBlock FontSize="11" FontWeight="Bold" Text="CAM B Roll #"/>
-                                <TextBox AcceptsReturn="False" Text="{Binding CamBRollNumber}" TextWrapping="NoWrap" PlaceholderText="Enter roll number..."/>
-                                <Grid ColumnDefinitions="*,*">
-                                  <Button Click="CloseFlyout_Click" Command="{Binding ApplyRollChangeCommand}" CommandParameter="CAM B" Content="Apply" FontSize="10" Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0"/>
-                                  <Button Click="CloseFlyout_Click" Command="{Binding RemoveRollChangeCommand}" CommandParameter="CAM B" Content="Remove" FontSize="10" Foreground="{StaticResource FailRed}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0"/>
-                                </Grid>
-                              </StackPanel>
-                            </Flyout>
-                          </FlyoutBase.AttachedFlyout>
+                          </TextBox.ContextMenu>
+                        </TextBox>
+                      </Panel>
 
-                          <!-- Panel visible when ShowCamBNormal -->
-                          <Panel VerticalAlignment="Center" IsVisible="{Binding ShowCamBNormal}">
-                            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowCamBRoll}" Text="{Binding CamBRoll}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowCamBRoll}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                            <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsReadOnly="{Binding IsCamBNotEditable}" Text="{Binding CamBRoll}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="..." Tag="CAM B" LostFocus="CameraRoll_LostFocus">
-                              <TextBox.Styles>
-                                <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
-                                <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
-                              </TextBox.Styles>
-                              <TextBox.ContextMenu>
-                                <ContextMenu>
-                                  <MenuItem Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B" Header="ΑΚΥΡΟ CLIP"/>
-                                  <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B" Header="No Roll"/>
-                                  <Separator/>
-                                  <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
-                                </ContextMenu>
-                              </TextBox.ContextMenu>
-                            </TextBox>
-                          </Panel>
+                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
+                      <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamBCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                      <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamBNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
+                    </Grid>
+                  </Grid>
+                </Border>
 
-                          <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
-                          <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamBCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                          <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamBNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
-                        </Grid>
-                      </Grid>
-                    </Border>
+                <!-- Extra Camera 1 (Col 3) -->
+                <ContentControl Grid.Column="3" Content="{Binding ExtraCell1}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam1Visible}"/>
 
-                    <!-- Extra Camera 1 (Col 3) -->
-                    <ContentControl Grid.Column="3" Content="{Binding ExtraCell1}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam1Visible}"/>
+                <!-- Extra Camera 2 (Col 4) -->
+                <ContentControl Grid.Column="4" Content="{Binding ExtraCell2}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam2Visible}"/>
 
-                    <!-- Extra Camera 2 (Col 4) -->
-                    <ContentControl Grid.Column="4" Content="{Binding ExtraCell2}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam2Visible}"/>
+                <!-- Extra Camera 3 (Col 5) -->
+                <ContentControl Grid.Column="5" Content="{Binding ExtraCell3}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam3Visible}"/>
 
-                    <!-- Extra Camera 3 (Col 5) -->
-                    <ContentControl Grid.Column="5" Content="{Binding ExtraCell3}" IsVisible="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).IsExtraCam3Visible}"/>
+                <!-- SOUND ROLL -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4" VerticalAlignment="Stretch">
+                  <Grid Background="Transparent" VerticalAlignment="Stretch">
+                    <Grid.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
+                      </ContextMenu>
+                    </Grid.ContextMenu>
 
-                    <!-- SOUND ROLL -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="6" Padding="4" VerticalAlignment="Stretch">
-                      <Grid Background="Transparent" VerticalAlignment="Stretch">
-                        <Grid.ContextMenu>
+                    <!-- Panel visible when ShowSoundNormal -->
+                    <Panel VerticalAlignment="Center" IsVisible="{Binding ShowSoundNormal}">
+                      <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowSoundNotes}" Text="{Binding SoundNotes}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowSoundNotes}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsReadOnly="{Binding IsSoundNoRoll}" Text="{Binding SoundNotes}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="..." LostFocus="SoundRoll_LostFocus">
+                        <TextBox.Styles>
+                          <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                          <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                        </TextBox.Styles>
+                        <TextBox.ContextMenu>
                           <ContextMenu>
                             <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
                           </ContextMenu>
-                        </Grid.ContextMenu>
+                        </TextBox.ContextMenu>
+                      </TextBox>
+                    </Panel>
 
-                        <!-- Panel visible when ShowSoundNormal -->
-                        <Panel VerticalAlignment="Center" IsVisible="{Binding ShowSoundNormal}">
-                          <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowSoundNotes}" Text="{Binding SoundNotes}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                          <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding !ShowSoundNotes}" Text="—″—" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
-                          <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsReadOnly="{Binding IsSoundNoRoll}" Text="{Binding SoundNotes}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" PlaceholderText="..." LostFocus="SoundRoll_LostFocus">
-                            <TextBox.Styles>
-                              <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
-                              <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
-                            </TextBox.Styles>
-                            <TextBox.ContextMenu>
-                              <ContextMenu>
-                                <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
-                              </ContextMenu>
-                            </TextBox.ContextMenu>
-                          </TextBox>
-                        </Panel>
-
-                        <Path Data="M1,0 L0,1" IsVisible="{Binding IsSoundNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
-                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                      </Grid>
-                    </Border>
-                    
-                    <!-- EP -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4" VerticalAlignment="Stretch">
-                      <Grid VerticalAlignment="Stretch">
-                        <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
-                          <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowEpisode}" Text="{Binding DisplayEpisode}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                          <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding Episode}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
-                        </Panel>
-                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                      </Grid>
-                    </Border>
-                    
-                    <!-- SC -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4" VerticalAlignment="Stretch">
-                      <Grid VerticalAlignment="Stretch">
-                        <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
-                          <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowScene}" Text="{Binding DisplayScene}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                          <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding Scene}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
-                        </Panel>
-                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                      </Grid>
-                    </Border>
-                    
-                    <!-- SHOT -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="9" Padding="4" VerticalAlignment="Stretch">
-                      <Grid VerticalAlignment="Stretch">
-                        <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
-                          <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowShot}" Text="{Binding DisplayShot}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                          <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding Shot}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
-                        </Panel>
-                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                      </Grid>
-                    </Border>
-
-                    <!-- TAKE -->
-                    <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="10" Padding="4" VerticalAlignment="Stretch">
-                      <Grid VerticalAlignment="Stretch">
-                        <Border BorderBrush="{StaticResource ActionAccent}" BorderThickness="2" CornerRadius="13" Height="26" HorizontalAlignment="Center" IsVisible="{Binding ShowCircledActive}" VerticalAlignment="Center" Width="26"/>
-                        <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
-                        <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding !ShowRowCrossed}" Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}">
-                          <TextBox.ContextMenu>
-                            <ContextMenu>
-                              <MenuItem Command="{Binding MarkCircledCommand}" Header="Mark Circled"/>
-                              <MenuItem Command="{Binding MarkFailedCommand}" Header="Mark Failed"/>
-                              <MenuItem Command="{Binding TogglePickupCommand}" Header="Toggle Pickup (PU)"/>
-                            </ContextMenu>
-                          </TextBox.ContextMenu>
-                        </TextBox>
-                        <TextBlock FontSize="9" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Right" IsVisible="{Binding IsPickup}" Margin="2" Text="PU" VerticalAlignment="Top"/>
-                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                      </Grid>
-                    </Border>
-
-                    <!-- NOTES -->
-                    <Border Grid.Column="11" Padding="12,4,4,4" Background="Transparent" VerticalAlignment="Stretch">
-                      <Border.ContextMenu>
-                        <ContextMenu>
-                          <MenuItem Command="{Binding ToggleBlooperCommand}" Header="Toggle Blooper"/>
-                        </ContextMenu>
-                      </Border.ContextMenu>
-                      <Grid Background="Transparent">
-                        <StackPanel IsVisible="{Binding !ShowRowCrossed}" Orientation="Vertical" VerticalAlignment="Center">
-                          
-                          <!-- Chips & Board Text Row -->
-                          <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,4">
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-
-                             <!--- FS Chip -->
-                              <Button Command="{Binding IncrementFalseStartsCommand}" Content="FS" FontSize="11" IsVisible="{Binding !FalseStartCount}" Padding="4,0"/>
-                              <Button Classes="fs-chip" Command="{Binding IncrementFalseStartsCommand}" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="11" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
-                              <Button Command="{Binding DecrementFalseStartsCommand}" Content="-" FontSize="11" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
-
-                              <ToggleButton Content="LS" FontSize="11" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="4,0">
-                                <ToggleButton.Styles>
-                                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                    <Setter Property="Opacity" Value="0.8"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked">
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                  </Style>
-                                </ToggleButton.Styles>
-                              </ToggleButton>
-                              
-                              <ToggleButton Content="BL" FontSize="11" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
-                                <ToggleButton.Styles>
-                                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                    <Setter Property="Opacity" Value="0.8"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked">
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                  </Style>
-                                </ToggleButton.Styles>
-                              </ToggleButton>
-
-                              <TextBlock Text="|" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="2,0"/>
-
-                              <ToggleButton Content="NB" FontSize="11" Padding="4,0" IsChecked="{Binding IsNoBoard, Mode=TwoWay}">
-                                <ToggleButton.Styles>
-                                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                    <Setter Property="Opacity" Value="0.8"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked">
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                  </Style>
-                                </ToggleButton.Styles>
-                              </ToggleButton>
-
-                              <ToggleButton Content="EB" FontSize="11" Padding="4,0" IsChecked="{Binding IsEndBoard, Mode=TwoWay}">
-                                <ToggleButton.Styles>
-                                  <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
-                                    <Setter Property="Foreground" Value="#121212"/>
-                                    <Setter Property="Opacity" Value="0.8"/>
-                                  </Style>
-                                  <Style Selector="ToggleButton:checked">
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                  </Style>
-                                </ToggleButton.Styles>
-                              </ToggleButton>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,10,0">
-                              <TextBlock Text="ΧΩΡΙΣ ΚΛΑΚΕΤΑ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NoBoardTeal}" IsVisible="{Binding IsNoBoard}"/>
-                              <TextBlock Text="ΚΛΑΚΕΤΑ ΤΕΛΟΥΣ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource EndBoardAmber}" IsVisible="{Binding IsEndBoard}"/>
-                            </StackPanel>
-                          </Grid>
-
-                          <!-- Notes TextBox with vertical centering and left alignment -->
-                          <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Margin="0,0,10,0" Text="{Binding TakeNotes}" TextAlignment="Left" TextWrapping="Wrap" VerticalContentAlignment="Center"/>
-                        </StackPanel>
-                        
-                        <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="4"/>
-                        <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                      </Grid>
-                    </Border>
-                    
+                    <Path Data="M1,0 L0,1" IsVisible="{Binding IsSoundNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
+                    <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                   </Grid>
+                </Border>
+                
+                <!-- EP -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="7" Padding="4" VerticalAlignment="Stretch">
+                  <Grid VerticalAlignment="Stretch">
+                    <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
+                      <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowEpisode}" Text="{Binding DisplayEpisode}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding Episode}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                    </Panel>
+                    <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                  </Grid>
+                </Border>
+                
+                <!-- SC -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="8" Padding="4" VerticalAlignment="Stretch">
+                  <Grid VerticalAlignment="Stretch">
+                    <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
+                      <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowScene}" Text="{Binding DisplayScene}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding Scene}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                    </Panel>
+                    <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                  </Grid>
+                </Border>
+                
+                <!-- SHOT -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="9" Padding="4" VerticalAlignment="Stretch">
+                  <Grid VerticalAlignment="Stretch">
+                    <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
+                      <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowShot}" Text="{Binding DisplayShot}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding Shot}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                    </Panel>
+                    <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                  </Grid>
+                </Border>
 
-                  <!-- Thick White Top Line for New Episode/Scene Groups -->
-                  <Rectangle Fill="{StaticResource TextPrimary}" Height="3" IsVisible="{Binding IsGroupStart}" VerticalAlignment="Top"/>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                <!-- TAKE -->
+                <Border BorderBrush="{StaticResource GridLineColor}" BorderThickness="0,0,1,0" Grid.Column="10" Padding="4" VerticalAlignment="Stretch">
+                  <Grid VerticalAlignment="Stretch">
+                    <Border BorderBrush="{StaticResource ActionAccent}" BorderThickness="2" CornerRadius="13" Height="26" HorizontalAlignment="Center" IsVisible="{Binding ShowCircledActive}" VerticalAlignment="Center" Width="26"/>
+                    <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
+                    <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding !ShowRowCrossed}" Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}">
+                      <TextBox.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Command="{Binding MarkCircledCommand}" Header="Mark Circled"/>
+                          <MenuItem Command="{Binding MarkFailedCommand}" Header="Mark Failed"/>
+                          <MenuItem Command="{Binding TogglePickupCommand}" Header="Toggle Pickup (PU)"/>
+                        </ContextMenu>
+                      </TextBox.ContextMenu>
+                    </TextBox>
+                    <TextBlock FontSize="9" FontWeight="Bold" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Right" IsVisible="{Binding IsPickup}" Margin="2" Text="PU" VerticalAlignment="Top"/>
+                    <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                  </Grid>
+                </Border>
 
-      </StackPanel>
-    </ScrollViewer>
+                <!-- NOTES -->
+                <Border Grid.Column="11" Padding="12,4,4,4" Background="Transparent" VerticalAlignment="Stretch">
+                  <Border.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Command="{Binding ToggleBlooperCommand}" Header="Toggle Blooper"/>
+                    </ContextMenu>
+                  </Border.ContextMenu>
+                  <Grid Background="Transparent">
+                    <StackPanel IsVisible="{Binding !ShowRowCrossed}" Orientation="Vertical" VerticalAlignment="Center">
+                      
+                      <!-- Chips & Board Text Row -->
+                      <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,4">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+
+                         <!--- FS Chip -->
+                          <Button Command="{Binding IncrementFalseStartsCommand}" Content="FS" FontSize="11" IsVisible="{Binding !FalseStartCount}" Padding="4,0"/>
+                          <Button Classes="fs-chip" Command="{Binding IncrementFalseStartsCommand}" Content="{Binding FalseStartCount, StringFormat=FS x{0}}" FontSize="11" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
+                          <Button Command="{Binding DecrementFalseStartsCommand}" Content="-" FontSize="11" IsVisible="{Binding FalseStartCount}" Padding="4,0"/>
+
+                          <ToggleButton Content="LS" FontSize="11" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="4,0">
+                            <ToggleButton.Styles>
+                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                                <Setter Property="Opacity" Value="0.8"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                              </Style>
+                            </ToggleButton.Styles>
+                          </ToggleButton>
+                          
+                          <ToggleButton Content="BL" FontSize="11" Padding="4,0" IsChecked="{Binding IsBlooper, Mode=TwoWay}">
+                            <ToggleButton.Styles>
+                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                                <Setter Property="Opacity" Value="0.8"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                              </Style>
+                            </ToggleButton.Styles>
+                          </ToggleButton>
+
+                          <TextBlock Text="|" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="2,0"/>
+
+                          <ToggleButton Content="NB" FontSize="11" Padding="4,0" IsChecked="{Binding IsNoBoard, Mode=TwoWay}">
+                            <ToggleButton.Styles>
+                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                                <Setter Property="Opacity" Value="0.8"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                              </Style>
+                            </ToggleButton.Styles>
+                          </ToggleButton>
+
+                          <ToggleButton Content="EB" FontSize="11" Padding="4,0" IsChecked="{Binding IsEndBoard, Mode=TwoWay}">
+                            <ToggleButton.Styles>
+                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
+                                <Setter Property="Foreground" Value="#121212"/>
+                                <Setter Property="Opacity" Value="0.8"/>
+                              </Style>
+                              <Style Selector="ToggleButton:checked">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                              </Style>
+                            </ToggleButton.Styles>
+                          </ToggleButton>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,10,0">
+                          <TextBlock Text="ΧΩΡΙΣ ΚΛΑΚΕΤΑ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NoBoardTeal}" IsVisible="{Binding IsNoBoard}"/>
+                          <TextBlock Text="ΚΛΑΚΕΤΑ ΤΕΛΟΥΣ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource EndBoardAmber}" IsVisible="{Binding IsEndBoard}"/>
+                        </StackPanel>
+                      </Grid>
+
+                      <!-- Notes TextBox with vertical centering and left alignment -->
+                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Margin="0,0,10,0" Text="{Binding TakeNotes}" TextAlignment="Left" TextWrapping="Wrap" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="4"/>
+                    <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                  </Grid>
+                </Border>
+                
+              </Grid>
+
+              <!-- Thick White Top Line for New Episode/Scene Groups -->
+              <Rectangle Fill="{StaticResource TextPrimary}" Height="3" IsVisible="{Binding IsGroupStart}" VerticalAlignment="Top"/>
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
   </Grid>
 </UserControl>

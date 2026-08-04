@@ -1,0 +1,531 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Logshot.ViewModels"
+             xmlns:android="using:Logshot.Views.Android"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="Logshot.Views.Android.AndroidMainView"
+             x:DataType="vm:MainViewModel">
+
+  <Design.DataContext>
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <Style Selector="Button">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ToggleButton">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid Background="{StaticResource WorkspaceBackground}">
+    <!-- Top-level loading bar & Contextual Message -->
+    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Stretch" ZIndex="300" IsVisible="{Binding AppViewModel.IsLoading}">
+        <ProgressBar IsIndeterminate="True" Height="4" Foreground="{StaticResource ActionAccent}" HorizontalAlignment="Stretch"/>
+        <TextBlock Text="{Binding AppViewModel.LoadingMessage}" FontSize="11" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,2,12,0" />
+    </StackPanel>
+
+    <!-- Main Navigation Drawer Layout -->
+    <SplitView IsPaneOpen="{Binding IsSidebarOpen, Mode=TwoWay}"
+               DisplayMode="Overlay"
+               OpenPaneLength="310"
+               CompactPaneLength="0"
+               IsVisible="{Binding IsInitialized}">
+
+      <!-- ========================================== -->
+      <!-- NAVIGATION DRAWER PANE                     -->
+      <!-- ========================================== -->
+      <SplitView.Pane>
+        <Border Background="{StaticResource HeaderBackground}"
+                BorderBrush="{StaticResource BorderColor}"
+                BorderThickness="0,0,1,0"
+                Padding="20">
+          
+          <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *, Auto">
+
+            <!-- App Brand & Drawer Close -->
+            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+              <TextBlock Grid.Column="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+              <Button Grid.Column="1" Content="✕" FontSize="18" Padding="10,6" MinHeight="44"
+                      Background="Transparent"
+                      Command="{Binding ToggleSidebarCommand}"/>
+            </Grid>
+
+            <!-- Active Project Section -->
+            <TextBlock Grid.Row="1" Text="ACTIVE PROJECT" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+            
+            <ComboBox Grid.Row="2" 
+                      ItemsSource="{Binding AppViewModel.Projects}" 
+                      SelectedItem="{Binding AppViewModel.CurrentProject}"
+                      HorizontalAlignment="Stretch"
+                      DisplayMemberBinding="{Binding Name}"
+                      PlaceholderText="Select a Project"
+                      MinHeight="48"
+                      Margin="0,0,0,8"/>
+
+            <Button Grid.Row="3" Content="EDIT / DELETE PROJECT" FontSize="12" Padding="8" Margin="0,0,0,18" MinHeight="44"
+                    Command="{Binding AppViewModel.OpenEditProjectDialogCommand}"
+                    IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+            <!-- Targeted Episode & Scene Search -->
+            <TextBlock Grid.Row="4" Text="EP/SC SEARCH" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+            <Grid Grid.Row="5" ColumnDefinitions="*, Auto" Margin="0,0,0,18">
+              <TextBox Grid.Column="0" Text="{Binding AppViewModel.SearchQuery}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 1/5 or 10.32"
+                       MinHeight="48" VerticalContentAlignment="Center"
+                       IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+              <Button Grid.Column="1" Content="✕" Margin="6,0,0,0" MinHeight="48" Width="48"
+                      Command="{Binding AppViewModel.ClearSearchCommand}"
+                      IsVisible="{Binding AppViewModel.IsSearchActive}"
+                      VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Shoot Days List -->
+            <TextBlock Grid.Row="6" Text="SHOOT DAYS" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6" VerticalAlignment="Top"/>
+            
+            <ListBox Grid.Row="6" 
+                     ItemsSource="{Binding AppViewModel.CurrentProject.Days}" 
+                     SelectedItem="{Binding AppViewModel.CurrentDay}"
+                     Background="Transparent"
+                     Margin="0,26,0,0"
+                     CornerRadius="8">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:DayViewModel">
+                  <Grid ColumnDefinitions="Auto, *, Auto" Margin="4,8">
+                    <TextBlock Grid.Column="0" Text="{Binding ShootDayNumber, StringFormat='Day {0}'}" 
+                               FontWeight="Bold" FontSize="15" Margin="0,0,10,0"/>
+                    <TextBlock Grid.Column="1" Text="{Binding CalendarDate, StringFormat='{}{0:MMM dd, yyyy}'}" 
+                               Foreground="{StaticResource TextSecondary}" FontSize="13" VerticalAlignment="Center"/>
+                    <Path Grid.Column="2" Data="{StaticResource IconLocked}" Width="14" Height="14" Stretch="Uniform" Fill="{StaticResource LockYellow}" IsVisible="{Binding IsFinalized}" VerticalAlignment="Center"/>
+
+                    <Grid.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="Edit Day Details..." 
+                                  Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).AppViewModel.OpenEditDayDialogCommand}" 
+                                  CommandParameter="{Binding}"/>
+                        <MenuItem Header="Delete Day" 
+                                  Foreground="{StaticResource FailRed}"
+                                  Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).AppViewModel.PromptDeleteDayCommand}" 
+                                  CommandParameter="{Binding}"/>
+                      </ContextMenu>
+                    </Grid.ContextMenu>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Bottom Drawer Actions -->
+            <Grid Grid.Row="7" RowDefinitions="Auto, Auto" Margin="0,12,0,0">
+              <StackPanel Grid.Row="0" Spacing="8">
+                <Button Content="+ NEW PROJECT" 
+                        Command="{Binding AppViewModel.OpenCreateProjectDialogCommand}" 
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48"/>
+                <Button Content="+ NEW DAY" 
+                        Command="{Binding AppViewModel.CreateDayCommand}" 
+                        IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}" 
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48"
+                        Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
+              </StackPanel>
+
+              <Grid Grid.Row="1" Margin="0,16,0,0" VerticalAlignment="Center">
+                <Button Command="{Binding ManualSyncCommand}"
+                        Background="Transparent"
+                        Padding="6,4" MinHeight="44"
+                        HorizontalAlignment="Left" VerticalAlignment="Center">
+                  <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Path Data="{Binding SyncIcon}" Width="18" Height="18" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center" Margin="0,2,0,0"/>
+                    <TextBlock Text="{Binding SyncText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
+
+                <Button HorizontalAlignment="Right"
+                        Command="{Binding ToggleInfoViewCommand}"
+                        Background="Transparent" Padding="10,6" MinHeight="44">
+                  <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                </Button>
+              </Grid>
+            </Grid>
+
+          </Grid>
+        </Border>
+      </SplitView.Pane>
+
+      <!-- ========================================== -->
+      <!-- MAIN WORKSPACE CONTENT                     -->
+      <!-- ========================================== -->
+      <SplitView.Content>
+        <Grid RowDefinitions="Auto, *" Background="{StaticResource WorkspaceBackground}">
+          
+          <!-- MATERIAL TOP APP BAR -->
+          <Border Grid.Row="0" Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1" Padding="12,8" Height="56">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+              
+              <!-- Drawer Toggle Button -->
+              <Button Grid.Column="0" Content="☰" FontSize="20" Padding="10,6" MinHeight="44" MinWidth="44"
+                      Background="Transparent"
+                      Command="{Binding ToggleSidebarCommand}" VerticalAlignment="Center"/>
+
+              <!-- Screen Title -->
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0,0,0">
+                <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='SHOOT DAY {0}', FallbackValue='LOGSHOT'}" 
+                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <Path Data="{StaticResource IconLocked}" Width="16" Height="16" Stretch="Uniform" Fill="{StaticResource LockYellow}" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized, FallbackValue=False}" VerticalAlignment="Center"/>
+              </StackPanel>
+
+              <!-- Top Right Action Icons -->
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <!-- Day Info Button -->
+                <Button Command="{Binding AppViewModel.CurrentDay.OpenDayInfoCommand, FallbackValue=null}"
+                        Background="Transparent" Padding="8,6" MinHeight="40"
+                        IsVisible="{Binding AppViewModel.CurrentDay, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <Path Data="{StaticResource IconInfo}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+                </Button>
+
+                <!-- Cloud Sync Status Icon -->
+                <Button Command="{Binding ManualSyncCommand}"
+                        Background="Transparent" Padding="8,6" MinHeight="40">
+                  <Path Data="{Binding SyncIcon}" Width="20" Height="15" Stretch="Uniform" Fill="{Binding SyncIconColor}" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                </Button>
+
+                <!-- Settings / Info Button -->
+                <Button Command="{Binding ToggleInfoViewCommand}" Background="Transparent" Padding="8,6" MinHeight="40">
+                  <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                </Button>
+              </StackPanel>
+
+            </Grid>
+          </Border>
+
+          <!-- WORKSPACE VIEWPORT -->
+          <Grid Grid.Row="1" Name="WorkspaceViewport">
+            
+            <!-- Views Container (When Settings View is closed) -->
+            <Grid IsVisible="{Binding IsInfoViewOpen, Converter={x:Static BoolConverters.Not}}">
+              
+              <!-- STATE 0: EP/SC SEARCH RESULTS -->
+              <Grid RowDefinitions="Auto, *" Margin="16" IsVisible="{Binding AppViewModel.IsSearchActive}">
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,16">
+                  <StackPanel Orientation="Vertical">
+                    <TextBlock Text="EP/SC SEARCH RESULTS" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                    <TextBlock Text="{Binding AppViewModel.SearchQuery, StringFormat='Filtering for: {0}'}" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="CLEAR" Command="{Binding AppViewModel.ClearSearchCommand}" MinHeight="44" Padding="12,6"/>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1">
+                  <StackPanel Spacing="16">
+                    <TextBlock Text="No matching takes found." Foreground="{StaticResource TextSecondary}" FontSize="15"
+                               IsVisible="{Binding AppViewModel.HasNoSearchResults}" HorizontalAlignment="Center" Margin="0,30,0,0"/>
+
+                    <ItemsControl ItemsSource="{Binding AppViewModel.SearchResultGroups}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DaySearchResultGroupViewModel">
+                          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
+                                  BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,12">
+                            <StackPanel Spacing="10">
+                              <TextBlock Text="{Binding DayHeader}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource ActionAccent}"/>
+                              <android:AndroidTakeListView />
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </ScrollViewer>
+              </Grid>
+
+              <!-- STATE 1: NO DAY SELECTED -->
+              <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24">
+                <StackPanel.IsVisible>
+                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNull}"/>
+                    <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
+                  </MultiBinding>
+                </StackPanel.IsVisible>
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Padding="24" MaxWidth="340">
+                  <StackPanel Spacing="16" HorizontalAlignment="Center">
+                    <TextBlock Text="No Shoot Day Selected" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Select an existing shoot day from the menu or create a new day to begin logging." 
+                               Foreground="{StaticResource TextSecondary}" FontSize="14" TextWrapping="Wrap" TextAlignment="Center"/>
+                    <Button Content="+ NEW DAY" Command="{Binding AppViewModel.CreateDayCommand}"
+                            IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                    <Button Content="+ NEW PROJECT" Command="{Binding AppViewModel.OpenCreateProjectDialogCommand}"
+                            MinHeight="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+
+              <!-- STATE 2: DAY SELECTED WORKSPACE -->
+              <Grid RowDefinitions="Auto, *, Auto" Margin="16,12">
+                <Grid.IsVisible>
+                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="AppViewModel.CurrentDay" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                    <Binding Path="AppViewModel.IsSearchActive" Converter="{x:Static BoolConverters.Not}"/>
+                  </MultiBinding>
+                </Grid.IsVisible>
+
+                <!-- Header Information & Finalize Toggle -->
+                <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Margin="0,0,0,8">
+                  <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,4">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='DAY {0}'}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+                      <TextBlock Text="{Binding AppViewModel.CurrentDay.CalendarDate, StringFormat='{}{0:MMM dd, yyyy}'}" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                      <!-- [DAY NOTES] Toggle Button -->
+                      <ToggleButton Content="DAY NOTES" 
+                                    IsChecked="{Binding AppViewModel.CurrentDay.IsGeneralNotesOpen, Mode=TwoWay}" 
+                                    MinHeight="44" Padding="10,6" FontSize="12" FontWeight="Bold">
+                        <ToggleButton.Styles>
+                          <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{StaticResource CardBackground}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource ActionAccent}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="Foreground" Value="{StaticResource ActionAccent}"/>
+                          </Style>
+                        </ToggleButton.Styles>
+                      </ToggleButton>
+
+                      <!-- [FINALIZE DAY] / [REOPEN DAY] -->
+                      <Panel>
+                        <Button Content="FINALIZE DAY" Command="{Binding AppViewModel.CurrentDay.FinalizeDayCommand}" IsVisible="{Binding !AppViewModel.CurrentDay.IsFinalized}" MinHeight="44" Padding="10,6" FontSize="12"/>
+                        <Button Content="REOPEN DAY" Command="{Binding AppViewModel.CurrentDay.UndoFinalizeDayCommand}" IsVisible="{Binding AppViewModel.CurrentDay.IsFinalized}" MinHeight="44" Padding="10,6" FontSize="12"/>
+                      </Panel>
+                    </StackPanel>
+                  </Grid>
+
+                  <!-- Expanded Day Notes Box (Occupies space ONLY when open) -->
+                  <Border Grid.Row="1" 
+                          IsVisible="{Binding AppViewModel.CurrentDay.IsGeneralNotesOpen}" 
+                          Background="{StaticResource CardBackground}" 
+                          BorderBrush="{StaticResource BorderColor}" 
+                          BorderThickness="1" 
+                          CornerRadius="8" 
+                          Padding="10" 
+                          Margin="0,6,0,4">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ" FontWeight="Bold" FontSize="11" Foreground="{StaticResource ActionAccent}"/>
+                      <TextBox Text="{Binding AppViewModel.CurrentDay.GeneralNotes}" 
+                               PlaceholderText="Γενικές σημειώσεις ημέρας..." 
+                               AcceptsReturn="True" 
+                               TextWrapping="Wrap" 
+                               MinHeight="60" 
+                               MaxHeight="140" 
+                               Padding="8" 
+                               FontSize="13" 
+                               IsReadOnly="{Binding AppViewModel.CurrentDay.IsFinalized}" />
+                    </StackPanel>
+                  </Border>
+                </Grid>
+
+                <!-- Setup Groups & Takes Feed -->
+                <Grid Grid.Row="1" Margin="0,0,0,8">
+                  <android:AndroidTakeListView DataContext="{Binding AppViewModel.CurrentDay}"/>
+                </Grid>
+
+                <!-- Sticky Bottom Action Bar -->
+                <Border Grid.Row="2" Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="12" Padding="8" Margin="0,4,0,0">
+                  <Grid ColumnDefinitions="*, *, *">
+                    <Button Grid.Column="0" Content="+ SCENE" Command="{Binding AppViewModel.OpenAddSceneDialogCommand}" IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48" Margin="0,0,4,0"/>
+                    <Button Grid.Column="1" Content="+ SHOT" Command="{Binding AppViewModel.CurrentDay.AddShotCommand}" IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48" Margin="2,0,2,0"/>
+                    <Button Grid.Column="2" Content="+ TAKE" Command="{Binding AppViewModel.CurrentDay.AddTakeCommand}" IsEnabled="{Binding !AppViewModel.CurrentDay.IsFinalized}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48" Margin="4,0,0,0" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
+                  </Grid>
+                </Border>
+
+              </Grid>
+
+            </Grid>
+
+            <!-- Android Settings & Info Overlay -->
+            <android:AndroidInfoView IsVisible="{Binding IsInfoViewOpen}"/>
+
+          </Grid>
+        </Grid>
+      </SplitView.Content>
+    </SplitView>
+
+    <!-- ========================================== -->
+    <!-- MATERIAL DIALOG MODALS OVERLAYS            -->
+    <!-- ========================================== -->
+    
+    <!-- Project Popup -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsProjectPopupOpen}" ZIndex="200" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="Project Details" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+          <StackPanel Spacing="4"><TextBlock Text="Project Title *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupProjectTitle}" PlaceholderText="Title"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Director" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupDirector}" PlaceholderText="Director"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="DOP" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupDop}" PlaceholderText="DOP"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Production Company" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupProductionCompany}" PlaceholderText="Company"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Script Supervisor" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupScriptSupervisor}" PlaceholderText="Supervisor"/></StackPanel>
+          <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,8,0,0">
+            <Button Grid.Column="0" Content="Delete" Command="{Binding AppViewModel.PromptDeleteProjectCommand}" IsVisible="{Binding AppViewModel.IsEditingProjectModal}" Foreground="{StaticResource FailRed}" MinHeight="48" Padding="12,8"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+              <Button Content="Cancel" Command="{Binding AppViewModel.CancelProjectDialogCommand}" MinHeight="48" Padding="12,8"/>
+              <Button Content="Save" Command="{Binding AppViewModel.SaveProjectDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48" Padding="16,8"/>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Delete Project Confirmation -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsDeleteConfirmationOpen}" ZIndex="200" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="Delete Project?" FontSize="18" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
+          <TextBlock Text="Type the project name to confirm deletion:" FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
+          <TextBlock Text="{Binding AppViewModel.ProjectToDelete.Name}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+          <TextBox Text="{Binding AppViewModel.DeleteProjectConfirmationText}" PlaceholderText="Type project name"/>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteProjectCommand}" MinHeight="48" Padding="16,8"/>
+            <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteProjectCommand}" Background="{StaticResource FailRed}" Foreground="White" FontWeight="Bold" MinHeight="48" Padding="16,8"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Edit Shoot Day -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsDayPopupOpen}" ZIndex="200" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="Edit Shoot Day" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+          <StackPanel Spacing="4"><TextBlock Text="Day Number *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupShootDayNumber}" PlaceholderText="e.g. 54"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Calendar Date" FontSize="12" Foreground="{StaticResource TextSecondary}"/><DatePicker SelectedDate="{Binding AppViewModel.PopupCalendarDate}" HorizontalAlignment="Stretch"/></StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelDayDialogCommand}" MinHeight="48" Padding="16,8"/>
+            <Button Content="Save" Command="{Binding AppViewModel.SaveDayDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48" Padding="16,8"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Delete Shoot Day Confirmation -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsDayDeleteConfirmationOpen}" ZIndex="200" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="Delete Shoot Day?" FontSize="18" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
+          <TextBlock Text="Are you sure you want to delete this shoot day and all its logged takes?" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}"/>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteDayCommand}" MinHeight="48" Padding="16,8"/>
+            <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteDayCommand}" Background="{StaticResource FailRed}" Foreground="White" FontWeight="Bold" MinHeight="48" Padding="16,8"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- New Scene Setup -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsAddScenePopupOpen}" ZIndex="200" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="New Scene Setup" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+          <StackPanel Spacing="4"><TextBlock Text="Episode (ΕΠ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewEpisode}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 1"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Scene (ΣΚ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewScene}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 32"/></StackPanel>
+          <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,8,0,0">
+            <Button Grid.Column="0" Content="+ Wild" Command="{Binding AppViewModel.ConfirmAddWildShotDialogCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" MinHeight="48" Padding="10,6"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+              <Button Content="Cancel" Command="{Binding AppViewModel.CancelAddSceneDialogCommand}" MinHeight="48" Padding="12,8"/>
+              <Button Content="Initialize" Command="{Binding AppViewModel.ConfirmAddSceneDialogCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48" Padding="14,8"/>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Delete Take Confirmation -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.IsTakeDeleteConfirmationOpen}" ZIndex="200" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="Delete Take?" FontSize="18" FontWeight="Bold" Foreground="{StaticResource FailRed}"/>
+          <TextBlock Text="Are you sure you want to delete this take?" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}"/>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="Cancel" Command="{Binding AppViewModel.CancelDeleteTakeCommand}" MinHeight="48" Padding="16,8"/>
+            <Button Content="Delete" Command="{Binding AppViewModel.ConfirmDeleteTakeCommand}" Background="{StaticResource FailRed}" Foreground="White" FontWeight="Bold" MinHeight="48" Padding="16,8"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Continuity Prompt -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.CurrentDay.IsContinuityPopupOpen, FallbackValue=False}" ZIndex="250" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Continuity History Found" FontSize="18" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+          <TextBlock Text="{Binding AppViewModel.CurrentDay.ContinuityMessage}" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" FontSize="14" LineHeight="20"/>
+          <StackPanel Spacing="10">
+            <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption1Text}" Command="{Binding AppViewModel.CurrentDay.ConfirmContinuityNewShotCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48"/>
+            <Button Content="{Binding AppViewModel.CurrentDay.ContinuityOption2Text}" Command="{Binding AppViewModel.CurrentDay.ConfirmContinuitySameShotCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="48"/>
+          </StackPanel>
+          <Button Content="Cancel" Command="{Binding AppViewModel.CurrentDay.CancelContinuityPromptCommand}" Background="Transparent" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Day Info Summary Modal -->
+    <Grid Background="#B2000000" IsVisible="{Binding AppViewModel.CurrentDay.IsDayInfoOpen, FallbackValue=False}" ZIndex="260" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="350" MaxHeight="550" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Grid RowDefinitions="*, Auto">
+          <ScrollViewer Grid.Row="0">
+            <StackPanel Spacing="14">
+              <TextBlock Text="{Binding AppViewModel.CurrentDay.ShootDayNumber, StringFormat='DAY {0} INFO'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+              
+              <StackPanel Spacing="2">
+                <TextBlock Text="Scenes:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="{Binding AppViewModel.CurrentDay.DayInfoScenes}" FontSize="15" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
+              </StackPanel>
+
+              <Separator Background="{StaticResource BorderColor}"/>
+
+              <StackPanel Spacing="2">
+                <TextBlock Text="Setups:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="{Binding AppViewModel.CurrentDay.DayInfoSetupsCount}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+              </StackPanel>
+
+              <StackPanel Spacing="2" IsVisible="{Binding AppViewModel.CurrentDay.DayInfoHasWildShots}">
+                <Separator Background="{StaticResource BorderColor}"/>
+                <TextBlock Text="Wild Shots:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="{Binding AppViewModel.CurrentDay.DayInfoWildShotsCount}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
+              </StackPanel>
+
+              <Separator Background="{StaticResource BorderColor}"/>
+
+              <StackPanel Spacing="6">
+                <TextBlock Text="Cameras:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                <ItemsControl ItemsSource="{Binding AppViewModel.CurrentDay.DayInfoCameraGroups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CameraClipGroupViewModel">
+                      <StackPanel Spacing="2" Margin="0,2,0,6">
+                        <TextBlock FontWeight="Bold" FontSize="14" Foreground="{StaticResource ActionAccent}">
+                          <Run Text="• "/><Run Text="{Binding CameraLabel}"/><Run Text=" - "/><Run Text="{Binding TotalClips}"/><Run Text=" clips"/>
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding Rolls}" Margin="12,2,0,0">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CameraRollClipCountViewModel">
+                              <TextBlock FontSize="13" Foreground="{StaticResource TextPrimary}">
+                                <Run Text="* "/><Run Text="{Binding RollName}"/><Run Text=": "/><Run Text="{Binding ClipCount}"/><Run Text=" clips"/>
+                              </TextBlock>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+
+          <Button Grid.Row="1" Content="CLOSE" Command="{Binding AppViewModel.CurrentDay.CloseDayInfoCommand}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48" HorizontalAlignment="Right" Padding="20,8" Margin="0,12,0,0"/>
+        </Grid>
+      </Border>
+    </Grid>
+
+  </Grid>
+</UserControl>

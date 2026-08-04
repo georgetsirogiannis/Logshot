@@ -1,10 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.IO;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Logshot.Services;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Logshot.ViewModels;
 
@@ -12,6 +13,7 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly DatabaseService _databaseService;
     private readonly SupabaseService _supabaseService;
+    private int _cloudMergeScheduled;
 
     public DatabaseService DatabaseService => _databaseService;
 
@@ -151,6 +153,7 @@ public partial class MainViewModel : ViewModelBase
 
     public async Task ProcessExportDbAsync(string destPath)
     {
+        AppViewModel.LoadingMessage = "Exporting database...";
         AppViewModel.IsLoading = true;
         try
         {
@@ -168,6 +171,7 @@ public partial class MainViewModel : ViewModelBase
 
     public async Task ProcessImportDbAsync(string sourcePath)
     {
+        AppViewModel.LoadingMessage = "Analyzing import...";
         AppViewModel.IsLoading = true;
         try
         {
@@ -201,6 +205,7 @@ public partial class MainViewModel : ViewModelBase
     public async Task ConfirmImport()
     {
         IsImportConfirmOpen = false;
+        AppViewModel.LoadingMessage = "Merging database...";
         AppViewModel.IsLoading = true;
         try
         {
@@ -250,7 +255,10 @@ public partial class MainViewModel : ViewModelBase
 
     // --- Cloud Sync UI Properties ---
     [ObservableProperty]
-    private string _syncIcon = "☁️";
+    private string _syncIcon = SupabaseService.SyncIconPaths.Synced;
+
+    [ObservableProperty]
+    private string _syncIconColor = "#A1A1AA";
 
     [ObservableProperty]
     private string _syncText = "Waiting...";
@@ -275,12 +283,34 @@ public partial class MainViewModel : ViewModelBase
         _databaseService.OnDataChanged += () => _supabaseService.TriggerSync();
 
         // Listen for status changes from the Sync Engine and update the UI securely
-        _supabaseService.OnSyncStatusChanged += (icon, text) =>
+        _supabaseService.OnSyncStatusChanged += (iconPath, text) =>
         {
             Dispatcher.UIThread.Post(() =>
             {
-                SyncIcon = icon;
+                SyncIcon = iconPath;
+                SyncIconColor = (iconPath == SupabaseService.SyncIconPaths.Warning)
+                    ? "#EAB308"
+                    : "#A1A1AA";
                 SyncText = text;
+            });
+        };
+
+        // Listen for cloud pull events and perform non-intrusive in-place UI merge
+        _supabaseService.OnCloudDataReceived += () =>
+        {
+            if (System.Threading.Interlocked.Exchange(ref _cloudMergeScheduled, 1) != 0)
+                return;
+
+            Dispatcher.UIThread.Post(async () =>
+            {
+                try
+                {
+                    await AppViewModel.MergeCloudDataAsync();
+                }
+                finally
+                {
+                    System.Threading.Interlocked.Exchange(ref _cloudMergeScheduled, 0);
+                }
             });
         };
 
@@ -292,32 +322,60 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task InitializeApplication()
     {
+        PerformanceDiagnostics.Instance.Start("App.Startup");
         try
         {
-            StatusMessage = "Connecting to cloud...";
-            await _supabaseService.InitializeAsync();
-
-            // One-time: push any data that existed before cloud sync was added
-            string backfillMarker = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "logshot_backfill_done.txt");
-
-            if (!File.Exists(backfillMarker))
-            {
-                await _databaseService.EnqueueAllExistingDataForSyncAsync();
-                File.WriteAllText(backfillMarker, "done");
-                _supabaseService.TriggerSync();
-            }
-
             StatusMessage = "Loading application...";
+            AppViewModel.LoadingMessage = "Loading projects...";
+
+            // 1. Load Local UI First (Instant Startup)
             await AppViewModel.InitializeAppCommand.ExecuteAsync(null);
 
             IsInitialized = true;
             StatusMessage = "Ready";
+            PerformanceDiagnostics.Instance.Stop("App.Startup");
+            System.Diagnostics.Debug.WriteLine($"[PERF] Startup completed in {PerformanceDiagnostics.Instance.GetAverage("App.Startup"):F0}ms");
+
+            // 2. Offload cloud connection to a background thread to prevent blocking
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    // Let the first usable frame render before network and backfill work begins.
+                    await Task.Delay(1000);
+
+                    string backfillMarker = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "logshot_backfill_done.txt");
+
+                    if (!File.Exists(backfillMarker))
+                    {
+                        var localProjects = await _databaseService.GetAllProjectsAsync();
+                        if (localProjects.Count > 0)
+                        {
+                            await _databaseService.EnqueueAllExistingDataForSyncAsync();
+                        }
+                        File.WriteAllText(backfillMarker, "done");
+                    }
+
+                    await _supabaseService.InitializeAsync();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Background Sync Init Error: {ex.Message}");
+                }
+            });
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error: {ex.Message}";
+            PerformanceDiagnostics.Instance.Stop("App.Startup");
         }
+    }
+
+    [RelayCommand]
+    public async Task ManualSync()
+    {
+        await _supabaseService.ManualSyncAsync();
     }
 }

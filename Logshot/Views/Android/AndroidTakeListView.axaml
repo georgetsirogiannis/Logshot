@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Logshot.ViewModels"
+             xmlns:android="using:Logshot.Views.Android"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             x:Class="Logshot.Views.Android.AndroidTakeListView"
+             x:DataType="vm:DayViewModel">
+
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="vm:TakeListGroupHeaderViewModel" x:CompileBindings="False">
+      <Border Margin="0,0,0,16" Background="Transparent">
+        <Border Background="{StaticResource HeaderBackground}" CornerRadius="10" Padding="14,12"
+                BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
+          <Grid ColumnDefinitions="*, Auto">
+            <Button Grid.Column="0" Command="{Binding ToggleCollapsedCommand}"
+                    Background="Transparent" BorderThickness="0" Padding="0"
+                    MinHeight="40" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="▸" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"
+                           IsVisible="{Binding IsCollapsed}" FontSize="16"/>
+                <TextBlock Text="▾" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"
+                           IsVisible="{Binding !IsCollapsed}" FontSize="16"/>
+                <TextBlock Text="{Binding HeaderTitle}" FontWeight="Bold" FontSize="15"
+                           Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Button>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Button Content="+ SHOT" Command="{Binding AddShotCommand}" FontSize="11"
+                      Padding="10,6" MinHeight="36" FontWeight="Bold"/>
+              <Button Content="+ TAKE" Command="{Binding AddTakeCommand}" FontSize="11"
+                      Padding="10,6" MinHeight="36" FontWeight="Bold"
+                      Background="{StaticResource ActionAccent}" Foreground="#121212"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+      </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="vm:TakeListTakeViewModel" x:CompileBindings="False">
+      <android:AndroidTakeCardView DataContext="{Binding Take}" />
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+    <UserControl.Styles>
+    <Style Selector="Button">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ToggleButton">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Background="Transparent" PointerPressed="Background_PointerPressed">
+    <!-- SETUP GROUPS FEED -->
+    <ScrollViewer Name="AndroidScrollViewer" BringIntoViewOnFocusChange="True">
+      <ListBox ItemsSource="{Binding FlatTakeList}" Margin="0,0,0,250"
+               Background="Transparent" BorderThickness="0">
+        <ListBox.ItemsPanel>
+          <ItemsPanelTemplate>
+            <VirtualizingStackPanel />
+          </ItemsPanelTemplate>
+        </ListBox.ItemsPanel>
+      </ListBox>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

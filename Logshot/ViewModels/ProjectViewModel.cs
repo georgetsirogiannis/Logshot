@@ -89,9 +89,7 @@ public partial class ProjectViewModel : ViewModelBase
         {
             var dayVM = new DayViewModel(_databaseService);
             dayVM.LoadFromModel(day);
-            await dayVM.LoadTakesCommand.ExecuteAsync(null);
             Days.Add(dayVM);
-            SortDays();
         }
 
         SortDays();
