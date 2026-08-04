@@ -15,6 +15,10 @@
       <Setter Property="IsHitTestVisible" Value="{Binding !$parent[views:AndroidTakeListView].((vm:DayViewModel)DataContext).IsFinalized}" />
       <Setter Property="behaviors:AutocorrectBehavior.Enable" Value="True" />
     </Style>
+    <Style Selector="TextBox.multiline-cell">
+      <Setter Property="TextInputOptions.Multiline" Value="True" />
+      <Setter Property="TextInputOptions.ReturnKeyType" Value="Return" />
+    </Style>
     <Style Selector="Button">
       <Setter Property="IsEnabled" Value="{Binding !$parent[views:AndroidTakeListView].((vm:DayViewModel)DataContext).IsFinalized}" />
       <Setter Property="MinHeight" Value="48" />
@@ -187,7 +191,7 @@
                  </StackPanel>
                  
                  <Grid Grid.Column="1" VerticalAlignment="Center" MinHeight="48">
-                    <TextBox Text="{Binding CamARoll}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowCamANormal}" IsReadOnly="{Binding IsCamANotEditable}" Tag="CAM A" LostFocus="CameraRoll_LostFocus"/>
+                    <TextBox Classes="multiline-cell" Text="{Binding CamARoll}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowCamANormal}" IsReadOnly="{Binding IsCamANotEditable}" Tag="CAM A" LostFocus="CameraRoll_LostFocus"/>
                     <TextBlock FontSize="13" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
                     <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" IsVisible="{Binding IsCamANoRoll}" VerticalAlignment="Center" Height="24"/>
                  </Grid>
@@ -220,7 +224,7 @@
                  </StackPanel>
                  
                  <Grid Grid.Column="1" VerticalAlignment="Center" MinHeight="48">
-                    <TextBox Text="{Binding CamBRoll}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowCamBNormal}" IsReadOnly="{Binding IsCamBNotEditable}" Tag="CAM B" LostFocus="CameraRoll_LostFocus"/>
+                     <TextBox Classes="multiline-cell" Text="{Binding CamBRoll}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowCamBNormal}" IsReadOnly="{Binding IsCamBNotEditable}" Tag="CAM B" LostFocus="CameraRoll_LostFocus"/>
                     <TextBlock FontSize="13" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
                     <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" IsVisible="{Binding IsCamBNoRoll}" VerticalAlignment="Center" Height="24"/>
                  </Grid>
@@ -256,7 +260,7 @@
                           </StackPanel>
                           
                           <Grid Grid.Column="1" VerticalAlignment="Center" MinHeight="48">
-                             <TextBox Text="{Binding Roll}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowNormal}" IsReadOnly="{Binding IsNotEditable}" LostFocus="CameraRoll_LostFocus"/>
+                              <TextBox Classes="multiline-cell" Text="{Binding Roll}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowNormal}" IsReadOnly="{Binding IsNotEditable}" LostFocus="CameraRoll_LostFocus"/>
                              <TextBlock FontSize="13" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
                              <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" IsVisible="{Binding IsNoRoll}" VerticalAlignment="Center" Height="24"/>
                           </Grid>
@@ -281,7 +285,7 @@
                  </StackPanel>
                  
                  <Grid Grid.Column="1" VerticalAlignment="Center" MinHeight="48">
-                    <TextBox Text="{Binding SoundNotes}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowSoundNormal}" IsReadOnly="{Binding IsSoundNoRoll}" LostFocus="SoundRoll_LostFocus"/>
+                     <TextBox Classes="multiline-cell" Text="{Binding SoundNotes}" HorizontalAlignment="Stretch" MinHeight="48" Padding="12" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}" IsVisible="{Binding ShowSoundNormal}" IsReadOnly="{Binding IsSoundNoRoll}" LostFocus="SoundRoll_LostFocus"/>
                     <Path Data="M0,0 L1,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" IsVisible="{Binding IsSoundNoRoll}" VerticalAlignment="Center" Height="24"/>
                  </Grid>
               </Grid>
@@ -346,7 +350,7 @@
 
                  <!-- Observations / Notes -->
                  <Grid>
-                    <TextBox Text="{Binding TakeNotes}" PlaceholderText="Add observations..." HorizontalAlignment="Stretch" MinHeight="64" TextWrapping="Wrap" AcceptsReturn="True" Padding="12" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}"/>
+                    <TextBox Classes="multiline-cell" Text="{Binding TakeNotes}" PlaceholderText="Add observations..." HorizontalAlignment="Stretch" MinHeight="64" TextWrapping="Wrap" AcceptsReturn="True" Padding="12" BorderThickness="0" CornerRadius="8" Background="{DynamicResource TextControlBackground}"/>
                     <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="5" CornerRadius="0,8,8,0"/>
                  </Grid>
               </StackPanel>
