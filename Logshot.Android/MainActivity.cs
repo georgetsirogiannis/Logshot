@@ -8,7 +8,7 @@ namespace Logshot.Android;
 [Activity(
     Label = "Logshot",
     Theme = "@style/MyTheme.NoActionBar",
-    Icon = "@drawable/icon",
+    Icon = "@mipmap/ic_launcher",
     MainLauncher = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode,
     WindowSoftInputMode = SoftInput.AdjustResize)]
