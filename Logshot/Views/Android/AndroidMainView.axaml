@@ -161,8 +161,9 @@
                         Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
               </StackPanel>
 
-              <Grid Grid.Row="1" Margin="0,16,0,0" VerticalAlignment="Center">
+              <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto" Margin="0,16,0,0" VerticalAlignment="Center">
                 <Button Command="{Binding ManualSyncCommand}"
+                        Grid.Column="0"
                         Background="Transparent"
                         Padding="6,4" MinHeight="44"
                         HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -172,15 +173,38 @@
                   </StackPanel>
                 </Button>
 
-                <Button HorizontalAlignment="Right"
+                <Button Grid.Column="1" Content="SIGN IN"
+                        Command="{Binding OpenLoginCommand}"
+                        IsVisible="{Binding !IsLoggedIn}"
+                        Background="Transparent"
+                        BorderBrush="{StaticResource ActionAccent}"
+                        BorderThickness="1"
+                        Foreground="{StaticResource ActionAccent}"
+                        FontSize="10"
+                        FontWeight="Bold"
+                        Padding="6,2"
+                        Margin="6,0,0,0"
+                        ToolTip.Tip="Sign in to sync your work"/>
+
+                <Button Grid.Column="1" Content="SIGN OUT"
+                        Command="{Binding SignOutCommand}"
+                        IsVisible="{Binding IsLoggedIn}"
+                        Background="Transparent"
+                        BorderBrush="{StaticResource FailRed}"
+                        BorderThickness="1"
+                        Foreground="{StaticResource FailRed}"
+                        FontSize="10"
+                        FontWeight="Bold"
+                        Padding="6,2"
+                        Margin="6,0,0,0"
+                        ToolTip.Tip="Sign out of cloud sync"/>
+
+                <Button Grid.Column="2"
                         Command="{Binding ToggleInfoViewCommand}"
                         Background="Transparent" Padding="10,6" MinHeight="44">
                   <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                 </Button>
               </Grid>
-              
-              <!-- Sign Out Button -->
-              <Button Content="SIGN OUT" Command="{Binding SignOutCommand}" Foreground="{StaticResource FailRed}" Background="Transparent" HorizontalAlignment="Stretch" Margin="0,16,0,0" MinHeight="44"/>
             </Grid>
 
           </Grid>

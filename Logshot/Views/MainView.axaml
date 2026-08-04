@@ -85,6 +85,8 @@
                    ItemsSource="{Binding AppViewModel.CurrentProject.Days}" 
                    SelectedItem="{Binding AppViewModel.CurrentDay}"
                    Background="Transparent"
+                   MinHeight="0"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                    Margin="0,25,0,0"
                    CornerRadius="4">
             <ListBox.ItemTemplate>
@@ -141,11 +143,12 @@
                     Command="{Binding OpenLoginCommand}"
                     IsVisible="{Binding !IsLoggedIn}"
                     Background="Transparent"
-                    BorderThickness="0"
+                     BorderBrush="{StaticResource ActionAccent}"
+                     BorderThickness="1"
                     Foreground="{StaticResource ActionAccent}"
-                    FontSize="11"
+                     FontSize="10"
                     FontWeight="Bold"
-                    Padding="6,4"
+                     Padding="6,2"
                     Margin="6,0,0,0"
                     ToolTip.Tip="Sign in to sync your work"/>
 
@@ -153,11 +156,12 @@
                     Command="{Binding SignOutCommand}"
                     IsVisible="{Binding IsLoggedIn}"
                     Background="Transparent"
-                    BorderThickness="0"
-                    Foreground="{StaticResource TextSecondary}"
-                    FontSize="11"
+                     BorderBrush="{StaticResource FailRed}"
+                     BorderThickness="1"
+                     Foreground="{StaticResource FailRed}"
+                     FontSize="10"
                     FontWeight="Bold"
-                    Padding="6,4"
+                     Padding="6,2"
                     Margin="6,0,0,0"
                     ToolTip.Tip="Sign out of cloud sync"/>
 
