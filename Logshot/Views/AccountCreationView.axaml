@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="using:Logshot.ViewModels" x:Class="Logshot.Views.AccountCreationView" x:DataType="vm:MainViewModel">
+  <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="28">
+    <StackPanel Spacing="14" MinWidth="280" HorizontalAlignment="Stretch">
+      <TextBlock Text="CREATE ACCOUNT" FontSize="24" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+      <TextBlock Text="Create an account to sync your production logs across devices. You will need to verify your email before signing in." TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}"/>
+      <TextBox Text="{Binding AuthEmail}" Watermark="Email" IsEnabled="{Binding !IsAuthLoading}"/>
+      <TextBox PasswordChar="●" Text="{Binding AuthPassword}" Watermark="Password" IsEnabled="{Binding !IsAuthLoading}"/>
+      <TextBlock Text="{Binding AccountCreationErrorMessage}" TextWrapping="Wrap" Foreground="{StaticResource FailRed}" IsVisible="{Binding AccountCreationErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+      <ProgressBar IsIndeterminate="True" Height="4" IsVisible="{Binding IsAuthLoading}"/>
+      <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+        <Button Grid.Column="0" Content="CANCEL" Command="{Binding CloseAccountCreationCommand}" IsEnabled="{Binding !IsAuthLoading}"/>
+        <Button Grid.Column="1" Content="CREATE ACCOUNT" Command="{Binding SignUpCommand}" IsEnabled="{Binding !IsAuthLoading}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
+      </Grid>
+    </StackPanel>
+  </Border>
+</UserControl>

@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -70,7 +70,7 @@
             <TextBox Grid.Column="0" Text="{Binding AppViewModel.SearchQuery}" PlaceholderText="e.g. 1/5 or 10.32" 
                      VerticalAlignment="Center"
                      IsEnabled="{Binding AppViewModel.CurrentProject, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-            <Button Grid.Column="1" Content="✕" Margin="4,0,0,0" 
+            <Button Grid.Column="1" Content="&#10005;" Margin="4,0,0,0" 
                     Command="{Binding AppViewModel.ClearSearchCommand}"
                     IsVisible="{Binding AppViewModel.IsSearchActive}"
                     VerticalAlignment="Center"/>
@@ -124,8 +124,8 @@
           </StackPanel>
 
           <!-- Cloud Sync Status & Settings Cog -->
-          <Grid Grid.Row="8" Margin="0,20,0,0" VerticalAlignment="Center">
-            <Button Command="{Binding ManualSyncCommand}"
+          <Grid Grid.Row="8" ColumnDefinitions="*, Auto, Auto" Margin="0,20,0,0" VerticalAlignment="Center">
+            <Button Grid.Column="0" Command="{Binding ManualSyncCommand}"
                     Background="Transparent"
                     BorderThickness="0"
                     Padding="4,2"
@@ -137,7 +137,31 @@
               </StackPanel>
             </Button>
 
-            <Button HorizontalAlignment="Right"
+            <Button Grid.Column="1" Content="SIGN IN"
+                    Command="{Binding OpenLoginCommand}"
+                    IsVisible="{Binding !IsLoggedIn}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="{StaticResource ActionAccent}"
+                    FontSize="11"
+                    FontWeight="Bold"
+                    Padding="6,4"
+                    Margin="6,0,0,0"
+                    ToolTip.Tip="Sign in to sync your work"/>
+
+            <Button Grid.Column="1" Content="SIGN OUT"
+                    Command="{Binding SignOutCommand}"
+                    IsVisible="{Binding IsLoggedIn}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="{StaticResource TextSecondary}"
+                    FontSize="11"
+                    FontWeight="Bold"
+                    Padding="6,4"
+                    Margin="6,0,0,0"
+                    ToolTip.Tip="Sign out of cloud sync"/>
+
+            <Button Grid.Column="2"
                     Command="{Binding ToggleInfoViewCommand}"
                     Background="Transparent"
                     Padding="6,4"
@@ -145,6 +169,10 @@
               <Path Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
             </Button>
           </Grid>
+
+    <Grid Background="#CC000000" IsVisible="{Binding IsAccountCreationVisible}" ZIndex="410">
+      <views:AccountCreationView DataContext="{Binding}" />
+    </Grid>
 
         </Grid>
       </Border>
@@ -362,14 +390,11 @@
                           BorderThickness="1" 
                           CornerRadius="4">
                   <Expander.Header>
-                    <TextBlock Text="ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ" 
-                               FontWeight="Bold" 
-                               FontSize="12" 
-                               Foreground="{StaticResource ActionAccent}" />
+                     <TextBlock Text="&#928;&#913;&#929;&#913;&#932;&#919;&#929;&#919;&#931;&#917;&#921;&#931; &#919;&#924;&#917;&#929;&#913;&#931;" FontWeight="Bold" FontSize="12" Foreground="{StaticResource ActionAccent}" />
                   </Expander.Header>
 
                   <TextBox Text="{Binding AppViewModel.CurrentDay.GeneralNotes}" 
-                           PlaceholderText="Γενικές σημειώσεις (π.χ. οδηγίες/επεξηγήσεις προς μοντέρ)..." 
+                           PlaceholderText="&#915;&#949;&#957;&#953;&#954;&#941;&#962; &#963;&#951;&#956;&#949;&#953;&#974;&#963;&#949;&#953;&#962; (&#960;.&#967;. &#959;&#948;&#951;&#947;&#943;&#949;&#962;/&#949;&#960;&#949;&#958;&#951;&#947;&#942;&#963;&#949;&#953;&#962; &#960;&#961;&#959;&#962; &#956;&#959;&#957;&#964;&#941;&#961;)..." 
                            AcceptsReturn="True" 
                            TextWrapping="Wrap" 
                            MinHeight="60" 
@@ -538,12 +563,12 @@
           <TextBlock Text="New Scene Setup" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
 
           <StackPanel Spacing="4">
-            <TextBlock Text="Episode (ΕΠ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBlock Text="Episode (&#917;&#928;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
             <TextBox Text="{Binding AppViewModel.PopupNewEpisode}" PlaceholderText="e.g. 1 or 10" AcceptsReturn="True" TextWrapping="Wrap"/>
           </StackPanel>
 
           <StackPanel Spacing="4">
-            <TextBlock Text="Scene (ΣΚ) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+            <TextBlock Text="Scene (&#931;&#922;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
             <TextBox Text="{Binding AppViewModel.PopupNewScene}" PlaceholderText="e.g. 32 or 28-29" AcceptsReturn="True" TextWrapping="Wrap"/>
           </StackPanel>
 
@@ -685,7 +710,7 @@
                     <DataTemplate x:DataType="vm:CameraClipGroupViewModel">
                       <StackPanel Spacing="4" Margin="0,4,0,8">
                         <TextBlock FontWeight="Bold" FontSize="16" Foreground="{StaticResource ActionAccent}">
-                          <Run Text="• "/>
+                          <Run Text="&#8226;"/>
                           <Run Text="{Binding CameraLabel}"/>
                           <Run Text=" - "/>
                           <Run Text="{Binding TotalClips}"/>
@@ -721,6 +746,71 @@
                   HorizontalAlignment="Right" HorizontalContentAlignment="Center" Width="100" FontWeight="Bold" Margin="0,16,0,0"/>
 
         </Grid>
+      </Border>
+    </Grid>
+
+    <!-- Authentication is optional: local work remains available through Continue Offline. -->
+    <Grid Background="#CC000000" IsVisible="{Binding IsLoginOverlayVisible}" ZIndex="400">
+      <Border Background="{StaticResource CardBackground}"
+              BorderBrush="{StaticResource BorderColor}"
+              BorderThickness="1"
+              CornerRadius="8"
+              Width="420"
+              Padding="28"
+              VerticalAlignment="Center"
+              HorizontalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="CLOUD SYNC LOGIN"
+                     FontSize="24"
+                     FontWeight="Bold"
+                     Foreground="{StaticResource ActionAccent}"/>
+          <TextBlock Text="Sign in to sync your projects across devices. You can continue working locally if you are offline."
+                     TextWrapping="Wrap"
+                     Foreground="{StaticResource TextSecondary}"/>
+
+          <TextBox Text="{Binding AuthEmail}"
+                   Watermark="Email"
+                   IsEnabled="{Binding !IsAuthLoading}"/>
+          <TextBox PasswordChar="*"
+                   Text="{Binding AuthPassword}"
+                   Watermark="Password"
+                   IsEnabled="{Binding !IsAuthLoading}"/>
+
+                    <CheckBox Content="Remember my credentials on this device" IsChecked="{Binding RememberCredentials}" IsEnabled="{Binding !IsAuthLoading}"/>
+
+<TextBlock Text="{Binding AuthErrorMessage}"
+                     TextWrapping="Wrap"
+                     Foreground="{StaticResource FailRed}"
+                     IsVisible="{Binding AuthErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+          <ProgressBar IsIndeterminate="True"
+                       Height="4"
+                       IsVisible="{Binding IsAuthLoading}"/>
+          <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+            <Button Grid.Column="0"
+                    Content="SIGN IN"
+                    Command="{Binding SignInCommand}"
+                    IsEnabled="{Binding !IsAuthLoading}"
+                    Background="{StaticResource ActionAccent}"
+                    Foreground="#121212"
+                    FontWeight="Bold"/>
+            <Button Grid.Column="1"
+                    Content="CREATE ACCOUNT"
+                    Command="{Binding SignUpCommand}"
+                    IsEnabled="{Binding !IsAuthLoading}"
+                    Background="Transparent"
+                    BorderBrush="{StaticResource ActionAccent}"
+                    Foreground="{StaticResource ActionAccent}"
+                    BorderThickness="1"/>
+          </Grid>
+          <Button Content="CONTINUE OFFLINE"
+                  Command="{Binding ContinueOfflineCommand}"
+                  IsEnabled="{Binding !IsAuthLoading}"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Foreground="{StaticResource TextSecondary}"
+                  HorizontalAlignment="Center"/>
+        </StackPanel>
       </Border>
     </Grid>
 

@@ -5,6 +5,9 @@ using Logshot.Services;
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Logshot.ViewModels;
@@ -263,6 +266,185 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _syncText = "Waiting...";
 
+    // --- AUTHENTICATION STATE ---
+    [ObservableProperty]
+    private bool _isLoggedIn = false;
+
+    [ObservableProperty]
+    private string _authEmail = string.Empty;
+
+    private static string RememberedEmailPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "logshot_last_account.txt");
+
+    private static string RememberedCredentialsPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "logshot_credentials.bin");
+
+    [ObservableProperty]
+    private string _authPassword = string.Empty;
+
+    [ObservableProperty]
+    private bool _rememberCredentials;
+
+    [ObservableProperty]
+    private string _authErrorMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _isAuthLoading = false;
+
+    [ObservableProperty]
+    private bool _isLoginOverlayVisible = false;
+
+    [ObservableProperty]
+    private bool _isAccountCreationVisible = false;
+
+    [ObservableProperty]
+    private string _accountCreationErrorMessage = string.Empty;
+
+    public Action? RequestOpenAccountCreation;
+    public Action? RequestCloseAccountCreation;
+
+    partial void OnRememberCredentialsChanged(bool value)
+    {
+        if (!value)
+        {
+            DeleteRememberedCredentials();
+            DeleteRememberedEmail();
+        }
+    }
+
+    [RelayCommand]
+    public void ContinueOffline()
+    {
+        IsLoginOverlayVisible = false;
+    }
+
+    [RelayCommand]
+    public void OpenLogin()
+    {
+        AuthErrorMessage = string.Empty;
+        IsLoginOverlayVisible = true;
+    }
+
+    [RelayCommand]
+    public void OpenAccountCreation()
+    {
+        AuthErrorMessage = string.Empty;
+        AccountCreationErrorMessage = string.Empty;
+
+        if (IsMobileLayout)
+        {
+            IsAccountCreationVisible = true;
+        }
+        else
+        {
+            RequestOpenAccountCreation?.Invoke();
+        }
+    }
+
+    [RelayCommand]
+    public void CloseAccountCreation()
+    {
+        IsAccountCreationVisible = false;
+        RequestCloseAccountCreation?.Invoke();
+    }
+
+    [RelayCommand]
+    public async Task SignIn()
+    {
+        IsAuthLoading = true;
+        AuthErrorMessage = string.Empty;
+        try
+        {
+            bool success = await _supabaseService.SignInAsync(AuthEmail, AuthPassword);
+            if (success)
+            {
+                IsLoggedIn = true;
+                SaveRememberedCredentials();
+                IsLoginOverlayVisible = false;
+                await ManualSyncCommand.ExecuteAsync(null);
+            }
+            else
+            {
+                IsLoginOverlayVisible = true;
+                AuthErrorMessage = "Unable to sign in. Check your credentials or connection and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            IsLoginOverlayVisible = true;
+            AuthErrorMessage = $"Unable to sign in: {ex.Message}";
+        }
+        finally
+        {
+            IsAuthLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task SignUp()
+    {
+        IsAuthLoading = true;
+        AuthErrorMessage = string.Empty;
+        try
+        {
+            var result = await _supabaseService.SignUpAsync(AuthEmail, AuthPassword);
+            if (result == SignUpResult.SignedIn)
+            {
+                IsLoggedIn = true;
+                SaveRememberedCredentials();
+                IsLoginOverlayVisible = false;
+                await ManualSyncCommand.ExecuteAsync(null);
+            }
+            else if (result == SignUpResult.VerificationRequired)
+            {
+                IsLoggedIn = false;
+                AuthPassword = string.Empty;
+                AccountCreationErrorMessage = $"Account created. Supabase sent a verification email to {AuthEmail}. Click the link in that email, then sign in to sync your work.";
+                IsAccountCreationVisible = false;
+                RequestCloseAccountCreation?.Invoke();
+                OpenLogin();
+                AuthErrorMessage = "Verify your email using the Supabase email, then sign in.";
+            }
+            else
+            {
+                AccountCreationErrorMessage = "Unable to create an account. Check the email and password and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            AccountCreationErrorMessage = $"Unable to create an account: {ex.Message}";
+        }
+        finally
+        {
+            IsAuthLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task SignOut()
+    {
+        try
+        {
+            await _supabaseService.SignOutAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SignOut Error: {ex.Message}");
+        }
+
+        IsLoggedIn = false;
+        AuthEmail = string.Empty;
+        AuthPassword = string.Empty;
+        DeleteRememberedEmail();
+        DeleteRememberedCredentials();
+
+        AppViewModel.CurrentProject = null;
+        AppViewModel.CurrentDay = null;
+        IsLoginOverlayVisible = true;
+    }
+
     partial void OnIsMobileLayoutChanged(bool value)
     {
         IsSidebarOpen = !value;
@@ -317,6 +499,116 @@ public partial class MainViewModel : ViewModelBase
         IsAutocorrectEnabled = AutocorrectionManager.Instance.IsEnabled;
 
         _appViewModel = new AppViewModel(databaseService);
+        LoadRememberedEmail();
+        LoadRememberedCredentials();
+    }
+
+    private void LoadRememberedCredentials()
+    {
+        try
+        {
+            if (!File.Exists(RememberedCredentialsPath))
+                return;
+
+            var encrypted = File.ReadAllBytes(RememberedCredentialsPath);
+            var json = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
+            var credentials = JsonSerializer.Deserialize<RememberedCredentials>(json);
+            if (credentials is null || string.IsNullOrWhiteSpace(credentials.Email) || string.IsNullOrEmpty(credentials.Password))
+                return;
+
+            AuthEmail = credentials.Email;
+            AuthPassword = credentials.Password;
+            RememberCredentials = true;
+        }
+        catch (Exception ex)
+        {
+            DeleteRememberedCredentials();
+            System.Diagnostics.Debug.WriteLine($"Could not load remembered credentials: {ex.Message}");
+        }
+    }
+
+    private void SaveRememberedCredentials()
+    {
+        if (!RememberCredentials || string.IsNullOrWhiteSpace(AuthEmail) || string.IsNullOrEmpty(AuthPassword))
+            return;
+
+        try
+        {
+            var json = JsonSerializer.SerializeToUtf8Bytes(new RememberedCredentials(AuthEmail.Trim(), AuthPassword));
+            var encrypted = ProtectedData.Protect(json, null, DataProtectionScope.CurrentUser);
+            Directory.CreateDirectory(Path.GetDirectoryName(RememberedCredentialsPath)!);
+            File.WriteAllBytes(RememberedCredentialsPath, encrypted);
+            SaveRememberedEmail();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not save remembered credentials: {ex.Message}");
+        }
+    }
+
+    private void DeleteRememberedCredentials()
+    {
+        try
+        {
+            if (File.Exists(RememberedCredentialsPath))
+                File.Delete(RememberedCredentialsPath);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not clear remembered credentials: {ex.Message}");
+        }
+    }
+
+    private async Task TryAutoSignInAsync()
+    {
+        if (!RememberCredentials || string.IsNullOrWhiteSpace(AuthEmail) || string.IsNullOrEmpty(AuthPassword) || _supabaseService.IsAuthenticated)
+            return;
+
+        await SignIn();
+    }
+
+    private sealed record RememberedCredentials(string Email, string Password);
+
+    private void LoadRememberedEmail()
+    {
+        try
+        {
+            if (File.Exists(RememberedEmailPath))
+                AuthEmail = File.ReadAllText(RememberedEmailPath).Trim();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not load remembered account: {ex.Message}");
+        }
+    }
+
+    private void SaveRememberedEmail()
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(AuthEmail))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(RememberedEmailPath)!);
+                File.WriteAllText(RememberedEmailPath, AuthEmail.Trim());
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not save remembered account: {ex.Message}");
+        }
+    }
+
+    private void DeleteRememberedEmail()
+    {
+        try
+        {
+            if (File.Exists(RememberedEmailPath))
+                File.Delete(RememberedEmailPath);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not clear remembered account: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -359,6 +651,28 @@ public partial class MainViewModel : ViewModelBase
                     }
 
                     await _supabaseService.InitializeAsync();
+
+                    // Recover session state for UI
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        IsLoggedIn = _supabaseService.IsAuthenticated;
+                        if (IsLoggedIn && !string.IsNullOrWhiteSpace(_supabaseService.CurrentUserEmail))
+                        {
+                            AuthEmail = _supabaseService.CurrentUserEmail;
+                            SaveRememberedEmail();
+                        }
+                        if (!IsLoggedIn)
+                        {
+                            if (RememberCredentials)
+                            {
+                                _ = TryAutoSignInAsync();
+                            }
+                            else
+                            {
+                                IsLoginOverlayVisible = true;
+                            }
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {
