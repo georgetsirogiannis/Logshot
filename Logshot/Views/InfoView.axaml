@@ -71,6 +71,26 @@
             </StackPanel>
           </Border>
 
+          <!-- Account Block -->
+          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}"
+                  BorderThickness="1" CornerRadius="8" Padding="24">
+            <StackPanel Spacing="12">
+              <TextBlock Text="CLOUD SYNC ACCOUNT" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+              <TextBlock Text="{Binding AuthEmail, StringFormat='Signed in as {0}'}" Foreground="{StaticResource TextPrimary}"
+                         IsVisible="{Binding IsLoggedIn}" TextWrapping="Wrap"/>
+              <TextBlock Text="Offline (Sign in to sync)" Foreground="{StaticResource TextSecondary}"
+                         IsVisible="{Binding !IsLoggedIn}"/>
+              <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                <Button Grid.Column="0" Content="SIGN IN" Command="{Binding OpenLoginCommand}"
+                        IsVisible="{Binding !IsLoggedIn}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
+                <Button Grid.Column="1" Content="CREATE ACCOUNT" Command="{Binding OpenAccountCreationCommand}"
+                        IsVisible="{Binding !IsLoggedIn}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" FontWeight="Bold"/>
+                <Button Grid.ColumnSpan="2" Content="SIGN OUT" Command="{Binding SignOutCommand}"
+                        IsVisible="{Binding IsLoggedIn}" Background="Transparent" BorderBrush="{StaticResource FailRed}" BorderThickness="1" Foreground="{StaticResource FailRed}" FontWeight="Bold"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+
           <!-- App Title & Description Block -->
           <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
                   BorderThickness="1" CornerRadius="8" Padding="24">

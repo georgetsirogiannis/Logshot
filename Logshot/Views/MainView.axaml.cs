@@ -15,6 +15,7 @@ public partial class MainView : UserControl
 
     private Grid? _rootSplitGrid;
     private MainViewModel? _boundViewModel;
+    private AccountCreationWindow? _accountCreationWindow;
 
     public MainView()
     {
@@ -28,6 +29,8 @@ public partial class MainView : UserControl
             {
                 _boundViewModel.PropertyChanged -= ViewModel_PropertyChanged;
                 _boundViewModel.AppViewModel.RequestPdfFilePicker -= OnRequestPdfFilePicker;
+                _boundViewModel.RequestOpenAccountCreation -= OnRequestOpenAccountCreation;
+                _boundViewModel.RequestCloseAccountCreation -= OnRequestCloseAccountCreation;
             }
 
             // Subscribe to new context
@@ -36,15 +39,33 @@ public partial class MainView : UserControl
                 _boundViewModel = vm;
                 vm.PropertyChanged += ViewModel_PropertyChanged;
                 vm.AppViewModel.RequestPdfFilePicker += OnRequestPdfFilePicker;
+                vm.RequestOpenAccountCreation += OnRequestOpenAccountCreation;
+                vm.RequestCloseAccountCreation += OnRequestCloseAccountCreation;
 
                 vm.InitializeApplicationCommand.Execute(null);
                 UpdateLayoutMode(Bounds.Width);
                 UpdateSidebarColumnWidth();
             }
+
         };
 
         SizeChanged += (_, e) => UpdateLayoutMode(e.NewSize.Width);
         UpdateLayoutMode(Bounds.Width);
+    }
+
+    private void OnRequestOpenAccountCreation()
+    {
+        if (_boundViewModel is null || _accountCreationWindow is not null)
+            return;
+
+        _accountCreationWindow = new AccountCreationWindow { DataContext = _boundViewModel };
+        _accountCreationWindow.Closed += (_, _) => _accountCreationWindow = null;
+        _accountCreationWindow.Show(TopLevel.GetTopLevel(this) as Window);
+    }
+
+    private void OnRequestCloseAccountCreation()
+    {
+        _accountCreationWindow?.Close();
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)

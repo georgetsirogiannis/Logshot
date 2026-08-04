@@ -1,10 +1,14 @@
 ﻿using Logshot.Models;
 using Supabase;
+using Supabase.Gotrue;
+using Supabase.Gotrue.Interfaces;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,6 +20,7 @@ namespace Logshot.Services;
 public class SupabaseProject : BaseModel
 {
     [PrimaryKey("id", false)] public string Id { get; set; } = string.Empty;
+    [Column("user_id")] public string? UserId { get; set; }
     [Column("name")] public string Name { get; set; } = string.Empty;
     [Column("director")] public string Director { get; set; } = string.Empty;
     [Column("dop")] public string Dop { get; set; } = string.Empty;
@@ -23,6 +28,64 @@ public class SupabaseProject : BaseModel
     [Column("script_supervisor")] public string ScriptSupervisor { get; set; } = string.Empty;
     [Column("is_deleted")] public bool IsDeleted { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; }
+}
+
+internal sealed class FileSessionPersistence : IGotrueSessionPersistence<Session>
+{
+    private readonly string _sessionPath;
+
+    public FileSessionPersistence()
+    {
+        _sessionPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Logshot",
+            "supabase-session.json");
+    }
+
+    public void SaveSession(Session session)
+    {
+        try
+        {
+            var directory = Path.GetDirectoryName(_sessionPath);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            File.WriteAllText(_sessionPath, JsonSerializer.Serialize(session));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not persist Supabase session: {ex.Message}");
+        }
+    }
+
+    public Session? LoadSession()
+    {
+        try
+        {
+            if (!File.Exists(_sessionPath))
+                return null;
+
+            return JsonSerializer.Deserialize<Session>(File.ReadAllText(_sessionPath));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not load Supabase session: {ex.Message}");
+            return null;
+        }
+    }
+
+    public void DestroySession()
+    {
+        try
+        {
+            if (File.Exists(_sessionPath))
+                File.Delete(_sessionPath);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not clear Supabase session: {ex.Message}");
+        }
+    }
 }
 
 [Table("days")]
@@ -67,10 +130,21 @@ public class SupabaseTake : BaseModel
 }
 
 
+public enum SignUpResult
+{
+    Failed,
+    SignedIn,
+    VerificationRequired
+}
+
 // --- The Service & Sync Engine ---
 
 public class SupabaseService
 {
+    public bool IsAuthenticated => _client?.Auth.CurrentSession != null;
+    public string? CurrentUserId => _client?.Auth.CurrentSession?.User?.Id;
+    public string? CurrentUserEmail => _client?.Auth.CurrentSession?.User?.Email;
+
     public static class SyncIconPaths
     {
         public const string Synced = "M19.35 12.04C18.67 8.59 15.64 6 12 6 9.11 6 6.6 7.64 5.35 10.04 2.34 10.36 0 12.91 0 16c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zm-8.64 6.25c-.39.39-1.02.39-1.41 0L7.2 16.2c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L10 16.18l4.48-4.48c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41l-5.18 5.18z";
@@ -79,7 +153,7 @@ public class SupabaseService
         public const string Warning = "M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3zM12 14c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm1 4h-2v-2h2v2z";
     }
 
-    private Client _client = null!;
+    private Supabase.Client _client = null!;
     private readonly DatabaseService _databaseService;
     private bool _isInitialized = false;
     private CancellationTokenSource? _debounceCts;
@@ -105,12 +179,21 @@ public class SupabaseService
 
         try
         {
-            var options = new SupabaseOptions { AutoConnectRealtime = true };
-            _client = new Client(SupabaseUrl, SupabaseKey, options);
+            var options = new SupabaseOptions
+            {
+                AutoConnectRealtime = true,
+                AutoRefreshToken = true,
+                SessionHandler = new FileSessionPersistence()
+            };
+            _client = new Supabase.Client(SupabaseUrl, SupabaseKey, options);
 
             await ExecuteWithTimeout(async () => await _client.InitializeAsync(), 5000);
 
-            await PullFromCloudAsync();
+            // Only pull data if a user session is active
+            if (IsAuthenticated)
+            {
+                await PullFromCloudAsync();
+            }
 
             var pending = await _databaseService.GetPendingSyncItemsAsync();
             if (pending.Count == 0)
@@ -127,6 +210,7 @@ public class SupabaseService
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Supabase Init Error: {ex.Message}");
+            _isInitialized = false;
             OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Pending)");
         }
     }
@@ -137,7 +221,11 @@ public class SupabaseService
     /// </summary>
     public async Task ManualSyncAsync()
     {
-        if (!_isInitialized) return;
+        if (!_isInitialized || !IsAuthenticated)
+        {
+            OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Sign in to sync)");
+            return;
+        }
 
         _debounceCts?.Cancel();
 
@@ -263,6 +351,7 @@ public class SupabaseService
         await _client.From<SupabaseProject>().Upsert(new SupabaseProject
         {
             Id = project.Id,
+            UserId = CurrentUserId ?? string.Empty,
             Name = project.Name,
             Director = project.Director,
             Dop = project.Dop,
@@ -386,7 +475,7 @@ public class SupabaseService
 
     public async Task PullFromCloudAsync()
     {
-        if (!_isInitialized) return;
+        if (!_isInitialized || !IsAuthenticated) return;
 
         try
         {
@@ -453,6 +542,62 @@ public class SupabaseService
         }
     }
 
+    public async Task<SignUpResult> SignUpAsync(string email, string password)
+    {
+        try
+        {
+            if (!_isInitialized)
+                await InitializeAsync();
+
+            if (!_isInitialized || _client == null)
+                return SignUpResult.Failed;
+
+            var session = await _client.Auth.SignUp(email, password);
+            if (session != null)
+            {
+                await PullFromCloudAsync();
+                return SignUpResult.SignedIn;
+            }
+            return SignUpResult.VerificationRequired;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SignUp Error: {ex.Message}");
+            return SignUpResult.Failed;
+        }
+    }
+
+    public async Task<bool> SignInAsync(string email, string password)
+    {
+        try
+        {
+            if (!_isInitialized)
+                await InitializeAsync();
+
+            if (!_isInitialized || _client == null)
+                return false;
+
+            var session = await _client.Auth.SignIn(email, password);
+            if (session != null)
+            {
+                await PullFromCloudAsync();
+                return true;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SignIn Error: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task SignOutAsync()
+    {
+        if (_client != null && IsAuthenticated)
+            await _client.Auth.SignOut();
+    }
+
     private void StartPeriodicPull()
     {
         Task.Run(async () =>
@@ -464,7 +609,7 @@ public class SupabaseService
                     await Task.Delay(15000);
                     if (_isInitialized)
                     {
-                        await PullFromCloudAsync();
+                        await ManualSyncAsync();
                     }
                 }
                 catch { /* Ignore */ }

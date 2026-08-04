@@ -1,0 +1,3 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:views="using:Logshot.Views" x:Class="Logshot.Views.AccountCreationWindow" Title="Create Logshot Account" Width="420" SizeToContent="Height" CanResize="False" WindowStartupLocation="CenterOwner">
+  <views:AccountCreationView />
+</Window>

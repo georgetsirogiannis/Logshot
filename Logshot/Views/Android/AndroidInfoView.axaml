@@ -70,6 +70,24 @@
             </StackPanel>
           </Border>
 
+          <!-- Account Block -->
+          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}"
+                  BorderThickness="1" CornerRadius="12" Padding="20">
+            <StackPanel Spacing="12">
+              <TextBlock Text="CLOUD SYNC ACCOUNT" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+              <TextBlock Text="{Binding AuthEmail, StringFormat='Signed in as {0}'}" Foreground="{StaticResource TextPrimary}"
+                         IsVisible="{Binding IsLoggedIn}" TextWrapping="Wrap"/>
+              <TextBlock Text="Offline (Sign in to sync)" Foreground="{StaticResource TextSecondary}"
+                         IsVisible="{Binding !IsLoggedIn}"/>
+              <Button Content="SIGN IN" Command="{Binding OpenLoginCommand}" IsVisible="{Binding !IsLoggedIn}"
+                      Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold" MinHeight="48"/>
+              <Button Content="CREATE ACCOUNT" Command="{Binding OpenAccountCreationCommand}" IsVisible="{Binding !IsLoggedIn}"
+                      Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" MinHeight="48"/>
+              <Button Content="SIGN OUT" Command="{Binding SignOutCommand}" IsVisible="{Binding IsLoggedIn}"
+                      Background="Transparent" BorderBrush="{StaticResource FailRed}" BorderThickness="1" Foreground="{StaticResource FailRed}" FontWeight="Bold" MinHeight="48"/>
+            </StackPanel>
+          </Border>
+
           <!-- App Details Card -->
           <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
                   BorderThickness="1" CornerRadius="12" Padding="20">
