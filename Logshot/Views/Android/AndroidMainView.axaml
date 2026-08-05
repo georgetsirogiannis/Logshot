@@ -84,10 +84,16 @@
           <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *, Auto">
 
             <!-- App brand and drawer close -->
-            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
-              <TextBlock Grid.Column="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
-              <Button Grid.Column="1" Content="&#10005;" Classes="quiet" FontSize="18" Padding="10,6" MinHeight="44" VerticalAlignment="Center"
-                      Background="Transparent"
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+              <TextBlock Grid.Column="0" FontSize="28" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"
+                         VerticalAlignment="Center" TextWrapping="NoWrap" LineHeight="44" ClipToBounds="False">
+                <InlineUIContainer BaselineAlignment="Baseline">
+                  <PathIcon Data="{StaticResource AppLogo}" Foreground="{StaticResource ActionAccent}" Width="32" Height="32" VerticalAlignment="Bottom"/>
+                </InlineUIContainer>
+                <Run Text=" Logshot"/>
+              </TextBlock>
+              <Button Grid.Column="1" Content="&#10005;" Classes="quiet" FontSize="18" Padding="10,6" MinHeight="44" Margin="0,0,0,-8"
+                      VerticalAlignment="Center" Background="Transparent"
                       Command="{Binding ToggleSidebarCommand}"/>
             </Grid>
 
@@ -167,7 +173,7 @@
                         Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
               </StackPanel>
 
-              <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto" Margin="0,16,0,0" VerticalAlignment="Center">
+              <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,16,0,0" VerticalAlignment="Center">
                 <Button Classes="quiet" Command="{Binding ManualSyncCommand}"
                         Grid.Column="0"
                         Background="Transparent"
@@ -205,11 +211,6 @@
                         Margin="6,0,0,0"
                         ToolTip.Tip="Sign out of cloud sync"/>
 
-                <Button Classes="quiet" Grid.Column="2"
-                        Command="{Binding ToggleInfoViewCommand}"
-                        Background="Transparent" Padding="10,6" MinHeight="44">
-                  <Path Data="{StaticResource IconSettings}" Width="18" Height="18" Stretch="Uniform" Fill="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-                </Button>
               </Grid>
             </Grid>
 

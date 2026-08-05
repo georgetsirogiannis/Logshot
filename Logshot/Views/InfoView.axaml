@@ -8,107 +8,88 @@
              x:DataType="vm:MainViewModel">
 
   <Grid>
-    <!-- Standard Layout -->
     <Grid RowDefinitions="Auto, *" Margin="30" Background="{StaticResource WorkspaceBackground}">
-      
-      <!-- Top Header Bar with Close Button -->
-      <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,30">
-        <TextBlock Grid.Column="0" Text="SETTINGS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
-        <Button Grid.Column="1" Content="✕ CLOSE" 
-                Command="{Binding CloseInfoViewCommand}"
-                VerticalAlignment="Center" Padding="12,6" FontWeight="Bold"/>
+      <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,24">
+        <PathIcon Grid.Column="0" Data="{StaticResource IconSettings}" Foreground="{StaticResource TextSecondary}" Width="22" Height="22" Margin="0,0,12,0"/>
+        <TextBlock Grid.Column="1" Text="Settings" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+        <Button Classes="quiet" Grid.Column="2" Content="✕" Command="{Binding CloseInfoViewCommand}" FontSize="18" Padding="10,6" Foreground="{StaticResource TextSecondary}"/>
       </Grid>
 
-      <!-- Info Content Body -->
       <ScrollViewer Grid.Row="1">
-        <StackPanel Spacing="24" MaxWidth="600" HorizontalAlignment="Left">
-          
-          <!-- Autocorrection Block -->
-          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
-                  BorderThickness="1" CornerRadius="8" Padding="24">
-            <StackPanel Spacing="16">
-              <Grid ColumnDefinitions="*, Auto">
-                <TextBlock Grid.Column="0" Text="SPELLING AUTOCORRECT" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-                <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAutocorrectEnabled}" OnContent="ON" OffContent="OFF"/>
+        <StackPanel Spacing="22" MaxWidth="720" HorizontalAlignment="Left">
+          <TextBlock Text="AUTOCORRECTION" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
+            <StackPanel>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="52">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="Spelling autocorrect" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                  <TextBlock Text="Correct common shorthand typos as you type" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAutocorrectEnabled}" OnContent="ON" OffContent="OFF" VerticalAlignment="Center"/>
               </Grid>
-              
-              <TextBlock Text="Instantly corrects common shorthand typos when you press space. Add your own in the custom dictionary."
-                         FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
-
-              <Button Content="EDIT CUSTOM DICTIONARY" 
-                      Command="{Binding OpenCustomDictCommand}"
-                      Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"
-                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontWeight="Bold"/>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Button Classes="quiet" Content="Edit custom dictionary    ›" Command="{Binding OpenCustomDictCommand}"
+                      HorizontalContentAlignment="Left" Foreground="{StaticResource ActionAccent}" Padding="0,12" Background="Transparent"/>
             </StackPanel>
           </Border>
-            
-          <!-- Database Export/Import Block -->
-          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
-                  BorderThickness="1" CornerRadius="8" Padding="24">
-            <StackPanel Spacing="16">
-              <TextBlock Text="DATABASE EXPORT &amp; IMPORT" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-              
-              <TextBlock Text="Transfer your database between devices without an internet connection."
-                         FontSize="13" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"/>
 
-              <StackPanel Spacing="6" Margin="0,8,0,0">
-                <TextBlock Text="Export Scope:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-                <ComboBox ItemsSource="{Binding ExportTargets}"
-                          SelectedIndex="{Binding SelectedExportTargetIndex}"
-                          HorizontalAlignment="Stretch"/>
-              </StackPanel>
-
-              <Grid ColumnDefinitions="*, *" Margin="0,12,0,0">
-                <Button Grid.Column="0" Content="EXPORT DATABASE" 
-                        Command="{Binding ExportDatabaseCommand}"
-                        Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}"
-                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,4,0" FontWeight="Bold"/>
-                <Button Grid.Column="1" Content="IMPORT DATABASE" 
-                        Command="{Binding ImportDatabaseCommand}"
-                        Background="{StaticResource ActionAccent}" Foreground="#121212"
-                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="4,0,0,0" FontWeight="Bold"/>
+          <TextBlock Text="DATABASE" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
+            <StackPanel>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="52">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="Export scope" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                  <TextBlock Text="Choose which production data to transfer" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding ExportTargets}" SelectedIndex="{Binding SelectedExportTargetIndex}" Width="220" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,0"/>
+              <Grid ColumnDefinitions="*, *" MinHeight="52" Margin="-20,0,-20,-8">
+                <Button Grid.Column="0" Classes="quiet" Command="{Binding ExportDatabaseCommand}"
+                        HorizontalAlignment="Stretch" Foreground="{StaticResource ActionAccent}" Padding="12,10"
+                        Background="{StaticResource CardBackground}" BorderThickness="0" CornerRadius="0,0,0,14"/>
+                <TextBlock Grid.Column="0" Text="Export database" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource ActionAccent}" IsHitTestVisible="False"/>
+                <Button Grid.Column="1" Classes="quiet" Command="{Binding ImportDatabaseCommand}"
+                        HorizontalAlignment="Stretch" Foreground="{StaticResource ActionAccent}" Padding="12,10"
+                        Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1,0,0,0" CornerRadius="0,0,14,0"/>
+                <TextBlock Grid.Column="1" Text="Import database" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource ActionAccent}" IsHitTestVisible="False"/>
               </Grid>
             </StackPanel>
           </Border>
 
-          <!-- Account Block -->
-          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}"
-                  BorderThickness="1" CornerRadius="8" Padding="24">
-            <StackPanel Spacing="12">
-              <TextBlock Text="CLOUD SYNC ACCOUNT" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-              <TextBlock Text="{Binding AuthEmail, StringFormat='Signed in as {0}'}" Foreground="{StaticResource TextPrimary}"
-                         IsVisible="{Binding IsLoggedIn}" TextWrapping="Wrap"/>
-              <TextBlock Text="Offline (Sign in to sync)" Foreground="{StaticResource TextSecondary}"
-                         IsVisible="{Binding !IsLoggedIn}"/>
-              <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
-                <Button Grid.Column="0" Content="SIGN IN" Command="{Binding OpenLoginCommand}"
-                        IsVisible="{Binding !IsLoggedIn}" Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
-                <Button Grid.Column="1" Content="CREATE ACCOUNT" Command="{Binding OpenAccountCreationCommand}"
-                        IsVisible="{Binding !IsLoggedIn}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" FontWeight="Bold"/>
-                <Button Grid.ColumnSpan="2" Content="SIGN OUT" Command="{Binding SignOutCommand}"
-                        IsVisible="{Binding IsLoggedIn}" Background="Transparent" BorderBrush="{StaticResource FailRed}" BorderThickness="1" Foreground="{StaticResource FailRed}" FontWeight="Bold"/>
+          <TextBlock Text="ACCOUNT" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
+            <StackPanel>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="52">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="Cloud sync account" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                  <TextBlock Text="{Binding AuthEmail, StringFormat='Signed in as {0}'}" Foreground="{StaticResource TextSecondary}" IsVisible="{Binding IsLoggedIn}" TextWrapping="Wrap"/>
+                  <TextBlock Text="Offline (sign in to sync)" Foreground="{StaticResource TextSecondary}" IsVisible="{Binding !IsLoggedIn}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="●" Foreground="{StaticResource ActionAccent}" FontSize="14" VerticalAlignment="Center" IsVisible="{Binding IsLoggedIn}"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Grid ColumnDefinitions="*, *" ColumnSpacing="20" MinHeight="48">
+                <Button Grid.Column="0" Classes="quiet" Content="Sign in" Command="{Binding OpenLoginCommand}" IsVisible="{Binding !IsLoggedIn}" HorizontalContentAlignment="Left" Foreground="{StaticResource ActionAccent}" Padding="0,10" Background="Transparent"/>
+                <Button Grid.Column="1" Classes="quiet" Content="Create account" Command="{Binding OpenAccountCreationCommand}" IsVisible="{Binding !IsLoggedIn}" HorizontalContentAlignment="Left" Foreground="{StaticResource ActionAccent}" Padding="0,10" Background="Transparent"/>
+                <Button Grid.ColumnSpan="2" Classes="quiet" Content="Sign out" Command="{Binding SignOutCommand}" IsVisible="{Binding IsLoggedIn}" HorizontalContentAlignment="Left" Foreground="{StaticResource FailRed}" Padding="0,10" Background="Transparent"/>
               </Grid>
             </StackPanel>
           </Border>
 
-          <!-- App Title & Description Block -->
-          <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" 
-                  BorderThickness="1" CornerRadius="8" Padding="24">
-            <StackPanel Spacing="12">
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20" Margin="0,2,0,0">
+            <StackPanel Spacing="10">
               <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
-                <TextBlock Text="LOGSHOT" FontSize="32" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
-                <TextBlock Text="v1.0.0" FontSize="14" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                <TextBlock Text="Logshot" FontSize="30" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
+                <TextBlock Text="v1.0.0" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
               </StackPanel>
-
-              <TextBlock Text="A daily shot reporting application designed for script supervisors to easily log, track, manage and export film &amp; television production logs."
-                         FontSize="14" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" LineHeight="20"/>
-
-              <Separator Background="{StaticResource BorderColor}" Margin="0,4"/>
-
-              <TextBlock Text="© 2026 George Tsirogiannis" FontSize="13" Foreground="{StaticResource TextSecondary}"/>
+              <TextBlock Text="A daily shot reporting application designed for script supervisors to easily log, track, manage and export film &amp; television production logs." FontSize="13" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" LineHeight="19"/>
+              <Separator Background="{StaticResource BorderColor}" Margin="0,3"/>
+              <TextBlock Text="© 2026 George Tsirogiannis" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
             </StackPanel>
           </Border>
-
         </StackPanel>
       </ScrollViewer>
     </Grid>
