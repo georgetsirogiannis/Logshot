@@ -566,7 +566,7 @@
                     <DataTemplate x:DataType="vm:CameraClipGroupViewModel">
                       <StackPanel Spacing="2" Margin="0,2,0,6">
                         <TextBlock FontWeight="Bold" FontSize="14" Foreground="{StaticResource ActionAccent}">
-                          <Run Text="&#8226;"/><Run Text="&#8226;"/><Run Text="&#8226;"/><Run Text="&#8226;"/><Run Text="&#8226;"/>
+                          <Run Text="&#8226;"/><Run Text="{Binding CameraLabel}"/><Run Text=" - "/><Run Text="{Binding TotalClips}"/><Run Text=" clips"/>
                         </TextBlock>
                         <ItemsControl ItemsSource="{Binding Rolls}" Margin="12,2,0,0">
                           <ItemsControl.ItemTemplate>

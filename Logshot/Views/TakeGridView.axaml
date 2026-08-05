@@ -455,7 +455,7 @@
                   <Grid VerticalAlignment="Stretch">
                     <Border BorderBrush="{StaticResource ActionAccent}" BorderThickness="2" CornerRadius="13" Height="26" HorizontalAlignment="Center" IsVisible="{Binding ShowCircledActive}" VerticalAlignment="Center" Width="26"/>
                     <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2.5" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowFailedActive}"/>
-                    <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding !ShowRowCrossed}" Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}">
+                    <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" Height="26" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding !ShowRowCrossed}" Name="TakeNumberBox" Text="{Binding DisplayTakeNumber}" TextAlignment="Center" TextWrapping="NoWrap" VerticalAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}">
                       <TextBox.ContextMenu>
                         <ContextMenu>
                           <MenuItem Command="{Binding MarkCircledCommand}" Header="Mark Circled"/>

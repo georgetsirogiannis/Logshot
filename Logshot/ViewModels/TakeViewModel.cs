@@ -243,6 +243,11 @@ public partial class TakeViewModel : ViewModelBase
 
     partial void OnIsCircledChanged(bool value)
     {
+        if (value && IsFailed)
+        {
+            IsFailed = false;
+        }
+
         OnPropertyChanged(nameof(ShowCircledActive));
         if (!_isSuppressingSave)
         {
@@ -252,6 +257,11 @@ public partial class TakeViewModel : ViewModelBase
 
     partial void OnIsFailedChanged(bool value)
     {
+        if (value && IsCircled)
+        {
+            IsCircled = false;
+        }
+
         OnPropertyChanged(nameof(ShowFailedActive));
         if (!_isSuppressingSave)
         {
@@ -387,8 +397,8 @@ public partial class TakeViewModel : ViewModelBase
             TakeNotes = take.TakeNotes;
             FalseStartCount = take.FalseStartCount;
             IsLongStart = take.IsLongStart;
-            IsCircled = take.IsCircled;
-            IsFailed = take.IsFailed;
+            IsCircled = take.IsCircled && !take.IsFailed;
+            IsFailed = take.IsFailed && !take.IsCircled;
             IsPickup = take.IsPickup;
             IsBlooper = take.IsBlooper;
             IsNoBoard = take.IsNoBoard;
@@ -424,8 +434,8 @@ public partial class TakeViewModel : ViewModelBase
             TakeNotes = TakeNotes,
             FalseStartCount = FalseStartCount,
             IsLongStart = IsLongStart,
-            IsCircled = IsCircled,
-            IsFailed = IsFailed,
+            IsCircled = IsCircled && !IsFailed,
+            IsFailed = IsFailed && !IsCircled,
             IsPickup = IsPickup,
             IsBlooper = IsBlooper,
             IsNoBoard = IsNoBoard,
