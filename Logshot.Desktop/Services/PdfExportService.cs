@@ -257,6 +257,12 @@ public class PdfExportService : IPdfExportService
                 {
                     foreach (var take in day.Takes)
                     {
+                        if (take.IsGroupStart)
+                        {
+                            table.Cell().ColumnSpan((uint)totalColumnsCount)
+                                .Height(1f).Background(Colors.Black);
+                        }
+
                         RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
                             showRoll: take.ShowCamARoll, rollVal: take.CamARoll,
                             isNoRoll: take.IsCamANoRoll, isVoided: take.IsCamAVoided,
@@ -306,11 +312,12 @@ public class PdfExportService : IPdfExportService
 
     private IContainer ApplyCellBorderStyle(IContainer container, TakeViewModel take)
     {
-        var c = container.Border(0.5f).BorderColor(Colors.Black);
-        if (take.IsGroupStart)
-        {
-            c = c.BorderTop(2f).BorderColor(Colors.Black);
-        }
+        var c = container
+            .BorderLeft(0.5f)
+            .BorderRight(0.5f)
+            .BorderBottom(0.5f)
+            .BorderTop(0.5f)
+            .BorderColor(Colors.Black);
 
         if (take.HasVoidedCameras)
         {
