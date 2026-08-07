@@ -1,8 +1,10 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Logshot.ViewModels;
+using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -11,11 +13,22 @@ namespace Logshot.Views.Android;
 
 public partial class AndroidTakeListView : UserControl
 {
+    private const double TouchSlop = 12;
     private DayViewModel? _dayVm;
+    private IPointer? _touchPointer;
+    private Point _touchStartPoint;
+    private bool _isTouchDragging;
+    private bool _suppressNextTouch;
 
     public AndroidTakeListView()
     {
         InitializeComponent();
+
+        AddHandler(InputElement.PointerPressedEvent, Touch_PointerPressed, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.PointerMovedEvent, Touch_PointerMoved, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.PointerReleasedEvent, Touch_PointerReleased, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.PointerCaptureLostEvent, Touch_PointerCaptureLost, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.TappedEvent, Touch_Tapped, RoutingStrategies.Tunnel);
 
         DataContextChanged += (_, _) =>
         {
@@ -31,6 +44,65 @@ public partial class AndroidTakeListView : UserControl
                 _dayVm.PropertyChanged += DayVm_PropertyChanged;
             }
         };
+    }
+
+    private void Touch_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.Pointer.Type != PointerType.Touch)
+            return;
+
+        _touchPointer = e.Pointer;
+        _touchStartPoint = e.GetPosition(this);
+        _isTouchDragging = false;
+        _suppressNextTouch = false;
+    }
+
+    private void Touch_PointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (e.Pointer.Type != PointerType.Touch || !ReferenceEquals(e.Pointer, _touchPointer))
+            return;
+
+        var currentPoint = e.GetPosition(this);
+        if (_isTouchDragging ||
+            Math.Abs(currentPoint.X - _touchStartPoint.X) > TouchSlop ||
+            Math.Abs(currentPoint.Y - _touchStartPoint.Y) > TouchSlop)
+        {
+            _isTouchDragging = true;
+            _suppressNextTouch = true;
+
+            var topLevel = TopLevel.GetTopLevel(this);
+            topLevel?.FocusManager?.Focus(null);
+        }
+    }
+
+    private void Touch_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.Pointer.Type != PointerType.Touch || !ReferenceEquals(e.Pointer, _touchPointer))
+            return;
+
+        if (_isTouchDragging)
+            e.Handled = true;
+
+        _touchPointer = null;
+        _isTouchDragging = false;
+    }
+
+    private void Touch_PointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        if (ReferenceEquals(e.Pointer, _touchPointer))
+        {
+            _touchPointer = null;
+            _isTouchDragging = false;
+        }
+    }
+
+    private void Touch_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (_suppressNextTouch)
+        {
+            e.Handled = true;
+            _suppressNextTouch = false;
+        }
     }
 
     private void DayVm_PropertyChanged(object? sender, PropertyChangedEventArgs e)

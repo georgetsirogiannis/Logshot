@@ -37,8 +37,8 @@
 
           <!-- App Brand -->
           <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,25">
-            <TextBlock Grid.Column="0" Text="LOGSHOT" FontSize="26" FontWeight="Bold"
-                       Foreground="{StaticResource ActionAccent}"/>
+            <PathIcon Grid.Column="0" Data="{StaticResource AppLogo}" Foreground="{StaticResource ActionAccent}" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
             <!-- Mobile-only close button -->
             <Button Grid.Column="1" Content="&#10005;" FontSize="14" Padding="6,2"
                     IsVisible="{Binding IsMobileLayout}"
