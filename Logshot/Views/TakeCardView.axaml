@@ -1,13 +1,13 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:behaviors="using:Logshot.Behaviors"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Logshot.ViewModels"
              xmlns:views="using:Logshot.Views"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
              x:Class="Logshot.Views.TakeCardView"
-             x:DataType="vm:TakeViewModel"
-             xmlns:behaviors="using:Logshot.Behaviors">
+              x:DataType="vm:TakeViewModel">
 
   <UserControl.Styles>
     <Style Selector="TextBox">

@@ -1372,10 +1372,13 @@ public partial class DayViewModel : ViewModelBase
             }
             else
             {
-                // A new group starts if either the episode or the scene changes - updated to also consider wild shots as a separate group
-                currentTake.IsGroupStart = (currentTake.Episode != previousTake.Episode) ||
-                                   (currentTake.Scene != previousTake.Scene) ||
-                                   (currentTake.IsWildShot != previousTake.IsWildShot);
+                // Consecutive sound-only and wild-shot rows belong to the same group.
+                currentTake.IsGroupStart = !(currentTake.IsSoundOnlyRow && previousTake.IsSoundOnlyRow) &&
+                                           !(currentTake.IsWildShot && previousTake.IsWildShot) &&
+                                           ((currentTake.Episode != previousTake.Episode) ||
+                                            (currentTake.Scene != previousTake.Scene) ||
+                                             (currentTake.IsSoundOnlyRow != previousTake.IsSoundOnlyRow) ||
+                                            (currentTake.IsWildShot != previousTake.IsWildShot));
 
                 // Show Episode whenever there's a group start (whether a new episode or a new scene in the same episode)
                 currentTake.ShowEpisode = currentTake.IsGroupStart;
