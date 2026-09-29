@@ -141,6 +141,8 @@ public enum SignUpResult
 
 public class SupabaseService
 {
+    private static readonly TimeSpan PeriodicSyncInterval = TimeSpan.FromMinutes(1);
+
     public bool IsAuthenticated => _client?.Auth.CurrentSession != null;
     public string? CurrentUserId => _client?.Auth.CurrentSession?.User?.Id;
     public string? CurrentUserEmail => _client?.Auth.CurrentSession?.User?.Email;
@@ -219,7 +221,9 @@ public class SupabaseService
     /// Forces an immediate manual sync process (pulling remote changes and pushing local outbox items).
     /// Guarded with a semaphore to handle rapid tapping and prevent concurrent runs.
     /// </summary>
-    public async Task ManualSyncAsync()
+    public Task ManualSyncAsync() => SyncAsync(pullFromCloud: true);
+
+    private async Task SyncAsync(bool pullFromCloud)
     {
         if (!_isInitialized || !IsAuthenticated)
         {
@@ -238,7 +242,10 @@ public class SupabaseService
         {
             OnSyncStatusChanged?.Invoke(SyncIconPaths.Syncing, "Syncing...");
             await ProcessSyncQueueInternalAsync();
-            await PullFromCloudAsync();
+            if (pullFromCloud)
+            {
+                await PullFromCloudAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -271,7 +278,7 @@ public class SupabaseService
                 await Task.Delay(3000, token);
                 if (!token.IsCancellationRequested)
                 {
-                    await ManualSyncAsync();
+                    await SyncAsync(pullFromCloud: false);
                 }
             }
             catch (TaskCanceledException) { /* Timer reset */ }
@@ -606,7 +613,7 @@ public class SupabaseService
             {
                 try
                 {
-                    await Task.Delay(15000);
+                    await Task.Delay(PeriodicSyncInterval);
                     if (_isInitialized)
                     {
                         await ManualSyncAsync();

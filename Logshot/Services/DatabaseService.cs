@@ -405,6 +405,27 @@ public class DatabaseService
         return await _db.Table<Day>().Where(d => d.ProjectId == projectId && !d.IsDeleted).OrderByDescending(d => d.CalendarDate).ToListAsync();
     }
 
+    public async Task<List<Day>> GetDaysForProjectsAsync(IEnumerable<string> projectIds)
+    {
+        await InitAsync();
+
+        var ids = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        var days = new List<Day>();
+        const int batchSize = 500;
+
+        for (int offset = 0; offset < ids.Count; offset += batchSize)
+        {
+            var batch = ids.Skip(offset).Take(batchSize).ToList();
+            var placeholders = string.Join(",", Enumerable.Repeat("?", batch.Count));
+            var batchDays = await _db.QueryAsync<Day>(
+                $"SELECT * FROM Days WHERE IsDeleted = 0 AND ProjectId IN ({placeholders}) ORDER BY ProjectId, CalendarDate DESC",
+                batch.Cast<object>().ToArray());
+            days.AddRange(batchDays);
+        }
+
+        return days;
+    }
+
     public async Task<List<Project>> GetAllProjectsAsync()
     {
         await InitAsync();

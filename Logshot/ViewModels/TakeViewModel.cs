@@ -287,7 +287,7 @@ public partial class TakeViewModel : ViewModelBase
 
         if (!_isSuppressingSave)
         {
-            _ = SaveTakeCommand.ExecuteAsync(null);
+            QueueTextSave();
         }
     }
 
@@ -361,7 +361,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayTakeNumber));
         if (!_isSuppressingSave)
         {
-            _ = SaveTakeCommand.ExecuteAsync(null);
+            QueueTextSave();
         }
     }
 

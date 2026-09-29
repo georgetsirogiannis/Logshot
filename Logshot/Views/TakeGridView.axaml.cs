@@ -267,8 +267,16 @@ public partial class TakeGridView : UserControl
 
             if (textBox.DataContext is TakeViewModel vm)
             {
-                await vm.SaveTakeCommand.ExecuteAsync(null);
+                await vm.FlushPendingTextSaveAsync();
             }
+        }
+    }
+
+    private async void TextNotes_LostFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)
+    {
+        if (sender is TextBox { DataContext: TakeViewModel takeViewModel })
+        {
+            await takeViewModel.FlushPendingTextSaveAsync();
         }
     }
 }

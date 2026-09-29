@@ -350,13 +350,19 @@ public partial class AppViewModel : ViewModelBase
         try
         {
             var projects = await _databaseService.GetAllProjectsAsync();
+            var daysByProjectId = (await _databaseService.GetDaysForProjectsAsync(projects.Select(project => project.Id)))
+                .GroupBy(day => day.ProjectId)
+                .ToDictionary(group => group.Key, group => group.ToList());
 
             Projects.Clear();
             foreach (var project in projects)
             {
                 var projectVM = new ProjectViewModel(_databaseService);
                 projectVM.LoadFromModel(project);
-                await projectVM.LoadDaysCommand.ExecuteAsync(null);
+                if (daysByProjectId.TryGetValue(project.Id, out var days))
+                {
+                    projectVM.LoadDaysFromModels(days);
+                }
                 Projects.Add(projectVM);
             }
         }
