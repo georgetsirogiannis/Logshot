@@ -381,7 +381,7 @@
 
                  <!-- Observations / Notes -->
                  <Grid>
-                    <TextBox Classes="multiline-cell" Text="{Binding TakeNotes}" PlaceholderText="Add observations..." HorizontalAlignment="Stretch" MinHeight="64" TextWrapping="Wrap" AcceptsReturn="True" Padding="12" BorderThickness="0" CornerRadius="8" Background="{StaticResource InputBackground}"/>
+                    <TextBox Classes="multiline-cell" Text="{Binding TakeNotes}" PlaceholderText="Add observations..." HorizontalAlignment="Stretch" MinHeight="64" TextWrapping="Wrap" AcceptsReturn="True" Padding="12" BorderThickness="0" CornerRadius="8" Background="{StaticResource InputBackground}" LostFocus="TextNotes_LostFocus"/>
                     <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="5" CornerRadius="0,8,8,0"/>
                  </Grid>
               </StackPanel>

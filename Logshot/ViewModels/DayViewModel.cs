@@ -42,6 +42,10 @@ public partial class DayViewModel : ViewModelBase
     private readonly ContinuityService _continuityService;
     private bool _isSuppressingSave = false;
     private CancellationTokenSource? _loadTakesCancellation;
+    private List<TakeViewModel>? _orderedTakesCache;
+    private Dictionary<TakeViewModel, int>? _takeIndexCache;
+    private int _groupRebuildVersion;
+    private const int GroupRebuildDelayMilliseconds = 150;
 
     [ObservableProperty]
     private string _id = string.Empty;
@@ -361,6 +365,8 @@ public partial class DayViewModel : ViewModelBase
 
     private void Takes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        InvalidateTakeOrderCache();
+
         if (e.OldItems is not null)
         {
             foreach (TakeViewModel take in e.OldItems)
@@ -385,9 +391,14 @@ public partial class DayViewModel : ViewModelBase
 
     private void Take_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(TakeViewModel.SequenceOrder))
+        {
+            InvalidateTakeOrderCache();
+        }
+
         if (e.PropertyName == nameof(TakeViewModel.Episode) || e.PropertyName == nameof(TakeViewModel.Scene))
         {
-            BuildHierarchicalGroups();
+            ScheduleHierarchicalGroupsRebuild();
         }
 
         // Recalculate visibility if one of the span-enabled text fields (OR the CameraData JSON) was edited
@@ -400,7 +411,7 @@ public partial class DayViewModel : ViewModelBase
             e.PropertyName == nameof(TakeViewModel.SoundNotes) ||
             e.PropertyName == nameof(TakeViewModel.IsSoundOnlyRow))
         {
-            UpdateRowVisibilities();
+            UpdateRowVisibilities(sender as TakeViewModel);
             _ = UpdateTotalTakesCommand.ExecuteAsync(null);
             _ = UpdateCurrentShotCommand.ExecuteAsync(null);
         }
@@ -408,6 +419,8 @@ public partial class DayViewModel : ViewModelBase
 
     partial void OnTakesChanged(ObservableCollection<TakeViewModel>? oldValue, ObservableCollection<TakeViewModel> newValue)
     {
+        InvalidateTakeOrderCache();
+
         if (oldValue is not null)
         {
             oldValue.CollectionChanged -= Takes_CollectionChanged;
@@ -684,6 +697,7 @@ public partial class DayViewModel : ViewModelBase
             }
         }
 
+        UpdateRowVisibilities();
         BuildHierarchicalGroups();
     }
 
@@ -1240,6 +1254,27 @@ public partial class DayViewModel : ViewModelBase
     /// </summary>
     public void BuildHierarchicalGroups()
     {
+        Interlocked.Increment(ref _groupRebuildVersion);
+        BuildHierarchicalGroupsCore();
+    }
+
+    private void ScheduleHierarchicalGroupsRebuild()
+    {
+        var version = Interlocked.Increment(ref _groupRebuildVersion);
+        _ = RebuildHierarchicalGroupsAfterDelayAsync(version);
+    }
+
+    private async Task RebuildHierarchicalGroupsAfterDelayAsync(int version)
+    {
+        await Task.Delay(GroupRebuildDelayMilliseconds);
+        if (Volatile.Read(ref _groupRebuildVersion) == version)
+        {
+            BuildHierarchicalGroupsCore();
+        }
+    }
+
+    private void BuildHierarchicalGroupsCore()
+    {
         if (Takes == null || !Takes.Any())
         {
             MobileSetupGroups.Clear();
@@ -1258,7 +1293,7 @@ public partial class DayViewModel : ViewModelBase
         SetupGroupViewModel? currentGroup = null;
 
         // Iterate through takes sequentially in logging order
-        foreach (var take in Takes.OrderBy(t => t.SequenceOrder))
+        foreach (var take in GetOrderedTakes())
         {
             string ep = take.Episode ?? string.Empty;
             string sc = take.Scene ?? string.Empty;
@@ -1347,15 +1382,42 @@ public partial class DayViewModel : ViewModelBase
         BuildHierarchicalGroups();
     }
 
-    public void UpdateRowVisibilities()
+    private List<TakeViewModel> GetOrderedTakes()
     {
-        if (Takes == null || Takes.Count == 0) return;
-
-        TakeViewModel? previousTake = null;
-
-        foreach (var currentTake in Takes.OrderBy(t => t.SequenceOrder))
+        if (_orderedTakesCache == null)
         {
-            if (previousTake == null)
+            _orderedTakesCache = Takes.OrderBy(t => t.SequenceOrder).ToList();
+            _takeIndexCache = _orderedTakesCache
+                .Select((take, index) => (take, index))
+                .ToDictionary(item => item.take, item => item.index);
+        }
+
+        return _orderedTakesCache;
+    }
+
+    private void InvalidateTakeOrderCache()
+    {
+        _orderedTakesCache = null;
+        _takeIndexCache = null;
+    }
+
+    public void UpdateRowVisibilities(TakeViewModel? changedTake = null)
+    {
+        var orderedTakes = GetOrderedTakes();
+        if (orderedTakes.Count == 0) return;
+
+        int firstIndex = 0;
+        int lastIndex = orderedTakes.Count - 1;
+        if (changedTake != null && _takeIndexCache!.TryGetValue(changedTake, out int changedIndex))
+        {
+            firstIndex = changedIndex;
+            lastIndex = Math.Min(changedIndex + 1, orderedTakes.Count - 1);
+        }
+
+        for (int index = firstIndex; index <= lastIndex; index++)
+        {
+            var currentTake = orderedTakes[index];
+            if (index == 0)
             {
                 currentTake.IsGroupStart = false;
                 currentTake.ShowEpisode = true;
@@ -1369,46 +1431,46 @@ public partial class DayViewModel : ViewModelBase
                 {
                     cell.ShowRoll = true;
                 }
+
+                continue;
             }
-            else
+
+            var previousTake = orderedTakes[index - 1];
+
+            // Consecutive sound-only and wild-shot rows belong to the same group.
+            currentTake.IsGroupStart = !(currentTake.IsSoundOnlyRow && previousTake.IsSoundOnlyRow) &&
+                                       !(currentTake.IsWildShot && previousTake.IsWildShot) &&
+                                       ((currentTake.Episode != previousTake.Episode) ||
+                                        (currentTake.Scene != previousTake.Scene) ||
+                                         (currentTake.IsSoundOnlyRow != previousTake.IsSoundOnlyRow) ||
+                                        (currentTake.IsWildShot != previousTake.IsWildShot));
+
+            // Show Episode whenever there's a group start (whether a new episode or a new scene in the same episode)
+            currentTake.ShowEpisode = currentTake.IsGroupStart;
+
+            // Show Scene if it's a group start or the scene itself changed
+            currentTake.ShowScene = currentTake.IsGroupStart || (currentTake.Scene != previousTake.Scene);
+            currentTake.ShowShot = currentTake.ShowScene || (currentTake.Shot != previousTake.Shot);
+
+            // Camera descriptions show full text if empty, at a new group start, or if different from previous take
+            currentTake.ShowCamARoll = string.IsNullOrEmpty(currentTake.CamARoll) || currentTake.IsGroupStart || currentTake.CamARoll != previousTake.CamARoll;
+            currentTake.ShowCamBRoll = string.IsNullOrEmpty(currentTake.CamBRoll) || currentTake.IsGroupStart || currentTake.CamBRoll != previousTake.CamBRoll;
+
+            // Sound notes show full text if empty or different from previous take
+            currentTake.ShowSoundNotes = string.IsNullOrEmpty(currentTake.SoundNotes) || currentTake.SoundNotes != previousTake.SoundNotes;
+
+            foreach (var cell in currentTake.ExtraCameraRolls)
             {
-                // Consecutive sound-only and wild-shot rows belong to the same group.
-                currentTake.IsGroupStart = !(currentTake.IsSoundOnlyRow && previousTake.IsSoundOnlyRow) &&
-                                           !(currentTake.IsWildShot && previousTake.IsWildShot) &&
-                                           ((currentTake.Episode != previousTake.Episode) ||
-                                            (currentTake.Scene != previousTake.Scene) ||
-                                             (currentTake.IsSoundOnlyRow != previousTake.IsSoundOnlyRow) ||
-                                            (currentTake.IsWildShot != previousTake.IsWildShot));
-
-                // Show Episode whenever there's a group start (whether a new episode or a new scene in the same episode)
-                currentTake.ShowEpisode = currentTake.IsGroupStart;
-
-                // Show Scene if it's a group start or the scene itself changed
-                currentTake.ShowScene = currentTake.IsGroupStart || (currentTake.Scene != previousTake.Scene);
-                currentTake.ShowShot = currentTake.ShowScene || (currentTake.Shot != previousTake.Shot);
-
-                // Camera descriptions show full text if empty, at a new group start, or if different from previous take
-                currentTake.ShowCamARoll = string.IsNullOrEmpty(currentTake.CamARoll) || currentTake.IsGroupStart || currentTake.CamARoll != previousTake.CamARoll;
-                currentTake.ShowCamBRoll = string.IsNullOrEmpty(currentTake.CamBRoll) || currentTake.IsGroupStart || currentTake.CamBRoll != previousTake.CamBRoll;
-
-                // Sound notes show full text if empty or different from previous take
-                currentTake.ShowSoundNotes = string.IsNullOrEmpty(currentTake.SoundNotes) || currentTake.SoundNotes != previousTake.SoundNotes;
-
-                foreach (var cell in currentTake.ExtraCameraRolls)
+                var prevCell = previousTake.ExtraCameraRolls.FirstOrDefault(c => c.Label == cell.Label);
+                if (prevCell != null)
                 {
-                    var prevCell = previousTake.ExtraCameraRolls.FirstOrDefault(c => c.Label == cell.Label);
-                    if (prevCell != null)
-                    {
-                        cell.ShowRoll = string.IsNullOrEmpty(cell.Roll) || currentTake.IsGroupStart || cell.Roll != prevCell.Roll;
-                    }
-                    else
-                    {
-                        cell.ShowRoll = true;
-                    }
+                    cell.ShowRoll = string.IsNullOrEmpty(cell.Roll) || currentTake.IsGroupStart || cell.Roll != prevCell.Roll;
+                }
+                else
+                {
+                    cell.ShowRoll = true;
                 }
             }
-
-            previousTake = currentTake;
         }
     }
 
@@ -1437,6 +1499,11 @@ public partial class DayViewModel : ViewModelBase
             }
             else if (!pendingTakeIds.Contains(tModel.Id))
             {
+                if (existingTake.SequenceOrder != tModel.SequenceOrder)
+                {
+                    structureChanged = true;
+                }
+
                 existingTake.LoadFromModel(tModel);
                 existingTake.RefreshCameraDataSync();
             }

@@ -93,6 +93,19 @@ public partial class TakeCardView : UserControl
                     await takeVm.ToggleSoundNoRollCommand.ExecuteAsync(null);
                 }
             }
+
+            if (textBox.DataContext is TakeViewModel takeViewModel)
+            {
+                await takeViewModel.FlushPendingTextSaveAsync();
+            }
+        }
+    }
+
+    private async void TextNotes_LostFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)
+    {
+        if (sender is TextBox { DataContext: TakeViewModel takeViewModel })
+        {
+            await takeViewModel.FlushPendingTextSaveAsync();
         }
     }
 }

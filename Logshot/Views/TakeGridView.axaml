@@ -582,7 +582,7 @@
                       </Grid>
 
                       <!-- Notes TextBox with vertical centering and left alignment -->
-                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Margin="0,0,10,0" Text="{Binding TakeNotes}" TextAlignment="Left" TextWrapping="Wrap" VerticalContentAlignment="Center"/>
+                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Margin="0,0,10,0" Text="{Binding TakeNotes}" TextAlignment="Left" TextWrapping="Wrap" VerticalContentAlignment="Center" LostFocus="TextNotes_LostFocus"/>
                     </StackPanel>
                     
                     <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="4"/>

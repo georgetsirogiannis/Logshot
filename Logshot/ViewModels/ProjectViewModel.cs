@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -83,7 +84,11 @@ public partial class ProjectViewModel : ViewModelBase
     public async Task LoadDays()
     {
         var days = await _databaseService.GetDaysForProjectAsync(Id);
+        LoadDaysFromModels(days);
+    }
 
+    public void LoadDaysFromModels(IEnumerable<Day> days)
+    {
         Days.Clear();
         foreach (var day in days)
         {

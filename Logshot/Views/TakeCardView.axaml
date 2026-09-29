@@ -337,7 +337,7 @@
 
                  <!-- Notes -->
                  <Grid>
-                    <TextBox Text="{Binding TakeNotes}" PlaceholderText="Add observations..." HorizontalAlignment="Stretch" MinHeight="60" TextWrapping="Wrap" AcceptsReturn="True" Padding="12" BorderThickness="0" CornerRadius="6" Background="{DynamicResource TextControlBackground}"/>
+                    <TextBox Text="{Binding TakeNotes}" PlaceholderText="Add observations..." HorizontalAlignment="Stretch" MinHeight="60" TextWrapping="Wrap" AcceptsReturn="True" Padding="12" BorderThickness="0" CornerRadius="6" Background="{DynamicResource TextControlBackground}" LostFocus="TextNotes_LostFocus"/>
                     <Border Background="{StaticResource BlooperOrange}" HorizontalAlignment="Right" IsVisible="{Binding IsBlooper}" VerticalAlignment="Stretch" Width="4" CornerRadius="0,6,6,0"/>
                  </Grid>
               </StackPanel>
