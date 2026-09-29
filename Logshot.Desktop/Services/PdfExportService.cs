@@ -65,6 +65,31 @@ public class PdfExportService : IPdfExportService
         return text.Replace("-->", "→");
     }
 
+    private static void RenderNotesText(IContainer container, string? value, float fontSize)
+    {
+        container.Column(column =>
+        {
+            foreach (var rawLine in (value ?? string.Empty).Replace("\r", string.Empty).Split('\n'))
+            {
+                string trimmedLine = rawLine.TrimStart();
+
+                if (trimmedLine.StartsWith("• ", StringComparison.Ordinal) || trimmedLine.StartsWith("- ", StringComparison.Ordinal))
+                {
+                    string bulletText = trimmedLine[2..];
+                    column.Item().Row(row =>
+                    {
+                        row.ConstantItem(10).AlignMiddle().Text(t => t.Span("•").FontSize(fontSize));
+                        row.RelativeItem().Text(t => t.Span(FormatText(bulletText)).FontSize(fontSize));
+                    });
+                }
+                else
+                {
+                    column.Item().Text(t => t.Span(FormatText(rawLine)).FontSize(fontSize));
+                }
+            }
+        });
+    }
+
     public Task GeneratePdfAsync(ProjectViewModel project, DayViewModel day, Stream stream)
     {
         EnsureInitialized();
@@ -149,10 +174,10 @@ public class PdfExportService : IPdfExportService
             if (!string.IsNullOrWhiteSpace(day.GeneralNotes))
             {
                 column.Item().ShowIf(x => x.PageNumber == 1).PaddingTop(4).Border(0.5f).BorderColor(Colors.Grey.Lighten1)
-                      .Background(Colors.Grey.Lighten5).Padding(6).Text(t =>
+                      .Background(Colors.Grey.Lighten5).Padding(6).Column(notesColumn =>
                       {
-                          t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ: ").Bold().FontSize(8f);
-                          t.Span(FormatText(day.GeneralNotes)).FontSize(8f);
+                          notesColumn.Item().Text(t => t.Span("ΠΑΡΑΤΗΡΗΣΕΙΣ ΗΜΕΡΑΣ:").Bold().FontSize(8f));
+                          notesColumn.Item().Element(c => RenderNotesText(c, day.GeneralNotes, 8f));
                       });
             }
         });
@@ -232,6 +257,12 @@ public class PdfExportService : IPdfExportService
                 {
                     foreach (var take in day.Takes)
                     {
+                        if (take.IsGroupStart)
+                        {
+                            table.Cell().ColumnSpan((uint)totalColumnsCount)
+                                .Height(1f).Background(Colors.Black);
+                        }
+
                         RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
                             showRoll: take.ShowCamARoll, rollVal: take.CamARoll,
                             isNoRoll: take.IsCamANoRoll, isVoided: take.IsCamAVoided,
@@ -281,11 +312,12 @@ public class PdfExportService : IPdfExportService
 
     private IContainer ApplyCellBorderStyle(IContainer container, TakeViewModel take)
     {
-        var c = container.Border(0.5f).BorderColor(Colors.Black);
-        if (take.IsGroupStart)
-        {
-            c = c.BorderTop(2f).BorderColor(Colors.Black);
-        }
+        var c = container
+            .BorderLeft(0.5f)
+            .BorderRight(0.5f)
+            .BorderBottom(0.5f)
+            .BorderTop(0.5f)
+            .BorderColor(Colors.Black);
 
         if (take.HasVoidedCameras)
         {
@@ -579,7 +611,7 @@ public class PdfExportService : IPdfExportService
                     });
                 }
 
-                innerRow.RelativeItem().AlignMiddle().Text(FormatText(take.TakeNotes ?? "")).FontSize(8.5f);
+                innerRow.RelativeItem().AlignMiddle().Element(c => RenderNotesText(c, take.TakeNotes, 8.5f));
 
                 if (take.IsEndBoard || take.IsNoBoard)
                 {
