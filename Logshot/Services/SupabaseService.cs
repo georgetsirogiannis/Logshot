@@ -197,8 +197,7 @@ public class SupabaseService
                 await PullFromCloudAsync();
             }
 
-            var pending = await _databaseService.GetPendingSyncItemsAsync();
-            if (pending.Count == 0)
+            if (await _databaseService.GetLatestPendingSyncItemIdAsync() == 0)
             {
                 OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
             }
@@ -290,37 +289,113 @@ public class SupabaseService
         _syncedProjectIds.Clear();
         _syncedDayIds.Clear();
 
-        var pendingItems = await _databaseService.GetPendingSyncItemsAsync();
-        if (pendingItems.Count == 0)
+        int highestPendingId = await _databaseService.GetLatestPendingSyncItemIdAsync();
+        if (highestPendingId == 0)
         {
             OnSyncStatusChanged?.Invoke(SyncIconPaths.Synced, "Synced");
             return;
         }
 
         bool hasError = false;
+        const int batchSize = 50;
+        int afterId = 0;
 
-        foreach (var item in pendingItems)
+        while (afterId < highestPendingId)
         {
-            try
+            var pendingItems = await _databaseService.GetPendingSyncItemsAsync(afterId, highestPendingId, batchSize);
+            if (pendingItems.Count == 0)
             {
-                await ExecuteWithTimeout(async () =>
-                {
-                    if (item.Action == "Upsert")
-                    {
-                        await ProcessUpsertAsync(item);
-                    }
-                    else if (item.Action == "Delete")
-                    {
-                        await ProcessDeleteAsync(item);
-                    }
-                }, 5000);
-
-                await _databaseService.DeleteSyncItemAsync(item);
+                break;
             }
-            catch (Exception ex)
+
+            afterId = pendingItems[^1].Id;
+
+            for (int offset = 0; offset < pendingItems.Count;)
             {
-                System.Diagnostics.Debug.WriteLine($"Cloud Sync Error on [{item.EntityType} {item.EntityId}]: {ex.Message}");
-                hasError = true;
+                var firstItem = pendingItems[offset];
+                int batchCount = 1;
+                while (batchCount < pendingItems.Count - offset)
+                {
+                    var nextItem = pendingItems[offset + batchCount];
+                    if (nextItem.EntityType != firstItem.EntityType || nextItem.Action != firstItem.Action)
+                    {
+                        break;
+                    }
+
+                    batchCount++;
+                }
+
+                var batch = pendingItems.GetRange(offset, batchCount);
+                var completedItems = new List<SyncQueueItem>(batch.Count);
+
+                if (CanBulkUpsert(firstItem))
+                {
+                    try
+                    {
+                        await ExecuteWithTimeout(() => ProcessUpsertBatchAsync(batch), 15000);
+                        completedItems.AddRange(batch);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Cloud Sync Batch Error on [{firstItem.EntityType}]: {ex.Message}. Retrying items individually.");
+
+                        foreach (var item in batch)
+                        {
+                            try
+                            {
+                                await ExecuteWithTimeout(() => ProcessUpsertAsync(item), 5000);
+                                completedItems.Add(item);
+                            }
+                            catch (Exception itemException)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Cloud Sync Error on [{item.EntityType} {item.EntityId}]: {itemException.Message}");
+                                hasError = true;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var item in batch)
+                    {
+                        try
+                        {
+                            await ExecuteWithTimeout(async () =>
+                            {
+                                if (item.Action == "Upsert")
+                                {
+                                    await ProcessUpsertAsync(item);
+                                }
+                                else if (item.Action == "Delete")
+                                {
+                                    await ProcessDeleteAsync(item);
+                                }
+                            }, 5000);
+
+                            completedItems.Add(item);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Cloud Sync Error on [{item.EntityType} {item.EntityId}]: {ex.Message}");
+                            hasError = true;
+                        }
+                    }
+                }
+
+                if (completedItems.Count > 0)
+                {
+                    try
+                    {
+                        await _databaseService.DeleteSyncItemsAsync(completedItems);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Could not acknowledge synchronized outbox batch: {ex.Message}");
+                        hasError = true;
+                    }
+                }
+
+                offset += batchCount;
             }
         }
 
@@ -349,24 +424,128 @@ public class SupabaseService
     private readonly HashSet<string> _syncedProjectIds = new();
     private readonly HashSet<string> _syncedDayIds = new();
 
+    private static bool CanBulkUpsert(SyncQueueItem item) =>
+        item.Action == "Upsert" && item.EntityType is "Project" or "Day" or "Take";
+
+    private SupabaseProject ToSupabaseProject(Project project) => new()
+    {
+        Id = project.Id,
+        UserId = CurrentUserId ?? string.Empty,
+        Name = project.Name,
+        Director = project.Director,
+        Dop = project.Dop,
+        ProductionCompany = project.ProductionCompany,
+        ScriptSupervisor = project.ScriptSupervisor,
+        IsDeleted = project.IsDeleted,
+        CreatedAt = project.CreatedAt
+    };
+
+    private static SupabaseDay ToSupabaseDay(Day day) => new()
+    {
+        Id = day.Id,
+        ProjectId = day.ProjectId,
+        ShootDayNumber = day.ShootDayNumber,
+        CalendarDate = day.CalendarDate,
+        GeneralNotes = day.GeneralNotes,
+        IsFinalized = day.IsFinalized,
+        IsDeleted = day.IsDeleted,
+        CreatedAt = day.CreatedAt
+    };
+
+    private static SupabaseTake ToSupabaseTake(Take take) => new()
+    {
+        Id = take.Id,
+        DayId = take.DayId,
+        SequenceOrder = take.SequenceOrder,
+        Episode = take.Episode,
+        Scene = take.Scene,
+        Shot = take.Shot,
+        TakeNumber = take.TakeNumber,
+        CameraData = take.CameraData,
+        SoundNotes = take.SoundNotes,
+        IsSoundNoRoll = take.IsSoundNoRoll,
+        TakeNotes = take.TakeNotes,
+        FalseStartCount = take.FalseStartCount,
+        IsLongStart = take.IsLongStart,
+        IsCircled = take.IsCircled,
+        IsFailed = take.IsFailed,
+        IsPickup = take.IsPickup,
+        IsBlooper = take.IsBlooper,
+        IsNoBoard = take.IsNoBoard,
+        IsEndBoard = take.IsEndBoard,
+        IsWildShot = take.IsWildShot,
+        VoidCameraLabels = take.VoidCameraLabels,
+        IsDeleted = take.IsDeleted,
+        CreatedAt = take.CreatedAt
+    };
+
+    private async Task ProcessUpsertBatchAsync(IReadOnlyList<SyncQueueItem> items)
+    {
+        var entityIds = items.Select(item => item.EntityId).Distinct().ToList();
+
+        switch (items[0].EntityType)
+        {
+            case "Project":
+            {
+                var projectsById = (await _databaseService.GetProjectsByIdsAsync(entityIds))
+                    .ToDictionary(project => project.Id);
+                var projects = entityIds.Where(projectsById.ContainsKey).Select(id => projectsById[id]).ToList();
+                if (projects.Count > 0)
+                {
+                    await _client.From<SupabaseProject>().Upsert(projects.Select(ToSupabaseProject).ToList());
+                    foreach (var project in projects)
+                    {
+                        _syncedProjectIds.Add(project.Id);
+                    }
+                }
+                break;
+            }
+            case "Day":
+            {
+                var daysById = (await _databaseService.GetDaysByIdsAsync(entityIds))
+                    .ToDictionary(day => day.Id);
+                var days = entityIds.Where(daysById.ContainsKey).Select(id => daysById[id]).ToList();
+                foreach (var day in days)
+                {
+                    await UpsertProjectIfNeeded(day.ProjectId);
+                }
+
+                if (days.Count > 0)
+                {
+                    await _client.From<SupabaseDay>().Upsert(days.Select(ToSupabaseDay).ToList());
+                    foreach (var day in days)
+                    {
+                        _syncedDayIds.Add(day.Id);
+                    }
+                }
+                break;
+            }
+            case "Take":
+            {
+                var takesById = (await _databaseService.GetTakesByIdsAsync(entityIds))
+                    .ToDictionary(take => take.Id);
+                var takes = entityIds.Where(takesById.ContainsKey).Select(id => takesById[id]).ToList();
+                foreach (var take in takes)
+                {
+                    await UpsertDayIfNeeded(take.DayId);
+                }
+
+                if (takes.Count > 0)
+                {
+                    await _client.From<SupabaseTake>().Upsert(takes.Select(ToSupabaseTake).ToList());
+                }
+                break;
+            }
+        }
+    }
+
     private async Task UpsertProjectIfNeeded(string projectId)
     {
         if (string.IsNullOrEmpty(projectId) || _syncedProjectIds.Contains(projectId)) return;
         var project = await _databaseService.GetProjectAsync(projectId);
         if (project == null) return;
 
-        await _client.From<SupabaseProject>().Upsert(new SupabaseProject
-        {
-            Id = project.Id,
-            UserId = CurrentUserId ?? string.Empty,
-            Name = project.Name,
-            Director = project.Director,
-            Dop = project.Dop,
-            ProductionCompany = project.ProductionCompany,
-            ScriptSupervisor = project.ScriptSupervisor,
-            IsDeleted = project.IsDeleted,
-            CreatedAt = project.CreatedAt
-        });
+        await _client.From<SupabaseProject>().Upsert(ToSupabaseProject(project));
         _syncedProjectIds.Add(projectId);
     }
 
@@ -378,17 +557,7 @@ public class SupabaseService
 
         await UpsertProjectIfNeeded(day.ProjectId);
 
-        await _client.From<SupabaseDay>().Upsert(new SupabaseDay
-        {
-            Id = day.Id,
-            ProjectId = day.ProjectId,
-            ShootDayNumber = day.ShootDayNumber,
-            CalendarDate = day.CalendarDate,
-            GeneralNotes = day.GeneralNotes,
-            IsFinalized = day.IsFinalized,
-            IsDeleted = day.IsDeleted,
-            CreatedAt = day.CreatedAt
-        });
+        await _client.From<SupabaseDay>().Upsert(ToSupabaseDay(day));
         _syncedDayIds.Add(dayId);
     }
 
@@ -410,32 +579,7 @@ public class SupabaseService
                 {
                     await UpsertDayIfNeeded(take.DayId);
 
-                    await _client.From<SupabaseTake>().Upsert(new SupabaseTake
-                    {
-                        Id = take.Id,
-                        DayId = take.DayId,
-                        SequenceOrder = take.SequenceOrder,
-                        Episode = take.Episode,
-                        Scene = take.Scene,
-                        Shot = take.Shot,
-                        TakeNumber = take.TakeNumber,
-                        CameraData = take.CameraData,
-                        SoundNotes = take.SoundNotes,
-                        IsSoundNoRoll = take.IsSoundNoRoll,
-                        TakeNotes = take.TakeNotes,
-                        FalseStartCount = take.FalseStartCount,
-                        IsLongStart = take.IsLongStart,
-                        IsCircled = take.IsCircled,
-                        IsFailed = take.IsFailed,
-                        IsPickup = take.IsPickup,
-                        IsBlooper = take.IsBlooper,
-                        IsNoBoard = take.IsNoBoard,
-                        IsEndBoard = take.IsEndBoard,
-                        IsWildShot = take.IsWildShot,
-                        VoidCameraLabels = take.VoidCameraLabels,
-                        IsDeleted = take.IsDeleted,
-                        CreatedAt = take.CreatedAt
-                    });
+                    await _client.From<SupabaseTake>().Upsert(ToSupabaseTake(take));
                 }
                 break;
         }

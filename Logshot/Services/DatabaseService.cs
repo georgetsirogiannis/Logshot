@@ -10,6 +10,12 @@ namespace Logshot.Services;
 
 public class DatabaseService
 {
+    private sealed class EntityIdRow
+    {
+        [Column("Id")]
+        public string Id { get; set; } = string.Empty;
+    }
+
     private SQLiteAsyncConnection _db = null!;
 
     // This event tells our Supabase worker that new changes exist
@@ -315,30 +321,89 @@ public class DatabaseService
         return await _db.Table<SyncQueueItem>().OrderBy(x => x.Id).ToListAsync();
     }
 
+    public async Task<int> GetLatestPendingSyncItemIdAsync()
+    {
+        await InitAsync();
+        var latestItem = await _db.Table<SyncQueueItem>().OrderByDescending(x => x.Id).FirstOrDefaultAsync();
+        return latestItem?.Id ?? 0;
+    }
+
+    public async Task<List<SyncQueueItem>> GetPendingSyncItemsAsync(int afterId, int throughId, int limit)
+    {
+        await InitAsync();
+        return await _db.QueryAsync<SyncQueueItem>(
+            "SELECT * FROM SyncQueue WHERE Id > ? AND Id <= ? ORDER BY Id LIMIT ?",
+            afterId,
+            throughId,
+            limit);
+    }
+
     public async Task DeleteSyncItemAsync(SyncQueueItem item)
     {
         await InitAsync();
         await _db.DeleteAsync(item);
     }
 
+    public async Task DeleteSyncItemsAsync(IEnumerable<SyncQueueItem> items)
+    {
+        await InitAsync();
+        var itemsToDelete = items.ToList();
+        if (itemsToDelete.Count == 0) return;
+
+        await _db.RunInTransactionAsync(tran =>
+        {
+            foreach (var item in itemsToDelete)
+            {
+                tran.Delete(item);
+            }
+        });
+    }
+
+    public Task<List<Project>> GetProjectsByIdsAsync(IEnumerable<string> ids) => GetEntitiesByIdsAsync<Project>("Projects", ids);
+
+    public Task<List<Day>> GetDaysByIdsAsync(IEnumerable<string> ids) => GetEntitiesByIdsAsync<Day>("Days", ids);
+
+    public Task<List<Take>> GetTakesByIdsAsync(IEnumerable<string> ids) => GetEntitiesByIdsAsync<Take>("Takes", ids);
+
+    private async Task<List<T>> GetEntitiesByIdsAsync<T>(string tableName, IEnumerable<string> entityIds) where T : new()
+    {
+        await InitAsync();
+
+        var ids = entityIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        var entities = new List<T>();
+        const int batchSize = 500;
+
+        for (int offset = 0; offset < ids.Count; offset += batchSize)
+        {
+            var batch = ids.Skip(offset).Take(batchSize).ToList();
+            var placeholders = string.Join(",", Enumerable.Repeat("?", batch.Count));
+            entities.AddRange(await _db.QueryAsync<T>(
+                $"SELECT * FROM {tableName} WHERE Id IN ({placeholders})",
+                batch.Cast<object>().ToArray()));
+        }
+
+        return entities;
+    }
+
     public async Task<int> EnqueueAllExistingDataForSyncAsync()
     {
         await InitAsync();
 
-        var projects = await _db.Table<Project>().ToListAsync();
-        var days = await _db.Table<Day>().ToListAsync();
-        var takes = await _db.Table<Take>().ToListAsync();
+        var projects = await _db.QueryAsync<EntityIdRow>("SELECT Id FROM Projects");
+        var days = await _db.QueryAsync<EntityIdRow>("SELECT Id FROM Days");
+        var takes = await _db.QueryAsync<EntityIdRow>("SELECT Id FROM Takes");
 
-        foreach (var p in projects)
-            await _db.InsertAsync(new SyncQueueItem { EntityType = "Project", EntityId = p.Id, Action = "Upsert" });
+        var syncItems = new List<SyncQueueItem>(projects.Count + days.Count + takes.Count);
+        syncItems.AddRange(projects.Select(p => new SyncQueueItem { EntityType = "Project", EntityId = p.Id, Action = "Upsert" }));
+        syncItems.AddRange(days.Select(d => new SyncQueueItem { EntityType = "Day", EntityId = d.Id, Action = "Upsert" }));
+        syncItems.AddRange(takes.Select(t => new SyncQueueItem { EntityType = "Take", EntityId = t.Id, Action = "Upsert" }));
 
-        foreach (var d in days)
-            await _db.InsertAsync(new SyncQueueItem { EntityType = "Day", EntityId = d.Id, Action = "Upsert" });
+        if (syncItems.Count > 0)
+        {
+            await _db.InsertAllAsync(syncItems);
+        }
 
-        foreach (var t in takes)
-            await _db.InsertAsync(new SyncQueueItem { EntityType = "Take", EntityId = t.Id, Action = "Upsert" });
-
-        return projects.Count + days.Count + takes.Count;
+        return syncItems.Count;
     }
 
     // --- EXISTING QUERY OPERATIONS ---
