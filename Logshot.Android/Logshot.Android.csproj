@@ -7,7 +7,6 @@
     <Nullable>enable</Nullable>
     <ApplicationId>com.georgetsirogiannis.Logshot</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Validated on the .NET 10 Android Release build; improves native startup/runtime optimization. -->
     <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>

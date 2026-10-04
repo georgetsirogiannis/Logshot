@@ -33,6 +33,17 @@
             </StackPanel>
           </Border>
 
+          <TextBlock Text="ROW REORDERING" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
+            <Grid ColumnDefinitions="*, Auto" MinHeight="52">
+              <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="Smart renumbering on reorder" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                <TextBlock Text="Automatically update scene, shot, and take numbers when a row is moved" FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsSmartRenumberingOnReorderEnabled}" OnContent="ON" OffContent="OFF" VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+
           <TextBlock Text="DATABASE" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
           <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
             <StackPanel>
@@ -79,11 +90,33 @@
             </StackPanel>
           </Border>
 
+            <TextBlock Text="DESKTOP SHORTCUTS" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
+            <StackPanel>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Add a take" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + 1" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Add a shot" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + 2" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Add a scene" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + 3" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <TextBlock Text="Available in the day view, including while typing, when a shoot day is selected and unlocked." FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,10,0,8"/>
+            </StackPanel>
+          </Border>
+
           <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20" Margin="0,2,0,0">
             <StackPanel Spacing="10">
               <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
                 <TextBlock Text="Logshot" FontSize="30" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
-                <TextBlock Text="v1.0.0" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                <TextBlock Text="{Binding AppVersion}" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
               </StackPanel>
               <TextBlock Text="A daily shot reporting application designed for script supervisors to easily log, track, manage and export film &amp; television production logs." FontSize="13" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" LineHeight="19"/>
               <Separator Background="{StaticResource BorderColor}" Margin="0,3"/>

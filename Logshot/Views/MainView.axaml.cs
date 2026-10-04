@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Platform;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Logshot.ViewModels;
 
@@ -20,6 +21,7 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+        AddHandler(KeyDownEvent, MainView_KeyDown, RoutingStrategies.Tunnel);
         _rootSplitGrid = this.FindControl<Grid>("RootSplitGrid");
 
         DataContextChanged += (_, _) =>
@@ -51,6 +53,37 @@ public partial class MainView : UserControl
 
         SizeChanged += (_, e) => UpdateLayoutMode(e.NewSize.Width);
         UpdateLayoutMode(Bounds.Width);
+    }
+
+    private async void MainView_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyModifiers != KeyModifiers.Control)
+            return;
+
+        if (DataContext is not MainViewModel vm ||
+            vm.IsInfoViewOpen ||
+            vm.AppViewModel.IsSearchActive ||
+            vm.AppViewModel.CurrentDay is not { IsFinalized: false } day)
+            return;
+
+        switch (e.Key)
+        {
+            case Key.D1:
+            case Key.NumPad1:
+                e.Handled = true;
+                await day.AddTakeCommand.ExecuteAsync(null);
+                break;
+            case Key.D2:
+            case Key.NumPad2:
+                e.Handled = true;
+                await day.AddShotCommand.ExecuteAsync(null);
+                break;
+            case Key.D3:
+            case Key.NumPad3:
+                e.Handled = true;
+                vm.AppViewModel.OpenAddSceneDialogCommand.Execute(null);
+                break;
+        }
     }
 
     private void OnRequestOpenAccountCreation()
