@@ -8,11 +8,6 @@
 	<AssemblyName>Logshot.Desktop</AssemblyName>
 	  <ApplicationIcon>..\Logshot\Assets\logshot-icon.ico</ApplicationIcon>
 
-	  <!-- Versioning -->
-	  <Version>1.0.0</Version>
-	  <FileVersion>1.0.0.0</FileVersion>
-	  <AssemblyVersion>1.0.0.0</AssemblyVersion>
-
 	  <!-- Branding Metadata -->
 	  <Title>Logshot</Title>
 	  <Product>Logshot Desktop</Product>
@@ -24,8 +19,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+	<ApplicationManifest>$(MSBuildProjectDirectory)\obj\$(Configuration)\$(TargetFramework)\app.manifest</ApplicationManifest>
   </PropertyGroup>
+
+  <Target Name="GenerateVersionedApplicationManifest" BeforeTargets="PrepareForBuild">
+	<MakeDir Directories="$(MSBuildProjectDirectory)\obj\$(Configuration)\$(TargetFramework)" />
+	<Copy SourceFiles="$(MSBuildProjectDirectory)\app.manifest" DestinationFiles="$(ApplicationManifest)" />
+	<XmlPoke XmlInputPath="$(ApplicationManifest)" Query="/*[local-name()='assembly']/*[local-name()='assemblyIdentity']/@version" Value="$([System.Text.RegularExpressions.Regex]::Match('$(Version)', '^\d+\.\d+\.\d+').Value).0" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />

@@ -19,6 +19,7 @@ public partial class MainViewModel : ViewModelBase
     private int _cloudMergeScheduled;
 
     public DatabaseService DatabaseService => _databaseService;
+    public string AppVersion => $"v{typeof(MainViewModel).Assembly.GetName().Version?.ToString(3)}";
 
     [ObservableProperty]
     private AppViewModel _appViewModel;

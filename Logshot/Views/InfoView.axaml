@@ -83,7 +83,7 @@
             <StackPanel Spacing="10">
               <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
                 <TextBlock Text="Logshot" FontSize="30" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"/>
-                <TextBlock Text="v1.0.0" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                <TextBlock Text="{Binding AppVersion}" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
               </StackPanel>
               <TextBlock Text="A daily shot reporting application designed for script supervisors to easily log, track, manage and export film &amp; television production logs." FontSize="13" TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" LineHeight="19"/>
               <Separator Background="{StaticResource BorderColor}" Margin="0,3"/>
