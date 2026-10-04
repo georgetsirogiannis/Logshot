@@ -33,6 +33,17 @@
             </StackPanel>
           </Border>
 
+          <TextBlock Text="ROW REORDERING" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
+            <Grid ColumnDefinitions="*, Auto" MinHeight="52">
+              <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="Smart renumbering on reorder" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                <TextBlock Text="Automatically update scene, shot, and take numbers when a row is moved" FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsSmartRenumberingOnReorderEnabled}" OnContent="ON" OffContent="OFF" VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+
           <TextBlock Text="DESKTOP SHORTCUTS" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
           <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
             <StackPanel>

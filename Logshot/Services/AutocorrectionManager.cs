@@ -11,6 +11,7 @@ public class AutocorrectionManager
 
     public bool IsEnabled { get; set; } = true;
     public string CustomDictionaryText { get; set; } = string.Empty;
+    public bool SmartRenumberingOnReorderEnabled { get; private set; } = true;
 
     // These are your hardcoded defaults
     private readonly Dictionary<string, string> _defaultPairs = new(StringComparer.OrdinalIgnoreCase)
@@ -174,10 +175,16 @@ public class AutocorrectionManager
         IsEnabled = isEnabled;
         CustomDictionaryText = customDictText ?? string.Empty;
 
-        var data = new { IsEnabled, CustomDictionaryText };
+        var data = new { IsEnabled, CustomDictionaryText, SmartRenumberingOnReorderEnabled };
         File.WriteAllText(_settingsFilePath, JsonSerializer.Serialize(data));
 
         RebuildActivePairs();
+    }
+
+    public void SetSmartRenumberingOnReorderEnabled(bool isEnabled)
+    {
+        SmartRenumberingOnReorderEnabled = isEnabled;
+        SaveSettings(IsEnabled, CustomDictionaryText);
     }
 
     private void LoadSettings()
@@ -190,6 +197,10 @@ public class AutocorrectionManager
                 using var doc = JsonDocument.Parse(json);
                 IsEnabled = doc.RootElement.GetProperty("IsEnabled").GetBoolean();
                 CustomDictionaryText = doc.RootElement.GetProperty("CustomDictionaryText").GetString() ?? "";
+                if (doc.RootElement.TryGetProperty(nameof(SmartRenumberingOnReorderEnabled), out var smartRenumberingSetting))
+                {
+                    SmartRenumberingOnReorderEnabled = smartRenumberingSetting.GetBoolean();
+                }
             }
             catch { /* If file is corrupted, silently fallback to defaults */ }
         }

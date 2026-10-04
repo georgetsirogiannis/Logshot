@@ -737,7 +737,8 @@ public partial class DayViewModel : ViewModelBase
             return true;
 
         var remainingTakes = Takes.Where(item => !ReferenceEquals(item, take)).ToList();
-        if (!take.IsSoundOnlyRow && !take.IsWildShot &&
+        if (AutocorrectionManager.Instance.SmartRenumberingOnReorderEnabled &&
+            !take.IsSoundOnlyRow && !take.IsWildShot &&
             FindSetupForInsertion(remainingTakes, newIndex) is { } setup)
         {
             bool MatchesSetup(TakeViewModel item) =>

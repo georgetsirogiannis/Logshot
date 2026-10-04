@@ -41,6 +41,14 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isAutocorrectEnabled;
 
+    [ObservableProperty]
+    private bool _isSmartRenumberingOnReorderEnabled = true;
+
+    partial void OnIsSmartRenumberingOnReorderEnabledChanged(bool value)
+    {
+        AutocorrectionManager.Instance.SetSmartRenumberingOnReorderEnabled(value);
+    }
+
     partial void OnIsAutocorrectEnabledChanged(bool value)
     {
         AutocorrectionManager.Instance.SaveSettings(value, AutocorrectionManager.Instance.CustomDictionaryText);
@@ -498,6 +506,7 @@ public partial class MainViewModel : ViewModelBase
         };
 
         IsAutocorrectEnabled = AutocorrectionManager.Instance.IsEnabled;
+        _isSmartRenumberingOnReorderEnabled = AutocorrectionManager.Instance.SmartRenumberingOnReorderEnabled;
 
         _appViewModel = new AppViewModel(databaseService);
         LoadRememberedEmail();
