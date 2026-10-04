@@ -5,6 +5,22 @@
     See https://docs.avaloniaui.net/docs/guides/platforms/platform-specific-code/dotnet for more details.-->
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
+	<AssemblyName>Logshot.Desktop</AssemblyName>
+	  <ApplicationIcon>..\Logshot\Assets\logshot-icon.ico</ApplicationIcon>
+
+	  <!-- Versioning -->
+	  <Version>1.0.0</Version>
+	  <FileVersion>1.0.0.0</FileVersion>
+	  <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+	  <!-- Branding Metadata -->
+	  <Title>Logshot</Title>
+	  <Product>Logshot Desktop</Product>
+	  <Authors>George Tsirogiannis</Authors>
+	  <Company>George Tsirogiannis</Company>
+	  <Copyright>Copyright © 2026 George Tsirogiannis</Copyright>
+	  <Description>Daily shot-reporting application for script supervisors.</Description>
+	  
   </PropertyGroup>
 
   <PropertyGroup>
