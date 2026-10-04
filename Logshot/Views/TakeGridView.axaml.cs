@@ -14,9 +14,15 @@ namespace Logshot.Views;
 
 public partial class TakeGridView : UserControl
 {
+    private static readonly DataFormat<TakeViewModel> TakeDataFormat =
+        DataFormat.CreateInProcessFormat<TakeViewModel>("logshot-take-row");
+
     private TakeViewModel? _draggedItem;
+    private PointerPressedEventArgs? _dragStartEventArgs;
     private Point _startPoint;
     private bool _isDragging;
+    private int _dropInsertionIndex = -1;
+    private Border? _dropMarker;
     private DayViewModel? _dayVm;
 
     public TakeGridView()
@@ -188,36 +194,158 @@ public partial class TakeGridView : UserControl
         }
     }
 
-    private void Row_PointerPressed(object sender, PointerPressedEventArgs e)
+    private void ReorderHandle_PointerPressed(object sender, PointerPressedEventArgs e)
     {
-        if (sender is Border border && border.Tag is TakeViewModel takeVm)
+        if (_dayVm is { IsReorderMode: true, IsFinalized: false } &&
+            sender is Control handle && handle.DataContext is TakeViewModel takeVm &&
+            e.GetCurrentPoint(handle).Properties.IsLeftButtonPressed)
         {
-            var point = e.GetCurrentPoint(border);
-            if (point.Properties.IsLeftButtonPressed)
-            {
-                _startPoint = e.GetPosition(this);
-                _draggedItem = takeVm;
-                _isDragging = false;
-            }
+            _startPoint = e.GetPosition(this);
+            _draggedItem = takeVm;
+            _dragStartEventArgs = e;
+            _isDragging = false;
+            ClearDropMarker();
+            e.Pointer.Capture(handle);
         }
     }
 
-    private void Row_PointerMoved(object sender, PointerEventArgs e)
+    private async void ReorderHandle_PointerMoved(object sender, PointerEventArgs e)
     {
-        if (_draggedItem != null && !_isDragging)
+        if (_draggedItem == null || _dragStartEventArgs == null || _isDragging ||
+            _dayVm is not { IsReorderMode: true, IsFinalized: false })
+            return;
+
+        var currentPoint = e.GetPosition(this);
+        var delta = currentPoint - _startPoint;
+        if (Math.Abs(delta.X) + Math.Abs(delta.Y) >= 5)
         {
-            var currentPoint = e.GetPosition(this);
-            if (Math.Abs(currentPoint.Y - _startPoint.Y) > 5)
-            {
-                _isDragging = true;
-            }
+            var draggedItem = _draggedItem;
+            _isDragging = true;
+
+            var transfer = new DataTransfer();
+            transfer.Add(DataTransferItem.Create(TakeDataFormat, draggedItem));
+            e.Pointer.Capture(null);
+
+            await DragDrop.DoDragDropAsync(_dragStartEventArgs, transfer, DragDropEffects.Move);
+
+            _isDragging = false;
+            _draggedItem = null;
+            _dragStartEventArgs = null;
+            ClearDropMarker();
         }
     }
 
-    private void Row_PointerReleased(object sender, PointerReleasedEventArgs e)
+    private void ReorderHandle_PointerReleased(object sender, PointerReleasedEventArgs e)
     {
-        _draggedItem = null;
-        _isDragging = false;
+        e.Pointer.Capture(null);
+        if (!_isDragging)
+        {
+            _draggedItem = null;
+            _dragStartEventArgs = null;
+        }
+    }
+
+    private void TakesListBox_DragOver(object? sender, DragEventArgs e)
+    {
+        if (_dayVm is not { IsReorderMode: true, IsFinalized: false } ||
+            !e.DataTransfer.Formats.Contains(TakeDataFormat) || TakesListBox == null)
+        {
+            ClearDropMarker();
+            e.DragEffects = DragDropEffects.None;
+            return;
+        }
+
+        UpdateDropTarget(e.GetPosition(TakesListBox));
+        e.DragEffects = _dropInsertionIndex >= 0 ? DragDropEffects.Move : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void TakesListBox_DragLeave(object? sender, DragEventArgs e)
+    {
+        ClearDropMarker();
+    }
+
+    private async void TakesListBox_Drop(object? sender, DragEventArgs e)
+    {
+        if (_dayVm is not { IsReorderMode: true, IsFinalized: false } || TakesListBox == null ||
+            e.DataTransfer.TryGetValue(TakeDataFormat) is not { } draggedItem)
+        {
+            ClearDropMarker();
+            e.DragEffects = DragDropEffects.None;
+            return;
+        }
+
+        UpdateDropTarget(e.GetPosition(TakesListBox));
+        if (_dropInsertionIndex < 0)
+        {
+            ClearDropMarker();
+            e.DragEffects = DragDropEffects.None;
+            return;
+        }
+
+        var oldIndex = _dayVm.Takes.IndexOf(draggedItem);
+        var newIndex = _dropInsertionIndex;
+        if (newIndex > oldIndex)
+        {
+            newIndex--;
+        }
+
+        await _dayVm.MoveTakeAsync(draggedItem, newIndex);
+        e.DragEffects = DragDropEffects.Move;
+        e.Handled = true;
+        ClearDropMarker();
+    }
+
+    private void UpdateDropTarget(Point listPosition)
+    {
+        if (_dayVm == null || TakesListBox == null)
+            return;
+
+        ClearDropMarker();
+
+        foreach (var take in _dayVm.Takes)
+        {
+            if (TakesListBox.ContainerFromItem(take) is not Control container)
+                continue;
+
+            var row = container.GetVisualDescendants()
+                .OfType<Border>()
+                .FirstOrDefault(border => ReferenceEquals(border.Tag, take));
+            if (row == null)
+                continue;
+
+            var rowOrigin = row.TranslatePoint(new Point(0, 0), TakesListBox);
+            if (rowOrigin is not Point origin ||
+                listPosition.Y < origin.Y || listPosition.Y > origin.Y + row.Bounds.Height)
+            {
+                continue;
+            }
+
+            var isAfter = listPosition.Y - origin.Y >= row.Bounds.Height / 2;
+            _dropInsertionIndex = _dayVm.Takes.IndexOf(take) + (isAfter ? 1 : 0);
+            _dropMarker = row.GetVisualDescendants().OfType<Border>()
+                .FirstOrDefault(border => border.Name == "DropMarker");
+            if (_dropMarker != null)
+            {
+                _dropMarker.VerticalAlignment = isAfter
+                    ? Avalonia.Layout.VerticalAlignment.Bottom
+                    : Avalonia.Layout.VerticalAlignment.Top;
+                _dropMarker.IsVisible = true;
+            }
+
+            return;
+        }
+    }
+
+    private void ClearDropMarker()
+    {
+        if (_dropMarker != null)
+        {
+            _dropMarker.IsVisible = false;
+            _dropMarker = null;
+        }
+
+        _dropInsertionIndex = -1;
     }
 
     private async void CameraRoll_LostFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)

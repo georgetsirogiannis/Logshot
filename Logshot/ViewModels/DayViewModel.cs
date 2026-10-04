@@ -97,9 +97,17 @@ public partial class DayViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoadingTakes = false;
 
+    [ObservableProperty]
+    private bool _isReorderMode = false;
+
     partial void OnIsFinalizedChanged(bool value)
     {
         OnPropertyChanged(nameof(IsNotFinalized));
+        if (value)
+        {
+            IsReorderMode = false;
+        }
+
         if (!_isSuppressingSave)
         {
             _ = SaveDayCommand.ExecuteAsync(null);
@@ -699,6 +707,23 @@ public partial class DayViewModel : ViewModelBase
 
         UpdateRowVisibilities();
         BuildHierarchicalGroups();
+    }
+
+    public async Task MoveTakeAsync(TakeViewModel take, int newIndex)
+    {
+        if (IsFinalized || !IsReorderMode || take is null)
+            return;
+
+        var oldIndex = Takes.IndexOf(take);
+        if (oldIndex < 0 || Takes.Count < 2)
+            return;
+
+        newIndex = Math.Clamp(newIndex, 0, Takes.Count - 1);
+        if (oldIndex == newIndex)
+            return;
+
+        Takes.Move(oldIndex, newIndex);
+        await ReorderTakesCommand.ExecuteAsync(null);
     }
 
     /// <summary>
