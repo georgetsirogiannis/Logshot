@@ -37,6 +37,13 @@ public partial class ExtraCameraHeaderState : ObservableObject
 
 public partial class DayViewModel : ViewModelBase
 {
+    private enum ReorderConflictResolution
+    {
+        RenumberLaterTakes,
+        KeepExistingNumbers,
+        CancelMove
+    }
+
     private readonly DatabaseService _databaseService;
     private readonly CameraDataManager _cameraDataManager;
     private readonly ContinuityService _continuityService;
@@ -44,6 +51,7 @@ public partial class DayViewModel : ViewModelBase
     private CancellationTokenSource? _loadTakesCancellation;
     private List<TakeViewModel>? _orderedTakesCache;
     private Dictionary<TakeViewModel, int>? _takeIndexCache;
+    private TaskCompletionSource<ReorderConflictResolution>? _reorderConflictDecision;
     private int _groupRebuildVersion;
     private const int GroupRebuildDelayMilliseconds = 150;
 
@@ -99,6 +107,12 @@ public partial class DayViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isReorderMode = false;
+
+    [ObservableProperty]
+    private bool _isReorderConflictDialogOpen;
+
+    [ObservableProperty]
+    private string _reorderConflictMessage = string.Empty;
 
     partial void OnIsFinalizedChanged(bool value)
     {
@@ -709,22 +723,123 @@ public partial class DayViewModel : ViewModelBase
         BuildHierarchicalGroups();
     }
 
-    public async Task MoveTakeAsync(TakeViewModel take, int newIndex)
+    public async Task<bool> MoveTakeAsync(TakeViewModel take, int newIndex)
     {
         if (IsFinalized || !IsReorderMode || take is null)
-            return;
+            return false;
 
         var oldIndex = Takes.IndexOf(take);
         if (oldIndex < 0 || Takes.Count < 2)
-            return;
+            return false;
 
         newIndex = Math.Clamp(newIndex, 0, Takes.Count - 1);
         if (oldIndex == newIndex)
-            return;
+            return true;
+
+        var remainingTakes = Takes.Where(item => !ReferenceEquals(item, take)).ToList();
+        if (!take.IsSoundOnlyRow && !take.IsWildShot &&
+            FindSetupForInsertion(remainingTakes, newIndex) is { } setup)
+        {
+            bool MatchesSetup(TakeViewModel item) =>
+                item.Episode == setup.Episode && item.Scene == setup.Scene && item.Shot == setup.Shot;
+
+            var nextTakeNumber = remainingTakes
+                .Take(newIndex)
+                .Where(MatchesSetup)
+                .Select(item => item.TakeNumber)
+                .DefaultIfEmpty(0)
+                .Max() + 1;
+
+            var laterTakes = remainingTakes
+                .Skip(newIndex)
+                .Where(MatchesSetup)
+                .Where(item => item.TakeNumber >= nextTakeNumber)
+                .ToList();
+
+            if (laterTakes.Count > 0)
+            {
+                var resolution = await RequestReorderConflictDecisionAsync(setup, nextTakeNumber, laterTakes.Count);
+                if (resolution == ReorderConflictResolution.CancelMove)
+                    return false;
+
+                if (resolution == ReorderConflictResolution.RenumberLaterTakes)
+                {
+                    foreach (var laterTake in laterTakes.OrderByDescending(item => item.TakeNumber))
+                    {
+                        laterTake.TakeNumber++;
+                        await laterTake.SaveTakeCommand.ExecuteAsync(null);
+                    }
+                }
+            }
+
+            take.Episode = setup.Episode;
+            take.Scene = setup.Scene;
+            take.Shot = setup.Shot;
+            take.TakeNumber = nextTakeNumber;
+            await take.FlushPendingTextSaveAsync();
+            await take.SaveTakeCommand.ExecuteAsync(null);
+        }
 
         Takes.Move(oldIndex, newIndex);
         await ReorderTakesCommand.ExecuteAsync(null);
+        return true;
     }
+
+    private static TakeViewModel? FindSetupForInsertion(IReadOnlyList<TakeViewModel> takes, int index)
+    {
+        for (var i = Math.Min(index - 1, takes.Count - 1); i >= 0; i--)
+        {
+            if (!takes[i].IsSoundOnlyRow && !takes[i].IsWildShot)
+                return takes[i];
+        }
+
+        for (var i = Math.Max(index, 0); i < takes.Count; i++)
+        {
+            if (!takes[i].IsSoundOnlyRow && !takes[i].IsWildShot)
+                return takes[i];
+        }
+
+        return null;
+    }
+
+    private async Task<ReorderConflictResolution> RequestReorderConflictDecisionAsync(
+        TakeViewModel setup,
+        int proposedTakeNumber,
+        int affectedTakeCount)
+    {
+        var episode = string.IsNullOrWhiteSpace(setup.Episode) ? string.Empty : $"Episode {setup.Episode}, ";
+        ReorderConflictMessage =
+            $"{episode}Scene {setup.Scene}, Shot {setup.Shot} already has {affectedTakeCount} later take(s) numbered {proposedTakeNumber} or higher. Renumber those takes, keep their current numbers, or cancel this move?";
+
+        var decision = new TaskCompletionSource<ReorderConflictResolution>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _reorderConflictDecision = decision;
+        IsReorderConflictDialogOpen = true;
+
+        try
+        {
+            return await decision.Task;
+        }
+        finally
+        {
+            IsReorderConflictDialogOpen = false;
+            _reorderConflictDecision = null;
+        }
+    }
+
+    private void ResolveReorderConflict(ReorderConflictResolution resolution)
+    {
+        IsReorderConflictDialogOpen = false;
+        _reorderConflictDecision?.TrySetResult(resolution);
+    }
+
+    [RelayCommand]
+    public void RenumberFollowingTakes() => ResolveReorderConflict(ReorderConflictResolution.RenumberLaterTakes);
+
+    [RelayCommand]
+    public void KeepFollowingTakeNumbers() => ResolveReorderConflict(ReorderConflictResolution.KeepExistingNumbers);
+
+    [RelayCommand]
+    public void CancelReorderMove() => ResolveReorderConflict(ReorderConflictResolution.CancelMove);
 
     /// <summary>
     /// Marks the day as finalized (locked from further edits in the desktop grid).

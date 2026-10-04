@@ -290,9 +290,14 @@ public partial class TakeGridView : UserControl
             newIndex--;
         }
 
-        await _dayVm.MoveTakeAsync(draggedItem, newIndex);
         e.DragEffects = DragDropEffects.Move;
         e.Handled = true;
+        var moved = await _dayVm.MoveTakeAsync(draggedItem, newIndex);
+        if (!moved)
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+
         ClearDropMarker();
     }
 
