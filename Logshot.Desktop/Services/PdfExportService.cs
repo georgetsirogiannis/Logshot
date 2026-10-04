@@ -18,6 +18,8 @@ public class PdfExportService : IPdfExportService
 {
     public bool IsSupported => true;
 
+    private const float VoidedRowHeight = 16f;
+    private const float VoidedRollChangeRowHeight = 24f;
     private static bool _isInitialized = false;
 
     private static void EnsureInitialized()
@@ -78,7 +80,7 @@ public class PdfExportService : IPdfExportService
                     string bulletText = trimmedLine[2..];
                     column.Item().Row(row =>
                     {
-                        row.ConstantItem(10).AlignMiddle().Text(t => t.Span("•").FontSize(fontSize));
+                        row.ConstantItem(10).AlignTop().Text(t => t.Span("•").FontSize(fontSize));
                         row.RelativeItem().Text(t => t.Span(FormatText(bulletText)).FontSize(fontSize));
                     });
                 }
@@ -321,10 +323,20 @@ public class PdfExportService : IPdfExportService
 
         if (take.HasVoidedCameras)
         {
-            return c.Height(15f);
+            return c.Height(GetVoidedRowHeight(take));
         }
 
         return c.MinHeight(40f).Padding(2);
+    }
+
+    private static float GetVoidedRowHeight(TakeViewModel take)
+    {
+        bool hasVoidedRollChange =
+            (take.IsCamAVoided && take.IsCamARollChangeMarked && !string.IsNullOrWhiteSpace(take.CamARollNumber)) ||
+            (take.IsCamBVoided && take.IsCamBRollChangeMarked && !string.IsNullOrWhiteSpace(take.CamBRollNumber)) ||
+            (take.ExtraCameraRolls?.Any(camera => camera.IsVoided && camera.IsRollChangeMarked && !string.IsNullOrWhiteSpace(camera.RollNumber)) ?? false);
+
+        return hasVoidedRollChange ? VoidedRollChangeRowHeight : VoidedRowHeight;
     }
 
     private static void RenderCrossStitchCell(IContainer cell, float targetHeight)
@@ -402,15 +414,48 @@ public class PdfExportService : IPdfExportService
         {
             if (isVoided)
             {
-                cell.Padding(2).AlignCenter().AlignMiddle().Text("ΑΚΥΡΟ CLIP").Bold().FontSize(7f).FontColor(Colors.Red.Medium);
+                if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))
+                {
+                    cell.PaddingHorizontal(1).Layers(layers =>
+                    {
+                        layers.PrimaryLayer().AlignBottom().PaddingBottom(1)
+                            .AlignCenter().Text("ΑΚΥΡΟ CLIP").Bold().FontSize(7f).FontColor(Colors.Red.Medium);
+                        layers.Layer().AlignTop().PaddingTop(1)
+                            .AlignCenter().Text(FormatText(rollNumber)).Bold().Underline().FontSize(7f);
+                    });
+                }
+                else
+                {
+                    cell.Padding(1).AlignCenter().AlignMiddle()
+                        .Text("ΑΚΥΡΟ CLIP").Bold().FontSize(7f).FontColor(Colors.Red.Medium);
+                }
+            }
+            else if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))
+            {
+                cell.Layers(layers =>
+                {
+                    layers.PrimaryLayer().Element(c =>
+                    {
+                        if (isNoRoll)
+                        {
+                            RenderNoRollCell(c, GetVoidedRowHeight(take));
+                        }
+                        else
+                        {
+                            RenderCrossStitchCell(c, GetVoidedRowHeight(take));
+                        }
+                    });
+                    layers.Layer().AlignTop().AlignCenter().PaddingTop(1)
+                        .Text(FormatText(rollNumber)).Bold().Underline().FontSize(7f);
+                });
             }
             else if (isNoRoll)
             {
-                RenderNoRollCell(cell, 15f);
+                RenderNoRollCell(cell, GetVoidedRowHeight(take));
             }
             else
             {
-                RenderCrossStitchCell(cell, 15f);
+                RenderCrossStitchCell(cell, GetVoidedRowHeight(take));
             }
             return;
         }
@@ -471,7 +516,7 @@ public class PdfExportService : IPdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell, 15f);
+            RenderCrossStitchCell(cell, GetVoidedRowHeight(take));
             return;
         }
 
@@ -491,7 +536,7 @@ public class PdfExportService : IPdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell, 15f);
+            RenderCrossStitchCell(cell, GetVoidedRowHeight(take));
             return;
         }
 
@@ -503,7 +548,7 @@ public class PdfExportService : IPdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell, 15f);
+            RenderCrossStitchCell(cell, GetVoidedRowHeight(take));
             return;
         }
 
@@ -515,7 +560,7 @@ public class PdfExportService : IPdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell, 15f);
+            RenderCrossStitchCell(cell, GetVoidedRowHeight(take));
             return;
         }
 
@@ -528,7 +573,7 @@ public class PdfExportService : IPdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell, 15f);
+            RenderCrossStitchCell(cell, GetVoidedRowHeight(take));
             return;
         }
 
@@ -581,7 +626,7 @@ public class PdfExportService : IPdfExportService
     {
         if (take.HasVoidedCameras)
         {
-            RenderCrossStitchCell(cell, 15f);
+            RenderCrossStitchCell(cell, GetVoidedRowHeight(take));
             return;
         }
 
