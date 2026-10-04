@@ -21,6 +21,10 @@ public partial class MainViewModel : ViewModelBase
     public DatabaseService DatabaseService => _databaseService;
     public string AppVersion => $"v{typeof(MainViewModel).Assembly.GetName().Version?.ToString(3)}";
 
+    public void BeginTextEditing() => _supabaseService.BeginTextEditing();
+
+    public void EndTextEditing() => _supabaseService.EndTextEditing();
+
     [ObservableProperty]
     private AppViewModel _appViewModel;
 

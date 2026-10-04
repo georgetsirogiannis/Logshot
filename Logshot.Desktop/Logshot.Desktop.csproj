@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
 	<AssemblyName>Logshot.Desktop</AssemblyName>
 	  <ApplicationIcon>..\Logshot\Assets\logshot-icon.ico</ApplicationIcon>
+	  <Version>1.1.3</Version>
 
 	  <!-- Branding Metadata -->
 	  <Title>Logshot</Title>

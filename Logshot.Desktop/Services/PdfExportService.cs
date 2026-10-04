@@ -526,10 +526,7 @@ public class PdfExportService : IPdfExportService
             return;
         }
 
-        cell.AlignCenter().AlignMiddle().Element(c =>
-        {
-            c.Text(FormatText(take.ShowSoundNotes ? (take.SoundNotes ?? "") : "—″—")).FontSize(8.5f);
-        });
+        cell.AlignCenter().AlignMiddle().Text(FormatText(take.ShowSoundNotes ? (take.SoundNotes ?? "") : "—″—")).FontSize(8.5f);
     }
 
     private void RenderEpisodeCell(IContainer cell, TakeViewModel take)

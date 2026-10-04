@@ -2,8 +2,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Platform;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Logshot.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Logshot.Views.Android;
@@ -11,6 +13,7 @@ namespace Logshot.Views.Android;
 public partial class AndroidMainView : UserControl
 {
     private MainViewModel? _boundViewModel;
+    private readonly HashSet<TextBox> _focusedMultilineTextBoxes = new();
 
     public AndroidMainView()
     {
@@ -35,6 +38,8 @@ public partial class AndroidMainView : UserControl
         {
             topLevel.InputPane.StateChanged += InputPane_StateChanged;
         }
+        topLevel?.AddHandler(InputElement.GotFocusEvent, MainView_GotFocus, RoutingStrategies.Bubble);
+        topLevel?.AddHandler(InputElement.LostFocusEvent, MainView_LostFocus, RoutingStrategies.Bubble);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -45,6 +50,31 @@ public partial class AndroidMainView : UserControl
         if (topLevel?.InputPane != null)
         {
             topLevel.InputPane.StateChanged -= InputPane_StateChanged;
+        }
+        topLevel?.RemoveHandler(InputElement.GotFocusEvent, MainView_GotFocus);
+        topLevel?.RemoveHandler(InputElement.LostFocusEvent, MainView_LostFocus);
+
+        foreach (var textBox in _focusedMultilineTextBoxes)
+        {
+            _boundViewModel?.EndTextEditing();
+        }
+        _focusedMultilineTextBoxes.Clear();
+    }
+
+    private void MainView_GotFocus(object? sender, RoutedEventArgs e)
+    {
+        if (e.Source is TextBox { AcceptsReturn: true, IsReadOnly: false } textBox &&
+            _focusedMultilineTextBoxes.Add(textBox))
+        {
+            _boundViewModel?.BeginTextEditing();
+        }
+    }
+
+    private void MainView_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (e.Source is TextBox textBox && _focusedMultilineTextBoxes.Remove(textBox))
+        {
+            _boundViewModel?.EndTextEditing();
         }
     }
 

@@ -36,6 +36,9 @@ public class AutocorrectBehavior
 
     private static void TextBox_KeyUp(object? sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            return;
+
         // Trigger instantly when user presses Space or Enter
         if (e.Key == Key.Space || e.Key == Key.Enter)
         {

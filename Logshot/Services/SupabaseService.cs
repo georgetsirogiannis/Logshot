@@ -160,6 +160,8 @@ public class SupabaseService
     private bool _isInitialized = false;
     private CancellationTokenSource? _debounceCts;
     private readonly SemaphoreSlim _syncSemaphore = new(1, 1);
+    private int _activeTextEditorCount;
+    private int _syncPending;
 
     public event Action<string, string>? OnSyncStatusChanged;
     public event Action? OnCloudDataReceived;
@@ -230,6 +232,12 @@ public class SupabaseService
             return;
         }
 
+        if (!pullFromCloud && Volatile.Read(ref _activeTextEditorCount) > 0)
+        {
+            Interlocked.Exchange(ref _syncPending, 1);
+            return;
+        }
+
         _debounceCts?.Cancel();
 
         if (!await _syncSemaphore.WaitAsync(0))
@@ -266,6 +274,15 @@ public class SupabaseService
 
         OnSyncStatusChanged?.Invoke(SyncIconPaths.Pending, "Pending Changes");
 
+        if (Volatile.Read(ref _activeTextEditorCount) > 0)
+        {
+            _debounceCts?.Cancel();
+            Interlocked.Exchange(ref _syncPending, 1);
+            return;
+        }
+
+        Interlocked.Exchange(ref _syncPending, 0);
+
         _debounceCts?.Cancel();
         _debounceCts = new CancellationTokenSource();
         var token = _debounceCts.Token;
@@ -282,6 +299,20 @@ public class SupabaseService
             }
             catch (TaskCanceledException) { /* Timer reset */ }
         }, token);
+    }
+
+    public void BeginTextEditing()
+    {
+        Interlocked.Increment(ref _activeTextEditorCount);
+    }
+
+    public void EndTextEditing()
+    {
+        if (Interlocked.Decrement(ref _activeTextEditorCount) == 0 &&
+            Interlocked.Exchange(ref _syncPending, 0) != 0)
+        {
+            TriggerSync();
+        }
     }
 
     private async Task ProcessSyncQueueInternalAsync()
@@ -758,7 +789,7 @@ public class SupabaseService
                 try
                 {
                     await Task.Delay(PeriodicSyncInterval);
-                    if (_isInitialized)
+                    if (_isInitialized && Volatile.Read(ref _activeTextEditorCount) == 0)
                     {
                         await ManualSyncAsync();
                     }
