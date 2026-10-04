@@ -6,7 +6,7 @@
 	<TargetOSPlatformVersion>34.0</TargetOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ApplicationId>com.georgetsirogiannis.Logshot</ApplicationId>
-    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationVersion>2</ApplicationVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Validated on the .NET 10 Android Release build; improves native startup/runtime optimization. -->
     <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>

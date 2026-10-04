@@ -33,6 +33,7 @@ public partial class MainView : UserControl
                 _boundViewModel.AppViewModel.RequestPdfFilePicker -= OnRequestPdfFilePicker;
                 _boundViewModel.RequestOpenAccountCreation -= OnRequestOpenAccountCreation;
                 _boundViewModel.RequestCloseAccountCreation -= OnRequestCloseAccountCreation;
+                _boundViewModel.AppViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
             }
 
             // Subscribe to new context
@@ -43,12 +44,12 @@ public partial class MainView : UserControl
                 vm.AppViewModel.RequestPdfFilePicker += OnRequestPdfFilePicker;
                 vm.RequestOpenAccountCreation += OnRequestOpenAccountCreation;
                 vm.RequestCloseAccountCreation += OnRequestCloseAccountCreation;
+                vm.AppViewModel.PropertyChanged += AppViewModel_PropertyChanged;
 
                 vm.InitializeApplicationCommand.Execute(null);
                 UpdateLayoutMode(Bounds.Width);
                 UpdateSidebarColumnWidth();
             }
-
         };
 
         SizeChanged += (_, e) => UpdateLayoutMode(e.NewSize.Width);
@@ -225,6 +226,16 @@ public partial class MainView : UserControl
         if (e.PropertyName == nameof(MainViewModel.IsSidebarOpen))
         {
             UpdateSidebarColumnWidth();
+        }
+    }
+
+    private void AppViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AppViewModel.IsAddScenePopupOpen) && sender is AppViewModel { IsAddScenePopupOpen: true })
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(
+                () => this.FindControl<TextBox>("NewSceneEpisodeBox")?.Focus(),
+                Avalonia.Threading.DispatcherPriority.Loaded);
         }
     }
 
