@@ -94,21 +94,35 @@
           <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
             <StackPanel>
               <Grid ColumnDefinitions="*, Auto" MinHeight="44">
-                <TextBlock Grid.Column="0" Text="Add a take" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="New scene" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1" Text="Ctrl + 1" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
               </Grid>
               <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
               <Grid ColumnDefinitions="*, Auto" MinHeight="44">
-                <TextBlock Grid.Column="0" Text="Add a shot" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="New shot" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1" Text="Ctrl + 2" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
               </Grid>
               <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
               <Grid ColumnDefinitions="*, Auto" MinHeight="44">
-                <TextBlock Grid.Column="0" Text="Add a scene" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="New take" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1" Text="Ctrl + 3" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
               </Grid>
               <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
-              <TextBlock Text="Available in the day view, including while typing, when a shoot day is selected and unlocked." FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,10,0,8"/>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Mark PU" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + ," FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Mark circled" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + ." FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Mark failed" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + /" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <TextBlock Text="Creation shortcuts work throughout the loaded day view, even when no field is focused. Mark shortcuts apply only when a field in that take is focused." FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,10,0,8"/>
             </StackPanel>
           </Border>
 

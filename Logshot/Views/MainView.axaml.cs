@@ -6,6 +6,7 @@ using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using Logshot.ViewModels;
 
 namespace Logshot.Views;
@@ -21,7 +22,6 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
-        AddHandler(KeyDownEvent, MainView_KeyDown, RoutingStrategies.Tunnel);
         _rootSplitGrid = this.FindControl<Grid>("RootSplitGrid");
 
         DataContextChanged += (_, _) =>
@@ -60,10 +60,10 @@ public partial class MainView : UserControl
         if (e.KeyModifiers != KeyModifiers.Control)
             return;
 
+        var topLevel = TopLevel.GetTopLevel(this);
         if (DataContext is not MainViewModel vm ||
             vm.IsInfoViewOpen ||
-            vm.AppViewModel.IsSearchActive ||
-            vm.AppViewModel.CurrentDay is not { IsFinalized: false } day)
+            vm.AppViewModel.CurrentDay is not { IsLoadingTakes: false } day)
             return;
 
         switch (e.Key)
@@ -71,7 +71,7 @@ public partial class MainView : UserControl
             case Key.D1:
             case Key.NumPad1:
                 e.Handled = true;
-                await day.AddTakeCommand.ExecuteAsync(null);
+                vm.AppViewModel.OpenAddSceneDialogCommand.Execute(null);
                 break;
             case Key.D2:
             case Key.NumPad2:
@@ -81,9 +81,40 @@ public partial class MainView : UserControl
             case Key.D3:
             case Key.NumPad3:
                 e.Handled = true;
-                vm.AppViewModel.OpenAddSceneDialogCommand.Execute(null);
+                await day.AddTakeCommand.ExecuteAsync(null);
+                break;
+            case Key.OemComma:
+            case Key.OemPeriod:
+            case Key.Oem2:
+                var focusedTake = topLevel is null ? null : GetFocusedTake(topLevel);
+                if (focusedTake is null)
+                    break;
+
+                e.Handled = true;
+                if (e.Key == Key.OemComma)
+                    await focusedTake.TogglePickupCommand.ExecuteAsync(null);
+                else if (e.Key == Key.OemPeriod)
+                    await focusedTake.MarkCircledCommand.ExecuteAsync(null);
+                else
+                    await focusedTake.MarkFailedCommand.ExecuteAsync(null);
                 break;
         }
+    }
+
+    private static TakeViewModel? GetFocusedTake(TopLevel topLevel)
+    {
+        var control = topLevel.FocusManager?.GetFocusedElement() as Control;
+        while (control is not null)
+        {
+            if (control.DataContext is TakeViewModel take)
+                return take;
+            if (control.DataContext is CameraRollCell cameraRollCell)
+                return cameraRollCell.Owner;
+
+            control = control.Parent as Control ?? control.GetVisualParent() as Control;
+        }
+
+        return null;
     }
 
     private void OnRequestOpenAccountCreation()
@@ -110,6 +141,7 @@ public partial class MainView : UserControl
         {
             topLevel.InputPane.StateChanged += InputPane_StateChanged;
         }
+        topLevel?.AddHandler(KeyDownEvent, MainView_KeyDown, RoutingStrategies.Tunnel);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -121,6 +153,7 @@ public partial class MainView : UserControl
         {
             topLevel.InputPane.StateChanged -= InputPane_StateChanged;
         }
+        topLevel?.RemoveHandler(KeyDownEvent, MainView_KeyDown);
     }
 
     private void InputPane_StateChanged(object? sender, InputPaneStateEventArgs e)

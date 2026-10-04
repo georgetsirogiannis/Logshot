@@ -1009,6 +1009,7 @@ public partial class TakeViewModel : ViewModelBase
 public partial class CameraRollCell : ObservableObject
 {
     private readonly TakeViewModel _owner;
+    internal TakeViewModel Owner => _owner;
     public async Task OwnerSaveAsync() => await _owner.SaveTakeCommand.ExecuteAsync(null);
 
     public string Label { get; }
