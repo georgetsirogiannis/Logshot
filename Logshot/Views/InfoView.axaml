@@ -33,6 +33,28 @@
             </StackPanel>
           </Border>
 
+          <TextBlock Text="DESKTOP SHORTCUTS" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
+          <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
+            <StackPanel>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Add a take" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + 1" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Add a shot" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + 2" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <Grid ColumnDefinitions="*, Auto" MinHeight="44">
+                <TextBlock Grid.Column="0" Text="Add a scene" FontSize="14" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Ctrl + 3" FontSize="14" Foreground="{StaticResource ActionAccent}" VerticalAlignment="Center"/>
+              </Grid>
+              <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"/>
+              <TextBlock Text="Available in the day view, including while typing, when a shoot day is selected and unlocked." FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,10,0,8"/>
+            </StackPanel>
+          </Border>
+
           <TextBlock Text="DATABASE" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,-14"/>
           <Border Background="{StaticResource CardBackground}" CornerRadius="14" Padding="20,8">
             <StackPanel>
