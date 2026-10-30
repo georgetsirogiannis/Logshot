@@ -72,28 +72,54 @@ public class DatabaseService
         }
     }
 
-    public async Task ExportDatabaseAsync(string destPath, string? specificProjectId)
+    public async Task ExportDatabaseToStreamAsync(Stream targetStream, string? specificProjectId)
     {
         await WaitForPendingWritesAsync();
         var sourcePath = GetDatabasePath();
 
+        if (!File.Exists(sourcePath))
+        {
+            throw new FileNotFoundException($"Local database file not found at: {sourcePath}");
+        }
+
         if (string.IsNullOrEmpty(specificProjectId))
         {
-            // Export the entire DB
-            File.Copy(sourcePath, destPath, true);
+            await using var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            await sourceStream.CopyToAsync(targetStream);
+            await targetStream.FlushAsync();
         }
         else
         {
-            // Export just one project by copying everything and pruning the irrelevant data
-            File.Copy(sourcePath, destPath, true);
-            var tempDb = new SQLiteAsyncConnection(destPath);
-            await tempDb.ExecuteAsync("DELETE FROM Projects WHERE Id != ?", specificProjectId);
-            await tempDb.ExecuteAsync("DELETE FROM Days WHERE ProjectId != ?", specificProjectId);
-            await tempDb.ExecuteAsync("DELETE FROM Takes WHERE DayId NOT IN (SELECT Id FROM Days WHERE ProjectId = ?)", specificProjectId);
-            await tempDb.ExecuteAsync("DELETE FROM SyncQueue"); // Don't carry over sync outbox for single exports
-            await tempDb.ExecuteAsync("VACUUM"); // Shrinks the DB file footprint
-            await tempDb.CloseAsync();
+            var tempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"export_{Guid.NewGuid():N}.db");
+            try
+            {
+                File.Copy(sourcePath, tempPath, true);
+                var tempDb = new SQLiteAsyncConnection(tempPath);
+                await tempDb.ExecuteAsync("DELETE FROM Projects WHERE Id != ?", specificProjectId);
+                await tempDb.ExecuteAsync("DELETE FROM Days WHERE ProjectId != ?", specificProjectId);
+                await tempDb.ExecuteAsync("DELETE FROM Takes WHERE DayId NOT IN (SELECT Id FROM Days WHERE ProjectId = ?)", specificProjectId);
+                await tempDb.ExecuteAsync("DELETE FROM SyncQueue"); // Don't carry over sync outbox for single exports
+                await tempDb.ExecuteAsync("VACUUM"); // Shrinks the DB file footprint
+                await tempDb.CloseAsync();
+
+                await using var tempStream = new FileStream(tempPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                await tempStream.CopyToAsync(targetStream);
+                await targetStream.FlushAsync();
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                {
+                    try { File.Delete(tempPath); } catch { }
+                }
+            }
         }
+    }
+
+    public async Task ExportDatabaseAsync(string destPath, string? specificProjectId)
+    {
+        await using var fileStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await ExportDatabaseToStreamAsync(fileStream, specificProjectId);
     }
 
     public async Task<(bool isValid, string summaryMessage)> GetImportSummaryAsync(string importPath)

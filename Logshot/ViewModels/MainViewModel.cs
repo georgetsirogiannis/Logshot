@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Logshot.Services;
@@ -167,6 +168,52 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    public async Task ProcessExportDbAsync(IStorageFile file)
+    {
+        AppViewModel.LoadingMessage = "Exporting database...";
+        AppViewModel.IsLoading = true;
+        try
+        {
+            string? targetProjectId = null;
+            if (SelectedExportTargetIndex > 0 && SelectedExportTargetIndex <= AppViewModel.Projects.Count)
+            {
+                targetProjectId = AppViewModel.Projects[SelectedExportTargetIndex - 1].Id;
+            }
+
+            await using (var stream = await file.OpenWriteAsync())
+            {
+                // Only truncate if the stream supports seeking (prevents NotSupportedException on Android)
+                if (stream.CanSeek)
+                {
+                    stream.SetLength(0);
+                }
+
+                await _databaseService.ExportDatabaseToStreamAsync(stream, targetProjectId);
+                await stream.FlushAsync();
+            }
+
+            StatusMessage = "Database exported successfully.";
+
+            // Show a visual success popup on screen
+            ImportResultTitle = "Database Export Successful";
+            ImportResultMessage = "The database was successfully exported to the selected file.";
+            IsImportResultOpen = true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Export Failed: {ex.Message}";
+
+            // If an error occurs, show an explicit popup displaying the exact cause
+            ImportResultTitle = "Database Export Failed";
+            ImportResultMessage = $"An error occurred while exporting the database:\n\n{ex.Message}";
+            IsImportResultOpen = true;
+        }
+        finally
+        {
+            AppViewModel.IsLoading = false;
+        }
+    }
+
     public async Task ProcessExportDbAsync(string destPath)
     {
         AppViewModel.LoadingMessage = "Exporting database...";
@@ -182,6 +229,52 @@ public partial class MainViewModel : ViewModelBase
             StatusMessage = "Database exported successfully.";
         }
         catch (Exception ex) { StatusMessage = $"Export Failed: {ex.Message}"; }
+        finally { AppViewModel.IsLoading = false; }
+    }
+
+    public async Task ProcessImportDbAsync(IStorageFile file)
+    {
+        AppViewModel.LoadingMessage = "Analyzing import...";
+        AppViewModel.IsLoading = true;
+        try
+        {
+            var tempImportPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"import_staging_{Guid.NewGuid():N}.db");
+            await using (var sourceStream = await file.OpenReadAsync())
+            await using (var destStream = File.Create(tempImportPath))
+            {
+                await sourceStream.CopyToAsync(destStream);
+            }
+
+            var (isValid, summaryMsg) = await _databaseService.GetImportSummaryAsync(tempImportPath);
+            _pendingImportPath = tempImportPath;
+
+            if (isValid)
+            {
+                ImportWarningMessage = summaryMsg;
+                IsImportConfirmOpen = true; // Always show the merge confirmation
+            }
+            else
+            {
+                try { File.Delete(tempImportPath); } catch { }
+                _pendingImportPath = string.Empty;
+                StatusMessage = "Import Failed: " + summaryMsg;
+                ImportResultTitle = "Database Merge Failed";
+                ImportResultMessage = summaryMsg;
+                IsImportResultOpen = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!string.IsNullOrEmpty(_pendingImportPath))
+            {
+                try { File.Delete(_pendingImportPath); } catch { }
+                _pendingImportPath = string.Empty;
+            }
+            StatusMessage = $"Import Check Failed: {ex.Message}";
+            ImportResultTitle = "Database Merge Failed";
+            ImportResultMessage = $"Could not open or read the imported database file.\n\nReason:\n{ex.Message}";
+            IsImportResultOpen = true;
+        }
         finally { AppViewModel.IsLoading = false; }
     }
 
@@ -241,16 +334,28 @@ public partial class MainViewModel : ViewModelBase
     public void CancelImport()
     {
         IsImportConfirmOpen = false;
-        _pendingImportPath = string.Empty;
+        if (!string.IsNullOrEmpty(_pendingImportPath))
+        {
+            try { File.Delete(_pendingImportPath); } catch { }
+            _pendingImportPath = string.Empty;
+        }
     }
 
     private async Task ExecuteImport()
     {
         if (string.IsNullOrEmpty(_pendingImportPath)) return;
 
-        // Execute the safe merge instead of a file replacement and get added counts
-        var (addedProjects, addedDays, addedTakes) = await _databaseService.MergeDatabaseAsync(_pendingImportPath);
-        _pendingImportPath = string.Empty;
+        int addedProjects, addedDays, addedTakes;
+        try
+        {
+            // Execute the safe merge instead of a file replacement and get added counts
+            (addedProjects, addedDays, addedTakes) = await _databaseService.MergeDatabaseAsync(_pendingImportPath);
+        }
+        finally
+        {
+            try { File.Delete(_pendingImportPath); } catch { }
+            _pendingImportPath = string.Empty;
+        }
 
         // Force a full reload of the app state after DB merge
         await AppViewModel.LoadAllProjectsCommand.ExecuteAsync(null);
