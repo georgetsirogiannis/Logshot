@@ -773,11 +773,11 @@
                      Foreground="{StaticResource TextSecondary}"/>
 
           <TextBox Text="{Binding AuthEmail}"
-                   Watermark="Email"
+                   PlaceholderText="Email"
                    IsEnabled="{Binding !IsAuthLoading}"/>
           <TextBox PasswordChar="*"
                    Text="{Binding AuthPassword}"
-                   Watermark="Password"
+                   PlaceholderText="Password"
                    IsEnabled="{Binding !IsAuthLoading}"/>
 
                     <CheckBox Content="Remember my credentials on this device" IsChecked="{Binding RememberCredentials}" IsEnabled="{Binding !IsAuthLoading}"/>
