@@ -43,6 +43,15 @@ public partial class TakeViewModel : ViewModelBase
     private string _scene = string.Empty;
 
     [ObservableProperty]
+    private bool _isEpisodeSceneEditorOpen;
+
+    [ObservableProperty]
+    private string _editedEpisode = string.Empty;
+
+    [ObservableProperty]
+    private string _editedScene = string.Empty;
+
+    [ObservableProperty]
     private int _shot;
 
     [ObservableProperty]
@@ -508,6 +517,30 @@ public partial class TakeViewModel : ViewModelBase
     {
         PerformanceDiagnostics.Instance.Increment("Take.SaveCount");
         await _databaseService.SaveTakeAsync(ToModel());
+    }
+
+    [RelayCommand]
+    private void OpenEpisodeSceneEditor()
+    {
+        EditedEpisode = Episode;
+        EditedScene = Scene;
+        IsEpisodeSceneEditorOpen = true;
+    }
+
+    [RelayCommand]
+    private void CancelEpisodeSceneEdit()
+    {
+        IsEpisodeSceneEditorOpen = false;
+    }
+
+    [RelayCommand]
+    private async Task ApplyEpisodeSceneEdit()
+    {
+        Episode = EditedEpisode.Trim();
+        Scene = EditedScene.Trim();
+        await FlushPendingTextSaveAsync();
+        await SaveTakeCommand.ExecuteAsync(null);
+        IsEpisodeSceneEditorOpen = false;
     }
 
     [RelayCommand]

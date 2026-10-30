@@ -73,20 +73,47 @@
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBoxItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
   </UserControl.Styles>
 
-  <DockPanel Background="Transparent" PointerPressed="Background_PointerPressed">
-    <!-- SETUP GROUPS FEED -->
-    <ListBox Name="AndroidTakeListBox" ItemsSource="{Binding FlatTakeList}"
-             Background="Transparent" BorderThickness="0"
-             ScrollViewer.VerticalScrollBarVisibility="Auto"
-             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-             ScrollViewer.BringIntoViewOnFocusChange="False">
-      <ListBox.ItemsPanel>
-        <ItemsPanelTemplate>
-          <VirtualizingStackPanel />
-        </ItemsPanelTemplate>
-      </ListBox.ItemsPanel>
-    </ListBox>
-  </DockPanel>
+  <Grid>
+    <DockPanel Background="Transparent" PointerPressed="Background_PointerPressed">
+      <ContentControl Name="StickyGroupHeader" DockPanel.Dock="Top" IsVisible="False" />
+      <!-- SETUP GROUPS FEED -->
+      <Grid>
+        <ListBox Name="AndroidTakeListBox" ItemsSource="{Binding FlatTakeList}"
+                 Background="Transparent" BorderThickness="0"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.BringIntoViewOnFocusChange="False">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <VirtualizingStackPanel />
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+        </ListBox>
+
+        <Border Name="ScrollbarTouchTarget" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                Width="32" Background="Transparent" IsHitTestVisible="True" ZIndex="1"
+                PointerPressed="ScrollbarTouchTarget_PointerPressed" />
+      </Grid>
+    </DockPanel>
+
+    <Border Name="ScrollPositionPreview" HorizontalAlignment="Right" VerticalAlignment="Top"
+            Margin="0,0,36,0" Height="48" MaxWidth="240" Padding="12,8"
+            Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}"
+            BorderThickness="1" CornerRadius="8" IsVisible="False" IsHitTestVisible="False" ZIndex="2">
+      <TextBlock Name="ScrollPositionPreviewText" FontSize="13" FontWeight="Bold"
+                 Foreground="{StaticResource TextPrimary}" TextTrimming="CharacterEllipsis"
+                 VerticalAlignment="Center" />
+    </Border>
+  </Grid>
 </UserControl>
