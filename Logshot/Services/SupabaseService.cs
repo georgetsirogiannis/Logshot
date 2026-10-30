@@ -176,9 +176,8 @@ public class SupabaseService
 
     public async Task InitializeAsync()
     {
-        if (_isInitialized) return;
+        if (_isInitialized && IsAuthenticated) return;
 
-        _isInitialized = true;
         OnSyncStatusChanged?.Invoke(SyncIconPaths.Syncing, "Connecting...");
 
         try
@@ -191,7 +190,29 @@ public class SupabaseService
             };
             _client = new Supabase.Client(SupabaseUrl, SupabaseKey, options);
 
-            await ExecuteWithTimeout(async () => await _client.InitializeAsync(), 5000);
+            // Give mobile connections 20 seconds to establish SSL/DNS handshake instead of 5s
+            await ExecuteWithTimeout(async () => await _client.InitializeAsync(), 20000);
+
+            // If a session was restored from disk, refresh it on startup to guarantee a valid token
+            if (_client.Auth.CurrentSession != null)
+            {
+                try
+                {
+                    await _client.Auth.RefreshToken();
+                }
+                catch (Exception refreshEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Session refresh failed: {refreshEx.Message}");
+
+                    // Only clear the session if the token was rejected by the server, not if the device is simply offline
+                    if (refreshEx is not (System.Net.Http.HttpRequestException or TimeoutException or System.IO.IOException))
+                    {
+                        try { await _client.Auth.SignOut(); } catch { }
+                    }
+                }
+            }
+
+            _isInitialized = true;
 
             // Only pull data if a user session is active
             if (IsAuthenticated)
@@ -226,6 +247,12 @@ public class SupabaseService
 
     private async Task SyncAsync(bool pullFromCloud)
     {
+        // If connection wasn't established yet, try to connect now instead of giving up
+        if (!_isInitialized)
+        {
+            await InitializeAsync();
+        }
+
         if (!_isInitialized || !IsAuthenticated)
         {
             OnSyncStatusChanged?.Invoke(SyncIconPaths.Warning, "Offline (Sign in to sync)");

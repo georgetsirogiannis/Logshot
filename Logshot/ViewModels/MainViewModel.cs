@@ -702,10 +702,14 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task TryAutoSignInAsync()
     {
-        if (!RememberCredentials || string.IsNullOrWhiteSpace(AuthEmail) || string.IsNullOrEmpty(AuthPassword) || _supabaseService.IsAuthenticated)
+        if (!RememberCredentials || string.IsNullOrWhiteSpace(AuthEmail) || string.IsNullOrEmpty(AuthPassword))
             return;
 
-        await SignIn();
+        // If not authenticated or current session is invalid/expired, sign in automatically
+        if (!_supabaseService.IsAuthenticated)
+        {
+            await SignIn();
+        }
     }
 
     private sealed record RememberedCredentials(string Email, string Password);
@@ -794,7 +798,7 @@ public partial class MainViewModel : ViewModelBase
                     await _supabaseService.InitializeAsync();
 
                     // Recover session state for UI
-                    Dispatcher.UIThread.Post(() =>
+                    Dispatcher.UIThread.Post(async () =>
                     {
                         IsLoggedIn = _supabaseService.IsAuthenticated;
                         if (IsLoggedIn && !string.IsNullOrWhiteSpace(_supabaseService.CurrentUserEmail))
@@ -802,16 +806,14 @@ public partial class MainViewModel : ViewModelBase
                             AuthEmail = _supabaseService.CurrentUserEmail;
                             SaveRememberedEmail();
                         }
-                        if (!IsLoggedIn)
+                        else if (RememberCredentials && !string.IsNullOrWhiteSpace(AuthEmail) && !string.IsNullOrWhiteSpace(AuthPassword))
                         {
-                            if (RememberCredentials)
-                            {
-                                _ = TryAutoSignInAsync();
-                            }
-                            else
-                            {
-                                IsLoginOverlayVisible = true;
-                            }
+                            // Stale session or cold start: automatically re-authenticate with saved credentials
+                            await TryAutoSignInAsync();
+                        }
+                        else if (!IsLoggedIn)
+                        {
+                            IsLoginOverlayVisible = true;
                         }
                     });
                 }
