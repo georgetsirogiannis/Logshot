@@ -48,11 +48,7 @@ public partial class InfoView : UserControl
 
         if (file != null)
         {
-            string? destPath = file.TryGetLocalPath();
-            if (!string.IsNullOrEmpty(destPath))
-            {
-                await _boundViewModel.ProcessExportDbAsync(destPath);
-            }
+            await _boundViewModel.ProcessExportDbAsync(file);
         }
     }
 
@@ -73,11 +69,7 @@ public partial class InfoView : UserControl
 
         if (files != null && files.Count > 0)
         {
-            string? sourcePath = files[0].TryGetLocalPath();
-            if (!string.IsNullOrEmpty(sourcePath))
-            {
-                await _boundViewModel.ProcessImportDbAsync(sourcePath);
-            }
+            await _boundViewModel.ProcessImportDbAsync(files[0]);
         }
     }
 }
