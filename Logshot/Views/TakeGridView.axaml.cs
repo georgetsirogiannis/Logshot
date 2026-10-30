@@ -58,28 +58,32 @@ public partial class TakeGridView : UserControl
     {
         if (e.Action == NotifyCollectionChangedAction.Add && _dayVm != null && !_dayVm.IsLoadingTakes && _dayVm.Takes.Count > 0)
         {
-            int lastIndex = _dayVm.Takes.Count - 1;
-            var lastTake = _dayVm.Takes[lastIndex];
+            var addedTake = e.NewItems?.OfType<TakeViewModel>().FirstOrDefault();
+            if (addedTake == null) return;
+
+            int addedIndex = e.NewStartingIndex >= 0 ? e.NewStartingIndex : _dayVm.Takes.IndexOf(addedTake);
+            bool isAtEnd = addedIndex >= _dayVm.Takes.Count - 1;
 
             // Post at Loaded priority so Avalonia updates the ListBox layout and item containers first
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 if (TakesListBox != null)
                 {
-                    // 1. Request ListBox to scroll item into view
-                    TakesListBox.ScrollIntoView(lastIndex);
-                    TakesListBox.ScrollIntoView(lastTake);
+                    TakesListBox.ScrollIntoView(addedIndex);
+                    TakesListBox.ScrollIntoView(addedTake);
 
-                    // 2. Set ScrollViewer Offset Y to max to guarantee scrolling to the bottom
-                    var scrollViewer = TakesListBox.FindDescendantOfType<ScrollViewer>();
-                    if (scrollViewer != null)
+                    if (isAtEnd)
                     {
-                        scrollViewer.Offset = new Vector(scrollViewer.Offset.X, double.MaxValue);
+                        var scrollViewer = TakesListBox.FindDescendantOfType<ScrollViewer>();
+                        if (scrollViewer != null)
+                        {
+                            scrollViewer.Offset = new Vector(scrollViewer.Offset.X, double.MaxValue);
+                        }
                     }
                 }
 
-                // 3. Auto-focus the first camera input box in the newly added row
-                TryFocusFirstInputInContainer(lastTake);
+                // Auto-focus the first camera input box in the newly added row
+                TryFocusFirstInputInContainer(addedTake);
             }, Avalonia.Threading.DispatcherPriority.Loaded);
         }
     }

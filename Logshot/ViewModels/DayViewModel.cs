@@ -418,7 +418,9 @@ public partial class DayViewModel : ViewModelBase
             InvalidateTakeOrderCache();
         }
 
-        if (e.PropertyName == nameof(TakeViewModel.Episode) || e.PropertyName == nameof(TakeViewModel.Scene))
+        if (e.PropertyName == nameof(TakeViewModel.Episode) ||
+            e.PropertyName == nameof(TakeViewModel.Scene) ||
+            e.PropertyName == nameof(TakeViewModel.IsWildShot))
         {
             ScheduleHierarchicalGroupsRebuild();
         }
@@ -427,11 +429,14 @@ public partial class DayViewModel : ViewModelBase
         if (e.PropertyName == nameof(TakeViewModel.Episode) ||
             e.PropertyName == nameof(TakeViewModel.Scene) ||
             e.PropertyName == nameof(TakeViewModel.Shot) ||
+            e.PropertyName == nameof(TakeViewModel.TakeNumber) ||
             e.PropertyName == nameof(TakeViewModel.CamARoll) ||
             e.PropertyName == nameof(TakeViewModel.CamBRoll) ||
             e.PropertyName == nameof(TakeViewModel.CameraData) ||
             e.PropertyName == nameof(TakeViewModel.SoundNotes) ||
-            e.PropertyName == nameof(TakeViewModel.IsSoundOnlyRow))
+            e.PropertyName == nameof(TakeViewModel.IsSoundOnlyRow) ||
+            e.PropertyName == nameof(TakeViewModel.IsWildShot) ||
+            e.PropertyName == nameof(TakeViewModel.IsEmptyRow))
         {
             UpdateRowVisibilities(sender as TakeViewModel);
             _ = UpdateTotalTakesCommand.ExecuteAsync(null);
@@ -581,9 +586,9 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddShot()
     {
-        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras)
-                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
-                            ?? Takes.LastOrDefault();
+        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras && !t.IsEmptyRow)
+                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.IsEmptyRow)
+                            ?? Takes.LastOrDefault(t => !t.IsEmptyRow);
         var episode = string.IsNullOrWhiteSpace(lastValidTake?.Episode) ? "1" : lastValidTake!.Episode;
         var scene = string.IsNullOrWhiteSpace(lastValidTake?.Scene) ? "1" : lastValidTake!.Scene;
 
@@ -593,9 +598,9 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task AddTake()
     {
-        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras)
-                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
-                            ?? Takes.LastOrDefault();
+        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras && !t.IsEmptyRow)
+                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.IsEmptyRow)
+                            ?? Takes.LastOrDefault(t => !t.IsEmptyRow);
 
         if (lastValidTake != null && lastValidTake.IsWildShot)
         {
@@ -738,7 +743,7 @@ public partial class DayViewModel : ViewModelBase
 
         var remainingTakes = Takes.Where(item => !ReferenceEquals(item, take)).ToList();
         if (AutocorrectionManager.Instance.SmartRenumberingOnReorderEnabled &&
-            !take.IsSoundOnlyRow && !take.IsWildShot &&
+            !take.IsSoundOnlyRow && !take.IsWildShot && !take.IsEmptyRow &&
             FindSetupForInsertion(remainingTakes, newIndex) is { } setup)
         {
             bool MatchesSetup(TakeViewModel item) =>
@@ -790,13 +795,13 @@ public partial class DayViewModel : ViewModelBase
     {
         for (var i = Math.Min(index - 1, takes.Count - 1); i >= 0; i--)
         {
-            if (!takes[i].IsSoundOnlyRow && !takes[i].IsWildShot)
+            if (!takes[i].IsSoundOnlyRow && !takes[i].IsWildShot && !takes[i].IsEmptyRow)
                 return takes[i];
         }
 
         for (var i = Math.Max(index, 0); i < takes.Count; i++)
         {
-            if (!takes[i].IsSoundOnlyRow && !takes[i].IsWildShot)
+            if (!takes[i].IsSoundOnlyRow && !takes[i].IsWildShot && !takes[i].IsEmptyRow)
                 return takes[i];
         }
 
@@ -865,13 +870,13 @@ public partial class DayViewModel : ViewModelBase
     [RelayCommand]
     public async Task UpdateTotalTakes()
     {
-        TotalTakes = Takes.Count(t => !t.IsSoundOnlyRow && !t.IsWildShot);
+        TotalTakes = Takes.Count(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.IsEmptyRow);
     }
 
     [RelayCommand]
     public async Task UpdateCurrentShot()
     {
-        var validTakes = Takes.Where(t => !t.IsSoundOnlyRow && !t.IsWildShot).ToList();
+        var validTakes = Takes.Where(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.IsEmptyRow).ToList();
         if (validTakes.Count > 0)
         {
             CurrentShot = validTakes.Last().Shot;
@@ -881,14 +886,67 @@ public partial class DayViewModel : ViewModelBase
             CurrentShot = 0;
         }
     }
+
+    /// <summary>
+    /// Creates a new empty row above or below the specified target take.
+    /// </summary>
+    /// 
+    [RelayCommand]
+    public async Task InsertEmptyRowAbove(TakeViewModel? targetTake)
+    {
+        if (targetTake == null || IsFinalized) return;
+        int index = Takes.IndexOf(targetTake);
+        if (index < 0) return;
+        await InsertEmptyRowAtIndexAsync(index);
+    }
+
+    [RelayCommand]
+    public async Task InsertEmptyRowBelow(TakeViewModel? targetTake)
+    {
+        if (targetTake == null || IsFinalized) return;
+        int index = Takes.IndexOf(targetTake);
+        if (index < 0) return;
+        await InsertEmptyRowAtIndexAsync(index + 1);
+    }
+
+    private async Task InsertEmptyRowAtIndexAsync(int insertIndex)
+    {
+        insertIndex = Math.Clamp(insertIndex, 0, Takes.Count);
+
+        var newTake = new Take
+        {
+            DayId = Id,
+            SequenceOrder = insertIndex,
+            Episode = string.Empty,
+            Scene = string.Empty,
+            Shot = 0,
+            TakeNumber = 0,
+            IsWildShot = false,
+            CameraData = SyncCameraDataWithActiveCameras(null),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var takeVM = new TakeViewModel(_databaseService, _cameraDataManager);
+        takeVM.LoadFromModel(newTake);
+        await takeVM.RefreshCameraDataCommand.ExecuteAsync(null);
+
+        await takeVM.SaveTakeCommand.ExecuteAsync(null);
+        Takes.Insert(insertIndex, takeVM);
+
+        RefreshAllExtraCameraRolls();
+        await ReorderTakes();
+        await UpdateTotalTakesCommand.ExecuteAsync(null);
+        await UpdateCurrentShotCommand.ExecuteAsync(null);
+    }
+
     /// <summary>
     /// Creates a new "wild shot" take, which is a special type of take that has no scene and is marked as a wild shot. The new take inherits camera data from the last valid take in the day.
     /// </summary>
     public async Task CreateWildShotAsync(string episode)
     {
-        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras)
-                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow)
-                            ?? Takes.LastOrDefault();
+        var lastValidTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras && !t.IsEmptyRow)
+                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.IsEmptyRow)
+                            ?? Takes.LastOrDefault(t => !t.IsEmptyRow);
 
         var newTake = new Take
         {
@@ -1272,7 +1330,7 @@ public partial class DayViewModel : ViewModelBase
 
         // 2. Setups: total number of UNIQUE SHOTS recorded in the day 
         // (excluding AKYRO CLIP, Wild Shot rows, and Sound-only rows)
-        var validShots = Takes.Where(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.HasVoidedCameras).ToList();
+        var validShots = Takes.Where(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.HasVoidedCameras && !t.IsEmptyRow).ToList();
         DayInfoSetupsCount = validShots
             .Select(t => new { Episode = t.Episode?.Trim(), Scene = t.Scene?.Trim(), t.Shot })
             .Distinct()
@@ -1313,7 +1371,7 @@ public partial class DayViewModel : ViewModelBase
             cameraRollClips[label] = new List<CameraRollClipCountViewModel>();
         }
 
-        foreach (var take in Takes.Where(t => !t.IsSoundOnlyRow).OrderBy(t => t.SequenceOrder))
+        foreach (var take in Takes.Where(t => !t.IsSoundOnlyRow && !t.IsEmptyRow).OrderBy(t => t.SequenceOrder))
         {
             var camData = _cameraDataManager.ParseCameraData(take.CameraData);
             bool isRowVoided = take.HasVoidedCameras;
@@ -1578,13 +1636,15 @@ public partial class DayViewModel : ViewModelBase
 
             var previousTake = orderedTakes[index - 1];
 
-            // Consecutive sound-only and wild-shot rows belong to the same group.
+            // Consecutive sound-only, wild-shot, and empty rows belong to the same group.
             currentTake.IsGroupStart = !(currentTake.IsSoundOnlyRow && previousTake.IsSoundOnlyRow) &&
                                        !(currentTake.IsWildShot && previousTake.IsWildShot) &&
+                                       !(currentTake.IsEmptyRow && previousTake.IsEmptyRow) &&
                                        ((currentTake.Episode != previousTake.Episode) ||
                                         (currentTake.Scene != previousTake.Scene) ||
-                                         (currentTake.IsSoundOnlyRow != previousTake.IsSoundOnlyRow) ||
-                                        (currentTake.IsWildShot != previousTake.IsWildShot));
+                                        (currentTake.IsSoundOnlyRow != previousTake.IsSoundOnlyRow) ||
+                                        (currentTake.IsWildShot != previousTake.IsWildShot) ||
+                                        (currentTake.IsEmptyRow != previousTake.IsEmptyRow));
 
             // Show Episode whenever there's a group start (whether a new episode or a new scene in the same episode)
             currentTake.ShowEpisode = currentTake.IsGroupStart;

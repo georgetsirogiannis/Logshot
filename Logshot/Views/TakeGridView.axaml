@@ -31,6 +31,15 @@
                 <MenuItem Command="{Binding ToggleNoRollCommand}" Header="No Roll"/>
                 <Separator/>
                 <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding Owner}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding Owner}"/>
+                <MenuItem Header="{Binding Owner.WildShotMenuHeader}"
+                          Command="{Binding Owner.ToggleWildShotCommand}"/>
               </ContextMenu>
             </Grid.ContextMenu>
             <FlyoutBase.AttachedFlyout>
@@ -61,9 +70,18 @@
                 <TextBox.ContextMenu>
                   <ContextMenu>
                     <MenuItem Command="{Binding ToggleVoidCommand}" Header="ΑΚΥΡΟ CLIP"/>
-                    <MenuItem Command="{Binding ToggleNoRollCommand}" Header="No Roll"/>
-                    <Separator/>
-                    <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                <MenuItem Command="{Binding ToggleNoRollCommand}" Header="No Roll"/>
+                <Separator/>
+                <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding Owner}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding Owner}"/>
+                <MenuItem Header="{Binding Owner.WildShotMenuHeader}"
+                          Command="{Binding Owner.ToggleWildShotCommand}"/>
                   </ContextMenu>
                 </TextBox.ContextMenu>
               </TextBox>
@@ -251,6 +269,23 @@
       <ListBox.ItemTemplate>
         <DataTemplate x:DataType="vm:TakeViewModel">
           <Border Background="{StaticResource CardBackground}" Classes="row-border" KeyboardNavigation.TabNavigation="Continue" Tag="{Binding}">
+            <Border.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
+                <Separator/>
+                <MenuItem Header="Delete Take"
+                          Foreground="{StaticResource FailRed}"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).PromptDeleteTakeCommand}"
+                          CommandParameter="{Binding}"/>
+              </ContextMenu>
+            </Border.ContextMenu>
             <Grid>
               <!-- Main Row Content Grid -->
               <Grid MinHeight="{Binding RowMinHeight}">
@@ -290,6 +325,15 @@
                           <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A" Header="No Roll"/>
                           <Separator/>
                           <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                          <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                         </ContextMenu>
                       </Grid.ContextMenu>
                       <FlyoutBase.AttachedFlyout>
@@ -320,6 +364,15 @@
                               <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A" Header="No Roll"/>
                               <Separator/>
                               <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                              <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                             </ContextMenu>
                           </TextBox.ContextMenu>
                         </TextBox>
@@ -344,6 +397,15 @@
                           <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B" Header="No Roll"/>
                           <Separator/>
                           <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                          <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                         </ContextMenu>
                       </Grid.ContextMenu>
                       <FlyoutBase.AttachedFlyout>
@@ -374,6 +436,15 @@
                               <MenuItem Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B" Header="No Roll"/>
                               <Separator/>
                               <MenuItem Click="ChangeRollMenuItem_Click" Header="Set / Edit Roll Change..."/>
+                              <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                             </ContextMenu>
                           </TextBox.ContextMenu>
                         </TextBox>
@@ -401,6 +472,15 @@
                     <Grid.ContextMenu>
                       <ContextMenu>
                         <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
+                        <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                       </ContextMenu>
                     </Grid.ContextMenu>
 
@@ -416,6 +496,15 @@
                         <TextBox.ContextMenu>
                           <ContextMenu>
                             <MenuItem Header="No Roll" Command="{Binding ToggleSoundNoRollCommand}"/>
+                            <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                           </ContextMenu>
                         </TextBox.ContextMenu>
                       </TextBox>
@@ -431,7 +520,12 @@
                   <Grid VerticalAlignment="Stretch">
                     <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                       <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowEpisode}" Text="{Binding DisplayEpisode}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Episode}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Episode}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsSoundOnlyRow}">
+                        <TextBox.Styles>
+                          <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                          <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                        </TextBox.Styles>
+                      </TextBox>
                     </Panel>
                     <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                   </Grid>
@@ -442,7 +536,12 @@
                   <Grid VerticalAlignment="Stretch">
                     <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                       <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowScene}" Text="{Binding DisplayScene}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Scene}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                      <TextBox AcceptsReturn="True" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Text="{Binding Scene}" TextAlignment="Center" TextWrapping="Wrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}">
+                        <TextBox.Styles>
+                          <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                          <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                        </TextBox.Styles>
+                      </TextBox>
                     </Panel>
                     <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                   </Grid>
@@ -453,7 +552,12 @@
                   <Grid VerticalAlignment="Stretch">
                     <Panel IsVisible="{Binding !ShowRowCrossed}" VerticalAlignment="Center">
                       <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" IsVisible="{Binding ShowShot}" Text="{Binding DisplayShot}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                      <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding Shot}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}"><TextBox.Styles><Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style></TextBox.Styles></TextBox>
+                      <TextBox AcceptsReturn="False" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Text="{Binding DisplayShot}" TextAlignment="Center" TextWrapping="NoWrap" VerticalContentAlignment="Center" IsReadOnly="{Binding IsWildOrSoundOnly}">
+                        <TextBox.Styles>
+                          <Style Selector="TextBox:not(:focus)"><Setter Property="Opacity" Value="0"/></Style>
+                          <Style Selector="TextBox:focus"><Setter Property="Background" Value="{StaticResource CardBackground}"/></Style>
+                        </TextBox.Styles>
+                      </TextBox>
                     </Panel>
                     <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowRowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                   </Grid>
@@ -470,6 +574,15 @@
                           <MenuItem Command="{Binding MarkCircledCommand}" Header="Mark Circled"/>
                           <MenuItem Command="{Binding MarkFailedCommand}" Header="Mark Failed"/>
                           <MenuItem Command="{Binding TogglePickupCommand}" Header="Toggle Pickup (PU)"/>
+                          <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                         </ContextMenu>
                       </TextBox.ContextMenu>
                     </TextBox>
@@ -483,6 +596,15 @@
                   <Border.ContextMenu>
                     <ContextMenu>
                       <MenuItem Command="{Binding ToggleBlooperCommand}" Header="Toggle Blooper"/>
+                      <Separator/>
+                <MenuItem Header="Insert Empty Row Above"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowAboveCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="Insert Empty Row Below"
+                          Command="{Binding $parent[UserControl].((vm:DayViewModel)DataContext).InsertEmptyRowBelowCommand}"
+                          CommandParameter="{Binding}"/>
+                <MenuItem Header="{Binding WildShotMenuHeader}"
+                          Command="{Binding ToggleWildShotCommand}"/>
                     </ContextMenu>
                   </Border.ContextMenu>
                   <Grid Background="Transparent">
