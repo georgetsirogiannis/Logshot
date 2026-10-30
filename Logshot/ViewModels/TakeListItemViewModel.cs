@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -48,6 +49,7 @@ public partial class TakeListGroupHeaderViewModel : TakeListItemViewModel
     public ICommand ToggleCollapsedCommand { get; }
     public ICommand AddShotCommand { get; }
     public ICommand AddTakeCommand { get; }
+    public TakeViewModel? AnchorTake => _group.GroupedTakes.FirstOrDefault();
 
     public TakeListGroupHeaderViewModel(DayViewModel parentDay, SetupGroupViewModel group)
     {

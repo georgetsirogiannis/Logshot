@@ -23,7 +23,7 @@
     </Style>
   </UserControl.Styles>
   
-  <Border Background="{StaticResource CardBackground}" 
+  <Border Background="Transparent"
           BorderBrush="{StaticResource GridLineColor}" 
           BorderThickness="0,0,0,1" 
           Padding="16,16" 
@@ -121,21 +121,8 @@
              </StackPanel>
           </StackPanel>
 
-          <!-- Right: Secondary Metadata (Ep/Sc) & Menu -->
-          <!-- Margin Top added to visually align with the Shot/Take input boxes -->
-          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="16" VerticalAlignment="Top" Margin="0,16,0,0">
-              
-              <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <TextBlock Text="ΕΠ" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBox Text="{Binding Episode}" MinWidth="32" MinHeight="26" Padding="0" FontSize="12" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="4" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsSoundOnlyRow}"/>
-                 </StackPanel>
-                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <TextBlock Text="ΣΚ" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBox Text="{Binding Scene}" MinWidth="32" MinHeight="26" Padding="0" FontSize="12" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" CornerRadius="4" Background="{DynamicResource TextControlBackground}" IsReadOnly="{Binding IsWildOrSoundOnly}"/>
-                 </StackPanel>
-              </StackPanel>
-
+          <!-- Options Menu -->
+          <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
               <!-- Options Menu Button -->
               <Button Content="⋮" FontSize="22" FontWeight="Bold" Background="Transparent" Padding="8,0" VerticalAlignment="Center">
                  <Button.Flyout>
@@ -145,6 +132,7 @@
                        <MenuItem Header="Toggle Pickup (PU)" Command="{Binding TogglePickupCommand}"/>
                        <Separator/>
                        <MenuItem Header="Delete Take" Click="DeleteTake_Click" Foreground="{StaticResource FailRed}"/>
+                       <MenuItem Header="Change Episode/Scene..." Command="{Binding OpenEpisodeSceneEditorCommand}"/>
                     </MenuFlyout>
                  </Button.Flyout>
               </Button>
@@ -291,13 +279,13 @@
                        <!-- FS Group -->
                        <Border Background="{StaticResource HeaderBackground}" CornerRadius="6" ClipToBounds="True">
                           <StackPanel Orientation="Horizontal" Spacing="0">
-                              <Button Content="-FS" Command="{Binding DecrementFalseStartsCommand}" IsVisible="{Binding FalseStartCount}" Padding="12,8" Background="Transparent" FontSize="13"/>
-                              <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}" Padding="12,8" Background="Transparent" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" FontSize="13"/>
-                              <Button Content="+FS" Command="{Binding IncrementFalseStartsCommand}" IsVisible="{Binding !FalseStartCount}" Padding="12,8" Background="Transparent" FontWeight="Bold" FontSize="13"/>
+                              <Button Content="-FS" Command="{Binding DecrementFalseStartsCommand}" IsVisible="{Binding FalseStartCount}" Padding="10,6" Background="Transparent" FontSize="13"/>
+                              <Button Content="{Binding FalseStartCount, StringFormat=FS x{0}}" IsVisible="{Binding FalseStartCount}" Command="{Binding IncrementFalseStartsCommand}" Padding="10,6" Background="Transparent" Foreground="{StaticResource ActionAccent}" FontWeight="Bold" FontSize="13"/>
+                              <Button Content="+FS" Command="{Binding IncrementFalseStartsCommand}" IsVisible="{Binding !FalseStartCount}" Padding="10,6" Background="Transparent" FontWeight="Bold" FontSize="13"/>
                           </StackPanel>
                        </Border>
 
-                       <ToggleButton Content="LS" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="16,8" CornerRadius="6" FontWeight="Bold" FontSize="13">
+                       <ToggleButton Content="LS" IsChecked="{Binding IsLongStart, Mode=TwoWay}" Padding="12,6" CornerRadius="6" FontWeight="Bold" FontSize="13">
                           <ToggleButton.Styles>
                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                <Setter Property="Background" Value="{StaticResource LongStartPurple}"/>
@@ -306,7 +294,7 @@
                           </ToggleButton.Styles>
                        </ToggleButton>
                        
-                       <ToggleButton Content="BL" IsChecked="{Binding IsBlooper, Mode=TwoWay}" Padding="16,8" CornerRadius="6" FontWeight="Bold" FontSize="13">
+                       <ToggleButton Content="BL" IsChecked="{Binding IsBlooper, Mode=TwoWay}" Padding="12,6" CornerRadius="6" FontWeight="Bold" FontSize="13">
                           <ToggleButton.Styles>
                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                <Setter Property="Background" Value="{StaticResource BlooperOrange}"/>
@@ -315,7 +303,7 @@
                           </ToggleButton.Styles>
                        </ToggleButton>
 
-                       <ToggleButton Content="NB" IsChecked="{Binding IsNoBoard, Mode=TwoWay}" Padding="16,8" CornerRadius="6" FontWeight="Bold" FontSize="13">
+                       <ToggleButton Content="NB" IsChecked="{Binding IsNoBoard, Mode=TwoWay}" Padding="12,6" CornerRadius="6" FontWeight="Bold" FontSize="13">
                           <ToggleButton.Styles>
                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                <Setter Property="Background" Value="{StaticResource NoBoardTeal}"/>
@@ -324,7 +312,7 @@
                           </ToggleButton.Styles>
                        </ToggleButton>
 
-                       <ToggleButton Content="EB" IsChecked="{Binding IsEndBoard, Mode=TwoWay}" Padding="16,8" CornerRadius="6" FontWeight="Bold" FontSize="13">
+                       <ToggleButton Content="EB" IsChecked="{Binding IsEndBoard, Mode=TwoWay}" Padding="12,6" CornerRadius="6" FontWeight="Bold" FontSize="13">
                           <ToggleButton.Styles>
                              <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
                                <Setter Property="Background" Value="{StaticResource EndBoardAmber}"/>
@@ -450,6 +438,37 @@
               
           </WrapPanel>
       </StackPanel>
+
+      <Border Background="#CC000000" IsVisible="{Binding IsEpisodeSceneEditorOpen}">
+        <Border Background="{StaticResource HeaderBackground}" BorderBrush="{StaticResource BorderColor}"
+                BorderThickness="1" CornerRadius="12" Padding="20" Width="320" MaxWidth="360"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+          <StackPanel Spacing="12">
+            <TextBlock Text="Change Episode/Scene" FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,4"/>
+            <StackPanel Spacing="5">
+              <TextBlock Text="EPISODE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+              <TextBox Text="{Binding EditedEpisode}" MinHeight="42" Padding="10,6"
+                       Background="{StaticResource InputBackground}" BorderBrush="{StaticResource BorderColor}"
+                       BorderThickness="1" CornerRadius="6" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            <StackPanel Spacing="5">
+              <TextBlock Text="SCENE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+              <TextBox Text="{Binding EditedScene}" MinHeight="42" Padding="10,6"
+                       Background="{StaticResource InputBackground}" BorderBrush="{StaticResource BorderColor}"
+                       BorderThickness="1" CornerRadius="6" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,4,0,0">
+              <Button Grid.Column="0" Content="CANCEL" Command="{Binding CancelEpisodeSceneEditCommand}"
+                      MinHeight="42" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                      Background="Transparent" BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                      Foreground="{StaticResource TextSecondary}"/>
+              <Button Grid.Column="1" Content="APPLY" Command="{Binding ApplyEpisodeSceneEditCommand}"
+                      MinHeight="42" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                      Background="{StaticResource ActionAccent}" Foreground="#121212" FontWeight="Bold"/>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </Border>
 
     </Grid>
   </Border>
