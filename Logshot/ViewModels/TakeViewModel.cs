@@ -186,10 +186,68 @@ public partial class TakeViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// True when the row has no hierarchy, media notes, or special status assigned yet.
+    /// </summary>
+    public bool IsEmptyRow
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(Episode) ||
+                !string.IsNullOrWhiteSpace(Scene) ||
+                Shot != 0 ||
+                TakeNumber != 0 ||
+                IsWildShot ||
+                HasVoidedCameras ||
+                !string.IsNullOrWhiteSpace(SoundNotes) ||
+                !string.IsNullOrWhiteSpace(TakeNotes))
+            {
+                return false;
+            }
+
+            var data = GetCameraDataCached();
+            foreach (var kvp in data.Cameras)
+            {
+                if (!string.IsNullOrWhiteSpace(kvp.Value.Notes) || kvp.Value.RollChangeMarker)
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    public string WildShotMenuHeader => IsWildShot ? "✓ Wild Shot (Click to Unmark)" : "Mark as Wild Shot";
+
     public string DisplayEpisode => IsSoundOnlyRow ? string.Empty : Episode;
     public string DisplayScene => (IsSoundOnlyRow || IsWildShot) ? string.Empty : Scene;
-    public string DisplayShot => (IsSoundOnlyRow || IsWildShot) ? string.Empty : (Shot == 0 ? string.Empty : Shot.ToString());
-    public string DisplayTakeNumber => (IsSoundOnlyRow || HasVoidedCameras || IsWildShot) ? string.Empty : (TakeNumber == 0 ? string.Empty : TakeNumber.ToString());
+
+    public string DisplayShot
+    {
+        get => (IsSoundOnlyRow || IsWildShot) ? string.Empty : (Shot == 0 ? string.Empty : Shot.ToString());
+        set
+        {
+            if (IsSoundOnlyRow || IsWildShot) return;
+            if (string.IsNullOrWhiteSpace(value))
+                Shot = 0;
+            else if (int.TryParse(value.Trim(), out int parsed) && parsed >= 0)
+                Shot = parsed;
+            OnPropertyChanged(nameof(DisplayShot));
+        }
+    }
+
+    public string DisplayTakeNumber
+    {
+        get => (IsSoundOnlyRow || HasVoidedCameras || IsWildShot) ? string.Empty : (TakeNumber == 0 ? string.Empty : TakeNumber.ToString());
+        set
+        {
+            if (IsSoundOnlyRow || HasVoidedCameras || IsWildShot) return;
+            if (string.IsNullOrWhiteSpace(value))
+                TakeNumber = 0;
+            else if (int.TryParse(value.Trim(), out int parsed) && parsed >= 0)
+                TakeNumber = parsed;
+            OnPropertyChanged(nameof(DisplayTakeNumber));
+        }
+    }
 
     public TakeViewModel(DatabaseService databaseService)
     {
@@ -217,6 +275,7 @@ public partial class TakeViewModel : ViewModelBase
     partial void OnEpisodeChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayEpisode));
+        OnPropertyChanged(nameof(IsEmptyRow));
         if (!_isSuppressingSave)
         {
             QueueTextSave();
@@ -226,6 +285,7 @@ public partial class TakeViewModel : ViewModelBase
     partial void OnSceneChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayScene));
+        OnPropertyChanged(nameof(IsEmptyRow));
         if (!_isSuppressingSave)
         {
             QueueTextSave();
@@ -235,6 +295,7 @@ public partial class TakeViewModel : ViewModelBase
     partial void OnShotChanged(int value)
     {
         OnPropertyChanged(nameof(DisplayShot));
+        OnPropertyChanged(nameof(IsEmptyRow));
         if (!_isSuppressingSave)
         {
             QueueTextSave();
@@ -244,6 +305,7 @@ public partial class TakeViewModel : ViewModelBase
     partial void OnTakeNumberChanged(int value)
     {
         OnPropertyChanged(nameof(DisplayTakeNumber));
+        OnPropertyChanged(nameof(IsEmptyRow));
         if (!_isSuppressingSave)
         {
             _ = SaveTakeCommand.ExecuteAsync(null);
@@ -294,6 +356,7 @@ public partial class TakeViewModel : ViewModelBase
             return;
         }
 
+        OnPropertyChanged(nameof(IsEmptyRow));
         if (!_isSuppressingSave)
         {
             QueueTextSave();
@@ -349,6 +412,8 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayShot));
         OnPropertyChanged(nameof(DisplayTakeNumber));
         OnPropertyChanged(nameof(IsWildOrSoundOnly));
+        OnPropertyChanged(nameof(WildShotMenuHeader));
+        OnPropertyChanged(nameof(IsEmptyRow));
         if (!_isSuppressingSave)
         {
             _ = SaveTakeCommand.ExecuteAsync(null);
@@ -368,6 +433,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayScene));
         OnPropertyChanged(nameof(DisplayShot));
         OnPropertyChanged(nameof(DisplayTakeNumber));
+        OnPropertyChanged(nameof(IsEmptyRow));
         if (!_isSuppressingSave)
         {
             QueueTextSave();
@@ -586,6 +652,21 @@ public partial class TakeViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task ToggleWildShot()
+    {
+        if (HasVoidedCameras) return;
+
+        IsWildShot = !IsWildShot;
+        if (IsWildShot)
+        {
+            Scene = string.Empty;
+            Shot = 0;
+            TakeNumber = 0;
+        }
+        await SaveTakeCommand.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
     public async Task ToggleSoundNoRoll()
     {
         // Fix: Prevent toggling No-Roll if the row is currently an ΑΚΥΡΟ CLIP row
@@ -736,6 +817,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowSoundNormal));
         OnPropertyChanged(nameof(DisplayTakeNumber));
         OnPropertyChanged(nameof(VoidedHeadingText));
+        OnPropertyChanged(nameof(IsEmptyRow));
 
         foreach (var cell in ExtraCameraRolls)
         {
@@ -957,6 +1039,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsCamBNoRoll));
         OnPropertyChanged(nameof(IsCamARollChangeMarked));
         OnPropertyChanged(nameof(IsCamBRollChangeMarked));
+        OnPropertyChanged(nameof(IsEmptyRow));
         OnPropertyChanged(nameof(IsCamANotEditable));
         OnPropertyChanged(nameof(IsCamBNotEditable));
         OnPropertyChanged(nameof(ShowCamANormal));
@@ -1042,7 +1125,7 @@ public partial class TakeViewModel : ViewModelBase
 public partial class CameraRollCell : ObservableObject
 {
     private readonly TakeViewModel _owner;
-    internal TakeViewModel Owner => _owner;
+    public TakeViewModel Owner => _owner;
     public async Task OwnerSaveAsync() => await _owner.SaveTakeCommand.ExecuteAsync(null);
 
     public string Label { get; }

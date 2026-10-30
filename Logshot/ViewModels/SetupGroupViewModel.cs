@@ -58,7 +58,13 @@ namespace Logshot.ViewModels
                     return $"{epText}WILD SHOTS ({validCount} Takes)";
                 }
 
-                return $"{formattedEp} / {formattedSc}{continuedText} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow && !t.IsWildShot)} Takes)";
+                if (string.IsNullOrEmpty(formattedEp) && string.IsNullOrEmpty(formattedSc))
+                {
+                    int assignedCount = GroupedTakes.Count(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.IsEmptyRow);
+                    return $"UNASSIGNED ({assignedCount} Takes)";
+                }
+
+                return $"{formattedEp} / {formattedSc}{continuedText} ({GroupedTakes.Count(t => !t.IsSoundOnlyRow && !t.IsWildShot && !t.IsEmptyRow)} Takes)";
             }
         }
 
