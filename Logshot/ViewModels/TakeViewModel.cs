@@ -998,7 +998,16 @@ public partial class TakeViewModel : ViewModelBase
             }
         }
 
-        CameraData = _cameraDataManager.SerializeCameraData(data);
+        _isUpdatingCameraRollFromInput = true;
+        try
+        {
+            CameraData = _cameraDataManager.SerializeCameraData(data);
+        }
+        finally
+        {
+            _isUpdatingCameraRollFromInput = false;
+        }
+
         QueueTextSave();
     }
 
@@ -1026,15 +1035,23 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(cameraLabel == "CAM A" ? nameof(CamARollNumber) : nameof(CamBRollNumber));
     }
 
+    private bool _isUpdatingCameraRollFromInput = false;
+
     partial void OnCameraDataChanged(string value)
     {
         _parsedCameraDataSource = null;
         _parsedCameraData = null;
         _ = RefreshCameraData();
-        OnPropertyChanged(nameof(CamARoll));
-        OnPropertyChanged(nameof(CamBRoll));
-        OnPropertyChanged(nameof(CamARollNumber));
-        OnPropertyChanged(nameof(CamBRollNumber));
+
+        // Do not re-echo property change back to active textboxes while the user is typing in them
+        if (!_isUpdatingCameraRollFromInput)
+        {
+            OnPropertyChanged(nameof(CamARoll));
+            OnPropertyChanged(nameof(CamBRoll));
+            OnPropertyChanged(nameof(CamARollNumber));
+            OnPropertyChanged(nameof(CamBRollNumber));
+        }
+
         OnPropertyChanged(nameof(IsCamANoRoll));
         OnPropertyChanged(nameof(IsCamBNoRoll));
         OnPropertyChanged(nameof(IsCamARollChangeMarked));

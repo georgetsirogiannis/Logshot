@@ -251,7 +251,8 @@
              DragDrop.DragLeave="TakesListBox_DragLeave"
              DragDrop.Drop="TakesListBox_Drop"
              ScrollViewer.VerticalScrollBarVisibility="Auto"
-             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+             ScrollViewer.BringIntoViewOnFocusChange="False">
       <ListBox.Styles>
         <Style Selector="ListBoxItem">
           <Setter Property="Padding" Value="0"/>

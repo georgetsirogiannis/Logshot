@@ -39,10 +39,20 @@ public class AutocorrectBehavior
         if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             return;
 
-        // Trigger instantly when user presses Space or Enter
+        // Trigger on Space or Enter, deferring autocorrect dispatch so line breaks commit cleanly without focus interruption
         if (e.Key == Key.Space || e.Key == Key.Enter)
         {
-            if (sender is TextBox tb) ApplyAutocorrect(tb);
+            if (sender is TextBox tb)
+            {
+                // Dispatch after the newline has been fully processed by the TextBox
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (tb.IsFocused)
+                    {
+                        ApplyAutocorrect(tb);
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Background);
+            }
         }
     }
 
