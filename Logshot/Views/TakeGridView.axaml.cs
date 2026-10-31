@@ -259,7 +259,31 @@ public partial class TakeGridView : UserControl
             return;
         }
 
-        UpdateDropTarget(e.GetPosition(TakesListBox));
+        var position = e.GetPosition(TakesListBox);
+
+        // AUTO-SCROLL LOGIC: Scroll when dragging near the top or bottom edge
+        var scrollViewer = TakesListBox.FindDescendantOfType<ScrollViewer>();
+        if (scrollViewer != null && TakesListBox.Bounds.Height > 0)
+        {
+            const double scrollZone = 50.0; // 50px boundary zone at top and bottom
+            const double scrollSpeed = 16.0; // Pixels per drag-over event
+
+            if (position.Y < scrollZone)
+            {
+                // Dragging near or above the top: scroll UP
+                var newY = Math.Max(0, scrollViewer.Offset.Y - scrollSpeed);
+                scrollViewer.Offset = new Vector(scrollViewer.Offset.X, newY);
+            }
+            else if (position.Y > TakesListBox.Bounds.Height - scrollZone)
+            {
+                // Dragging near or past the bottom: scroll DOWN
+                var maxOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+                var newY = Math.Min(maxOffset, scrollViewer.Offset.Y + scrollSpeed);
+                scrollViewer.Offset = new Vector(scrollViewer.Offset.X, newY);
+            }
+        }
+
+        UpdateDropTarget(position);
         e.DragEffects = _dropInsertionIndex >= 0 ? DragDropEffects.Move : DragDropEffects.None;
         e.Handled = true;
     }
@@ -307,42 +331,75 @@ public partial class TakeGridView : UserControl
 
     private void UpdateDropTarget(Point listPosition)
     {
-        if (_dayVm == null || TakesListBox == null)
+        if (_dayVm == null || TakesListBox == null || _dayVm.Takes.Count == 0)
             return;
 
         ClearDropMarker();
 
-        foreach (var take in _dayVm.Takes)
-        {
-            if (TakesListBox.ContainerFromItem(take) is not Control container)
-                continue;
-
-            var row = container.GetVisualDescendants()
-                .OfType<Border>()
-                .FirstOrDefault(border => ReferenceEquals(border.Tag, take));
-            if (row == null)
-                continue;
-
-            var rowOrigin = row.TranslatePoint(new Point(0, 0), TakesListBox);
-            if (rowOrigin is not Point origin ||
-                listPosition.Y < origin.Y || listPosition.Y > origin.Y + row.Bounds.Height)
+        // Collect all currently realized/visible rows with their positions
+        var visibleRows = _dayVm.Takes
+            .Select(take =>
             {
-                continue;
-            }
+                var container = TakesListBox.ContainerFromItem(take) as Control;
+                var row = container?.GetVisualDescendants().OfType<Border>().FirstOrDefault(b => ReferenceEquals(b.Tag, take));
+                var origin = row?.TranslatePoint(new Point(0, 0), TakesListBox);
+                return new { Take = take, Row = row, Origin = origin };
+            })
+            .Where(x => x.Row != null && x.Origin.HasValue)
+            .OrderBy(x => x.Origin!.Value.Y)
+            .ToList();
 
-            var isAfter = listPosition.Y - origin.Y >= row.Bounds.Height / 2;
-            _dropInsertionIndex = _dayVm.Takes.IndexOf(take) + (isAfter ? 1 : 0);
-            _dropMarker = row.GetVisualDescendants().OfType<Border>()
-                .FirstOrDefault(border => border.Name == "DropMarker");
+        if (visibleRows.Count == 0)
+            return;
+
+        // If pointer is above the first visible row, target the very top of that row
+        var firstVisible = visibleRows.First();
+        if (listPosition.Y < firstVisible.Origin!.Value.Y)
+        {
+            _dropInsertionIndex = _dayVm.Takes.IndexOf(firstVisible.Take);
+            _dropMarker = firstVisible.Row!.GetVisualDescendants().OfType<Border>().FirstOrDefault(b => b.Name == "DropMarker");
             if (_dropMarker != null)
             {
-                _dropMarker.VerticalAlignment = isAfter
-                    ? Avalonia.Layout.VerticalAlignment.Bottom
-                    : Avalonia.Layout.VerticalAlignment.Top;
+                _dropMarker.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
                 _dropMarker.IsVisible = true;
             }
-
             return;
+        }
+
+        // If pointer is below the last visible row, target the bottom of that row
+        var lastVisible = visibleRows.Last();
+        if (listPosition.Y > lastVisible.Origin!.Value.Y + lastVisible.Row!.Bounds.Height)
+        {
+            _dropInsertionIndex = _dayVm.Takes.IndexOf(lastVisible.Take) + 1;
+            _dropMarker = lastVisible.Row!.GetVisualDescendants().OfType<Border>().FirstOrDefault(b => b.Name == "DropMarker");
+            if (_dropMarker != null)
+            {
+                _dropMarker.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom;
+                _dropMarker.IsVisible = true;
+            }
+            return;
+        }
+
+        // Pointer is inside the visible list: locate the specific row being hovered
+        foreach (var item in visibleRows)
+        {
+            var origin = item.Origin!.Value;
+            var height = item.Row!.Bounds.Height;
+
+            if (listPosition.Y >= origin.Y && listPosition.Y <= origin.Y + height)
+            {
+                var isAfter = listPosition.Y - origin.Y >= height / 2;
+                _dropInsertionIndex = _dayVm.Takes.IndexOf(item.Take) + (isAfter ? 1 : 0);
+                _dropMarker = item.Row.GetVisualDescendants().OfType<Border>().FirstOrDefault(b => b.Name == "DropMarker");
+                if (_dropMarker != null)
+                {
+                    _dropMarker.VerticalAlignment = isAfter
+                        ? Avalonia.Layout.VerticalAlignment.Bottom
+                        : Avalonia.Layout.VerticalAlignment.Top;
+                    _dropMarker.IsVisible = true;
+                }
+                return;
+            }
         }
     }
 

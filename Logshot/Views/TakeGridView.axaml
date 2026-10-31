@@ -383,7 +383,6 @@
                       <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamACrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamANoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
                     </Grid>
-              <Border Name="DropMarker" Background="{StaticResource ActionAccent}" Height="3" VerticalAlignment="Top" IsHitTestVisible="False" IsVisible="False" ZIndex="10"/>
                   </Grid>
                 </Border>
 
@@ -726,6 +725,9 @@
 
               <!-- Thick White Top Line for New Episode/Scene Groups -->
               <Rectangle Fill="{StaticResource TextPrimary}" Height="3" IsVisible="{Binding IsGroupStart}" VerticalAlignment="Top"/>
+
+              <!-- Drop Marker spans the full width of the row -->
+              <Border Name="DropMarker" Background="{StaticResource ActionAccent}" Height="3" VerticalAlignment="Top" IsHitTestVisible="False" IsVisible="False" ZIndex="10"/>
             </Grid>
           </Border>
         </DataTemplate>
