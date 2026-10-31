@@ -1,18 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
-	<TargetOSPlatformVersion>34.0</TargetOSPlatformVersion>
-    <Nullable>enable</Nullable>
-    <ApplicationId>com.georgetsirogiannis.Logshot</ApplicationId>
-    <ApplicationVersion>4</ApplicationVersion>
-    <ApplicationDisplayVersion>1.1.4</ApplicationDisplayVersion>
-    <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <!-- Validated on the .NET 10 Android Release build; improves native startup/runtime optimization. -->
-    <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
-	<RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
-  </PropertyGroup>
+	<!-- 1. Global Settings (Applies to both Debug and Release) -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0-android</TargetFramework>
+		<SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
+		<TargetOSPlatformVersion>34.0</TargetOSPlatformVersion>
+		<Nullable>enable</Nullable>
+		<ApplicationId>com.georgetsirogiannis.Logshot</ApplicationId>
+		<ApplicationVersion>4</ApplicationVersion>
+		<ApplicationDisplayVersion>1.1.4</ApplicationDisplayVersion>
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+	</PropertyGroup>
+
+	<!-- 2. Debug Specific Settings (Turns off AOT for fast deployment) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+		<RunAOTCompilation>false</RunAOTCompilation>
+	</PropertyGroup>
+
+	<!-- 3. Release Specific Settings (Keeps optimization active for production) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<!-- Validated on the .NET 10 Android Release build; improves native startup/runtime optimization. -->
+		<AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+	</PropertyGroup>
 
   <ItemGroup>
     <AndroidResource Include="Icon.png">
