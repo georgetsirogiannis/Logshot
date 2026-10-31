@@ -488,7 +488,7 @@ public class SupabaseService
     private SupabaseProject ToSupabaseProject(Project project) => new()
     {
         Id = project.Id,
-        UserId = CurrentUserId ?? string.Empty,
+        UserId = string.IsNullOrWhiteSpace(CurrentUserId) ? null : CurrentUserId,
         Name = project.Name,
         Director = project.Director,
         Dop = project.Dop,
