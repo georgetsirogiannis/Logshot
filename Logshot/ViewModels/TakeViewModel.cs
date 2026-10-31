@@ -429,6 +429,7 @@ public partial class TakeViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(IsSoundOnlyRow));
+        OnPropertyChanged(nameof(IsWildOrSoundOnly));
         OnPropertyChanged(nameof(DisplayEpisode));
         OnPropertyChanged(nameof(DisplayScene));
         OnPropertyChanged(nameof(DisplayShot));
@@ -998,16 +999,7 @@ public partial class TakeViewModel : ViewModelBase
             }
         }
 
-        _isUpdatingCameraRollFromInput = true;
-        try
-        {
-            CameraData = _cameraDataManager.SerializeCameraData(data);
-        }
-        finally
-        {
-            _isUpdatingCameraRollFromInput = false;
-        }
-
+        CameraData = _cameraDataManager.SerializeCameraData(data);
         QueueTextSave();
     }
 
@@ -1032,10 +1024,16 @@ public partial class TakeViewModel : ViewModelBase
         data.Cameras[cameraLabel].RollNumber = value ?? string.Empty;
         CameraData = _cameraDataManager.SerializeCameraData(data);
         QueueTextSave();
-        OnPropertyChanged(cameraLabel == "CAM A" ? nameof(CamARollNumber) : nameof(CamBRollNumber));
-    }
 
-    private bool _isUpdatingCameraRollFromInput = false;
+        if (cameraLabel == "CAM A")
+        {
+            OnPropertyChanged(nameof(CamARollNumber));
+        }
+        else if (cameraLabel == "CAM B")
+        {
+            OnPropertyChanged(nameof(CamBRollNumber));
+        }
+    }
 
     partial void OnCameraDataChanged(string value)
     {
@@ -1043,14 +1041,10 @@ public partial class TakeViewModel : ViewModelBase
         _parsedCameraData = null;
         _ = RefreshCameraData();
 
-        // Do not re-echo property change back to active textboxes while the user is typing in them
-        if (!_isUpdatingCameraRollFromInput)
-        {
-            OnPropertyChanged(nameof(CamARoll));
-            OnPropertyChanged(nameof(CamBRoll));
-            OnPropertyChanged(nameof(CamARollNumber));
-            OnPropertyChanged(nameof(CamBRollNumber));
-        }
+        OnPropertyChanged(nameof(CamARoll));
+        OnPropertyChanged(nameof(CamBRoll));
+        OnPropertyChanged(nameof(CamARollNumber));
+        OnPropertyChanged(nameof(CamBRollNumber));
 
         OnPropertyChanged(nameof(IsCamANoRoll));
         OnPropertyChanged(nameof(IsCamBNoRoll));
@@ -1062,6 +1056,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowCamANormal));
         OnPropertyChanged(nameof(ShowCamBNormal));
         OnPropertyChanged(nameof(IsSoundOnlyRow));
+        OnPropertyChanged(nameof(IsWildOrSoundOnly));
         OnPropertyChanged(nameof(DisplayEpisode));
         OnPropertyChanged(nameof(DisplayScene));
         OnPropertyChanged(nameof(DisplayShot));

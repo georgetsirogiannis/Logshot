@@ -262,13 +262,16 @@ public class DatabaseService
         });
     }
 
-    public async Task<int> DeleteTakeAsync(Take take)
+    public Task<int> DeleteTakeAsync(Take take)
     {
-        await InitAsync();
-        take.IsDeleted = true;
-        var result = await _db.UpdateAsync(take);
-        await QueueSyncAction("Take", take.Id, "Upsert"); // Push the delete flag to cloud
-        return result;
+        return Enqueue(async () =>
+        {
+            await InitAsync();
+            take.IsDeleted = true;
+            var result = await _db.UpdateAsync(take);
+            await QueueSyncAction("Take", take.Id, "Upsert"); // Push the delete flag to cloud
+            return result;
+        });
     }
 
     public async Task<int> DeleteDayAsync(Day day)

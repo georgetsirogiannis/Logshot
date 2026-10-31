@@ -1592,7 +1592,7 @@ public partial class DayViewModel : ViewModelBase
         }
     }
 
-    public void CreateSubsequentTake(string episode, string scene, int currentShot, int currentTake)
+    public async Task CreateSubsequentTake(string episode, string scene, int currentShot, int currentTake)
     {
         var previousTake = Takes.LastOrDefault(t => !t.IsSoundOnlyRow && !t.HasVoidedCameras && t.Episode == episode && t.Scene == scene && t.Shot == currentShot)
                            ?? Takes.LastOrDefault(t => !t.IsSoundOnlyRow && t.Episode == episode && t.Scene == scene)
@@ -1608,13 +1608,21 @@ public partial class DayViewModel : ViewModelBase
             TakeNumber = currentTake + 1,
             CameraData = SyncCameraDataWithActiveCameras(previousTake?.CameraData),
             CreatedAt = System.DateTime.UtcNow,
-            SequenceOrder = Takes.Count + 1
+            SequenceOrder = Takes.Count
         };
 
         var takeViewModel = new TakeViewModel(_databaseService, _cameraDataManager);
         takeViewModel.LoadFromModel(newTakeModel);
+        await takeViewModel.RefreshCameraDataCommand.ExecuteAsync(null);
+
+        // PERSISTENCE FIX: Save to database so takes created on mobile are not lost
+        await takeViewModel.SaveTakeCommand.ExecuteAsync(null);
 
         Takes.Add(takeViewModel);
+
+        RefreshAllExtraCameraRolls();
+        await UpdateTotalTakesCommand.ExecuteAsync(null);
+        await UpdateCurrentShotCommand.ExecuteAsync(null);
         BuildHierarchicalGroups();
     }
 
