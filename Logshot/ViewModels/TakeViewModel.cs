@@ -429,6 +429,7 @@ public partial class TakeViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(IsSoundOnlyRow));
+        OnPropertyChanged(nameof(IsWildOrSoundOnly));
         OnPropertyChanged(nameof(DisplayEpisode));
         OnPropertyChanged(nameof(DisplayScene));
         OnPropertyChanged(nameof(DisplayShot));
@@ -1062,6 +1063,7 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowCamANormal));
         OnPropertyChanged(nameof(ShowCamBNormal));
         OnPropertyChanged(nameof(IsSoundOnlyRow));
+        OnPropertyChanged(nameof(IsWildOrSoundOnly));
         OnPropertyChanged(nameof(DisplayEpisode));
         OnPropertyChanged(nameof(DisplayScene));
         OnPropertyChanged(nameof(DisplayShot));
