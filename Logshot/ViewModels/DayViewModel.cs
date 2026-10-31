@@ -1530,12 +1530,12 @@ public partial class DayViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Rebuilds FlatTakeList from MobileSetupGroups, flattening headers and takes.
-    /// Called after BuildHierarchicalGroups or when collapse state changes.
+    /// Rebuilds FlatTakeList from MobileSetupGroups, flattening headers and takes in-place
+    /// to preserve TextBox focus and avoid destructive list clearing.
     /// </summary>
     public void RebuildFlatTakeList()
     {
-        FlatTakeList.Clear();
+        var targetItems = new List<TakeListItemViewModel>();
 
         foreach (var group in MobileSetupGroups)
         {
@@ -1543,15 +1543,52 @@ public partial class DayViewModel : ViewModelBase
             {
                 IsCollapsed = group.IsCollapsed
             };
-            FlatTakeList.Add(headerVm);
+            targetItems.Add(headerVm);
 
             if (!group.IsCollapsed)
             {
                 foreach (var take in group.GroupedTakes)
                 {
-                    FlatTakeList.Add(new TakeListTakeViewModel(take));
+                    targetItems.Add(new TakeListTakeViewModel(take));
                 }
             }
+        }
+
+        // Synchronize in-place rather than calling FlatTakeList.Clear()
+        // This ensures existing focused cards are NEVER removed from the visual tree
+        for (int i = 0; i < targetItems.Count; i++)
+        {
+            var target = targetItems[i];
+            if (i < FlatTakeList.Count)
+            {
+                var existing = FlatTakeList[i];
+                if (existing is TakeListGroupHeaderViewModel existingHeader && target is TakeListGroupHeaderViewModel newHeader)
+                {
+                    if (existingHeader.SetupKey == newHeader.SetupKey)
+                    {
+                        existingHeader.IsCollapsed = newHeader.IsCollapsed;
+                        continue;
+                    }
+                }
+                else if (existing is TakeListTakeViewModel existingTake && target is TakeListTakeViewModel newTake)
+                {
+                    if (ReferenceEquals(existingTake.Take, newTake.Take))
+                    {
+                        continue;
+                    }
+                }
+
+                FlatTakeList[i] = target;
+            }
+            else
+            {
+                FlatTakeList.Add(target);
+            }
+        }
+
+        while (FlatTakeList.Count > targetItems.Count)
+        {
+            FlatTakeList.RemoveAt(FlatTakeList.Count - 1);
         }
     }
 

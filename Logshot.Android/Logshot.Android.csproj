@@ -7,8 +7,8 @@
 		<TargetOSPlatformVersion>34.0</TargetOSPlatformVersion>
 		<Nullable>enable</Nullable>
 		<ApplicationId>com.georgetsirogiannis.Logshot</ApplicationId>
-		<ApplicationVersion>4</ApplicationVersion>
-		<ApplicationDisplayVersion>1.1.4</ApplicationDisplayVersion>
+		<ApplicationVersion>5</ApplicationVersion>
+		<ApplicationDisplayVersion>1.1.5</ApplicationDisplayVersion>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
 		<RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
 	</PropertyGroup>

@@ -196,6 +196,13 @@ public partial class AndroidTakeListView : UserControl
 
     private void ListScrollViewer_ScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
+        // Only update sticky header if extent height alone didn't change (prevents text-expansion layout shifts while typing)
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.FocusManager?.GetFocusedElement() is TextBox tb && tb.AcceptsReturn)
+        {
+            return;
+        }
+
         UpdateStickyHeader();
     }
 
