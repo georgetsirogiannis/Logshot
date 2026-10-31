@@ -1033,7 +1033,15 @@ public partial class TakeViewModel : ViewModelBase
         data.Cameras[cameraLabel].RollNumber = value ?? string.Empty;
         CameraData = _cameraDataManager.SerializeCameraData(data);
         QueueTextSave();
-        OnPropertyChanged(cameraLabel == "CAM A" ? nameof(CamARollNumber) : nameof(CamBRollNumber));
+
+        if (cameraLabel == "CAM A")
+        {
+            OnPropertyChanged(nameof(CamARollNumber));
+        }
+        else if (cameraLabel == "CAM B")
+        {
+            OnPropertyChanged(nameof(CamBRollNumber));
+        }
     }
 
     private bool _isUpdatingCameraRollFromInput = false;
