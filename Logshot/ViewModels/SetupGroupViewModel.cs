@@ -93,7 +93,7 @@ namespace Logshot.ViewModels
         // 2. [ + TAKE ] Button Logic
         // -------------------------------------------------------------------------
         [RelayCommand]
-        private void AddTake()
+        private async Task AddTake()
         {
             if (!GroupedTakes.Any()) return;
 
@@ -104,7 +104,7 @@ namespace Logshot.ViewModels
 
             if (lastTake == null) return;
 
-            _parentDay.CreateSubsequentTake(Episode, Scene, lastTake.Shot, lastTake.TakeNumber);
+            await _parentDay.CreateSubsequentTake(Episode, Scene, lastTake.Shot, lastTake.TakeNumber);
         }
 
         // -------------------------------------------------------------------------
