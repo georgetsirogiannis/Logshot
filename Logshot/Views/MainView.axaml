@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Logshot.ViewModels"
              xmlns:views="using:Logshot.Views"
+             xmlns:svg="using:Avalonia.Svg.Skia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="Logshot.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -37,7 +38,10 @@
 
           <!-- App Brand -->
           <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,25">
-            <PathIcon Grid.Column="0" Data="{StaticResource AppLogo}" Foreground="{StaticResource ActionAccent}" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <svg:Svg Grid.Column="0"
+                     Path="avares://Logshot/Assets/Logshot-logo.svg"
+                     Width="32" Height="32"
+                     HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
             <!-- Mobile-only close button -->
             <Button Grid.Column="1" Content="&#10005;" FontSize="14" Padding="6,2"

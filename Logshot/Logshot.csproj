@@ -26,6 +26,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="sqlite-net-pcl" />
     <PackageReference Include="Supabase" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     <PackageReference Include="Tmds.DBus.Protocol" />
   </ItemGroup>

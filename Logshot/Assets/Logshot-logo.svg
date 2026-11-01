@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #34aee5;
+      }
+
+      .cls-2 {
+        fill: #f2f2f2;
+      }
+
+      .cls-3 {
+        fill: #0f252e;
+      }
+    </style>
+  </defs>
+  <g id="Logshot_alt_2" data-name="Logshot alt 2">
+    <g>
+      <rect class="cls-1" width="512" height="512" rx="80" ry="80"/>
+      <g>
+        <polygon class="cls-2" points="165.72 70 145.72 424 270.72 434 375.72 409 375.72 326 269.72 323 269.72 70 165.72 70"/>
+        <path class="cls-3" d="M165.05,66.82h103.5l2.49,2.49v251.13h104.74l2.49,2.49v82.67c-19.27,43.1-30.26,64.65-32.95,64.65h-201.09l-2.49-2.49V90.13l23.31-23.31ZM169.71,73.04v332.57h202.34v-78.01h-103.5l-2.49-2.49V73.04h-96.35Z"/>
+      </g>
+    </g>
+  </g>
+</svg>

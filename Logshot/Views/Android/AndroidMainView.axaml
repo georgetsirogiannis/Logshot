@@ -5,6 +5,7 @@
              xmlns:vm="using:Logshot.ViewModels"
              xmlns:android="using:Logshot.Views.Android"
              xmlns:views="using:Logshot.Views"
+             xmlns:svg="using:Avalonia.Svg.Skia"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
              x:Class="Logshot.Views.Android.AndroidMainView"
              x:DataType="vm:MainViewModel">
@@ -88,7 +89,7 @@
               <TextBlock Grid.Column="0" FontSize="28" FontWeight="Bold" Foreground="{StaticResource ActionAccent}"
                          VerticalAlignment="Center" TextWrapping="NoWrap" LineHeight="44" ClipToBounds="False">
                 <InlineUIContainer BaselineAlignment="Baseline">
-                  <PathIcon Data="{StaticResource AppLogo}" Foreground="{StaticResource ActionAccent}" Width="32" Height="32" VerticalAlignment="Bottom"/>
+                  <svg:Svg Path="avares://Logshot/Assets/Logshot-logo.svg" Width="32" Height="32" VerticalAlignment="Bottom"/>
                 </InlineUIContainer>
                 <Run Text=" Logshot"/>
               </TextBlock>
