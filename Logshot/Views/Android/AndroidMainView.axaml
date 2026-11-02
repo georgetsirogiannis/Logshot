@@ -491,8 +491,8 @@
       <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="16" Width="340" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
         <StackPanel Spacing="14">
           <TextBlock Text="New Scene Setup" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
-          <StackPanel Spacing="4"><TextBlock Text="Episode (&#917;&#928;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewEpisode}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 1"/></StackPanel>
-          <StackPanel Spacing="4"><TextBlock Text="Scene (&#931;&#922;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewScene}" TextInputOptions.ContentType="Digits" PlaceholderText="e.g. 32"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Episode (&#917;&#928;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewEpisode}" TextInputOptions.ContentType="Normal" PlaceholderText="e.g. 1"/></StackPanel>
+          <StackPanel Spacing="4"><TextBlock Text="Scene (&#931;&#922;) *" FontSize="12" Foreground="{StaticResource TextSecondary}"/><TextBox Text="{Binding AppViewModel.PopupNewScene}" TextInputOptions.ContentType="Normal" AcceptsReturn="True" TextInputOptions.Multiline="True" PlaceholderText="e.g. 32"/></StackPanel>
           <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,8,0,0">
             <Button Classes="quiet" Grid.Column="0" Content="+ Wild" Command="{Binding AppViewModel.ConfirmAddWildShotDialogCommand}" Background="Transparent" BorderBrush="{StaticResource ActionAccent}" BorderThickness="1" Foreground="{StaticResource ActionAccent}" MinHeight="48" Padding="10,6"/>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
