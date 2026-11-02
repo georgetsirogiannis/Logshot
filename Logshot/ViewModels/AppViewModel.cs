@@ -755,16 +755,11 @@ public partial class AppViewModel : ViewModelBase
                 {
                     var newProjVm = new ProjectViewModel(_databaseService);
                     newProjVm.LoadFromModel(pModel);
-                    await newProjVm.LoadDaysCommand.ExecuteAsync(null);
                     Projects.Add(newProjVm);
                 }
                 else
                 {
-                    existingProj.Name = pModel.Name;
-                    existingProj.Director = pModel.Director;
-                    existingProj.Dop = pModel.Dop;
-                    existingProj.ProductionCompany = pModel.ProductionCompany;
-                    existingProj.ScriptSupervisor = pModel.ScriptSupervisor;
+                    existingProj.LoadFromModel(pModel);
                 }
             }
 
@@ -783,44 +778,49 @@ public partial class AppViewModel : ViewModelBase
                 }
             }
 
-            if (CurrentProject == null) return;
+            var dbDays = await _databaseService.GetDaysForProjectsAsync(dbProjects.Select(p => p.Id));
+            var daysByProjectId = dbDays.GroupBy(d => d.ProjectId).ToDictionary(g => g.Key, g => g.ToList());
 
-            var dbDays = await _databaseService.GetDaysForProjectAsync(CurrentProject.Id);
-            foreach (var dModel in dbDays)
+            foreach (var project in Projects)
             {
-                var existingDay = CurrentProject.Days.FirstOrDefault(d => d.Id == dModel.Id);
-                if (existingDay == null)
-                {
-                    var newDayVm = new DayViewModel(_databaseService);
-                    newDayVm.LoadFromModel(dModel);
-                    CurrentProject.Days.Add(newDayVm);
-                    CurrentProject.SortDays();
-                }
-                else
-                {
-                    existingDay.ShootDayNumber = dModel.ShootDayNumber;
-                    existingDay.CalendarDate = dModel.CalendarDate;
-                    existingDay.IsFinalized = dModel.IsFinalized;
-                }
-            }
+                daysByProjectId.TryGetValue(project.Id, out var projectDays);
+                projectDays ??= new List<Day>();
 
-            // Clean up any days deleted on another device
-            var dbDayIds = dbDays.Select(d => d.Id).ToHashSet();
-            for (int i = CurrentProject.Days.Count - 1; i >= 0; i--)
-            {
-                if (!dbDayIds.Contains(CurrentProject.Days[i].Id))
+                foreach (var dModel in projectDays)
                 {
-                    if (CurrentDay?.Id == CurrentProject.Days[i].Id)
+                    var existingDay = project.Days.FirstOrDefault(d => d.Id == dModel.Id);
+                    if (existingDay == null)
                     {
-                        CurrentDay = null;
+                        var newDayVm = new DayViewModel(_databaseService);
+                        newDayVm.LoadFromModel(dModel);
+                        project.Days.Add(newDayVm);
                     }
-                    CurrentProject.Days.RemoveAt(i);
+                    else
+                    {
+                        existingDay.LoadFromModel(dModel);
+                    }
+                }
+
+                project.SortDays();
+
+                var dbDayIds = projectDays.Select(d => d.Id).ToHashSet();
+                for (int i = project.Days.Count - 1; i >= 0; i--)
+                {
+                    if (!dbDayIds.Contains(project.Days[i].Id))
+                    {
+                        if (CurrentDay?.Id == project.Days[i].Id)
+                        {
+                            CurrentDay = null;
+                        }
+                        project.Days.RemoveAt(i);
+                    }
                 }
             }
 
-            if (CurrentDay == null) return;
-
-            await CurrentDay.MergeTakesFromCloudAsync();
+            if (CurrentDay != null)
+            {
+                await CurrentDay.MergeTakesFromCloudAsync();
+            }
         }
         finally
         {

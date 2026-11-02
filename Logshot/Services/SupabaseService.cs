@@ -4,6 +4,7 @@ using Supabase.Gotrue;
 using Supabase.Gotrue.Interfaces;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
+using static Supabase.Postgrest.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -659,15 +660,21 @@ public class SupabaseService
         }
     }
 
-    private async Task<List<T>> FetchAllPaginatedAsync<T>() where T : BaseModel, new()
+    private async Task<List<T>> FetchAllPaginatedAsync<T>(Func<T, string> getId) where T : BaseModel, new()
     {
         var allItems = new List<T>();
         int pageSize = 1000;
-        int from = 0;
+        string? lastId = null;
 
         while (true)
         {
-            var response = await _client.From<T>().Range(from, from + pageSize - 1).Get();
+            Supabase.Postgrest.Interfaces.IPostgrestTable<T> query = _client.From<T>();
+            if (lastId is not null)
+            {
+                query = query.Filter("id", Operator.GreaterThan, lastId);
+            }
+
+            var response = await query.Order("id", Ordering.Ascending).Range(0, pageSize - 1).Get();
             if (response.Models == null || response.Models.Count == 0)
                 break;
 
@@ -676,7 +683,7 @@ public class SupabaseService
             if (response.Models.Count < pageSize)
                 break;
 
-            from += pageSize;
+            lastId = getId(response.Models[^1]);
         }
 
         return allItems;
@@ -688,7 +695,7 @@ public class SupabaseService
 
         try
         {
-            var remoteProjects = (await FetchAllPaginatedAsync<SupabaseProject>()).Select(sp => new Project
+            var remoteProjects = (await FetchAllPaginatedAsync<SupabaseProject>(sp => sp.Id)).Select(sp => new Project
             {
                 Id = sp.Id,
                 Name = sp.Name,
@@ -700,7 +707,7 @@ public class SupabaseService
                 CreatedAt = sp.CreatedAt
             }).ToList();
 
-            var remoteDays = (await FetchAllPaginatedAsync<SupabaseDay>()).Select(sd => new Day
+            var remoteDays = (await FetchAllPaginatedAsync<SupabaseDay>(sd => sd.Id)).Select(sd => new Day
             {
                 Id = sd.Id,
                 ProjectId = sd.ProjectId,
@@ -712,7 +719,7 @@ public class SupabaseService
                 CreatedAt = sd.CreatedAt
             }).ToList();
 
-            var remoteTakes = (await FetchAllPaginatedAsync<SupabaseTake>()).Select(st => new Take
+            var remoteTakes = (await FetchAllPaginatedAsync<SupabaseTake>(st => st.Id)).Select(st => new Take
             {
                 Id = st.Id,
                 DayId = st.DayId,
