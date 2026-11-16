@@ -1404,7 +1404,7 @@ public partial class DayViewModel : ViewModelBase
                     cameraRollClips[label].Add(rollRecord);
                 }
 
-                rollRecord.ClipCount++;
+                rollRecord.ClipCount += isRowVoided ? take.VoidedClipCount : 1;
             }
         }
 

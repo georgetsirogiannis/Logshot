@@ -419,7 +419,7 @@ public class PdfExportService : IPdfExportService
                     cell.PaddingHorizontal(1).Layers(layers =>
                     {
                         layers.PrimaryLayer().AlignBottom().PaddingBottom(1)
-                            .AlignCenter().Text("ΑΚΥΡΟ CLIP").Bold().FontSize(7f).FontColor(Colors.Red.Medium);
+                            .AlignCenter().Text(take.VoidedClipDisplayText).Bold().FontSize(7f).FontColor(Colors.Red.Medium);
                         layers.Layer().AlignTop().PaddingTop(1)
                             .AlignCenter().Text(FormatText(rollNumber)).Bold().Underline().FontSize(7f);
                     });
@@ -427,7 +427,7 @@ public class PdfExportService : IPdfExportService
                 else
                 {
                     cell.Padding(1).AlignCenter().AlignMiddle()
-                        .Text("ΑΚΥΡΟ CLIP").Bold().FontSize(7f).FontColor(Colors.Red.Medium);
+                        .Text(take.VoidedClipDisplayText).Bold().FontSize(7f).FontColor(Colors.Red.Medium);
                 }
             }
             else if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))

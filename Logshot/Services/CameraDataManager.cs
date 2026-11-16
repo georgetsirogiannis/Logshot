@@ -65,6 +65,9 @@ public class CameraDataManager
         [JsonPropertyName("cameras")]
         public Dictionary<string, CameraState> Cameras { get; set; } = new();
 
+        [JsonPropertyName("voidClipCount")]
+        public int VoidClipCount { get; set; } = 1;
+
         [JsonPropertyName("lastUpdated")]
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     }
@@ -100,7 +103,7 @@ public class CameraDataManager
     /// </summary>
     public string SerializeCameraData(CameraDataStructure data)
     {
-        if (data?.Cameras == null || data.Cameras.Count == 0)
+        if (data?.Cameras == null || (data.Cameras.Count == 0 && data.VoidClipCount <= 1))
             return "{}";
 
         data.LastUpdated = DateTime.UtcNow;

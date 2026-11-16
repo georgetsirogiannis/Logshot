@@ -6,9 +6,10 @@
 		<SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
 		<TargetOSPlatformVersion>34.0</TargetOSPlatformVersion>
 		<Nullable>enable</Nullable>
+		<Version>1.1.7</Version>
 		<ApplicationId>com.georgetsirogiannis.Logshot</ApplicationId>
-		<ApplicationVersion>7</ApplicationVersion>
-		<ApplicationDisplayVersion>1.1.6</ApplicationDisplayVersion>
+		<ApplicationVersion>8</ApplicationVersion>
+		<ApplicationDisplayVersion>1.1.7</ApplicationDisplayVersion>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
 		<RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
 	</PropertyGroup>

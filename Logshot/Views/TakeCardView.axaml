@@ -346,6 +346,13 @@
                      FontWeight="Bold" 
                      HorizontalAlignment="Center" 
                      TextAlignment="Center"/>
+
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+              <Button Content="−" Command="{Binding DecrementVoidedClipCountCommand}" IsEnabled="{Binding CanDecrementVoidedClipCount}" MinWidth="32" Padding="4,0"/>
+              <TextBlock Text="Consecutive clips:" VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding VoidedClipCount}" VerticalAlignment="Center" FontWeight="Bold"/>
+              <Button Content="+" Command="{Binding IncrementVoidedClipCountCommand}" MinWidth="32" Padding="4,0"/>
+          </StackPanel>
                      
           <!-- Horizontal Cameras Layout -->
           <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">

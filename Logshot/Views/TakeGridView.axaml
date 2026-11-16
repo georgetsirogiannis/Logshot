@@ -87,7 +87,14 @@
               </TextBox>
             </Panel>
 
-            <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
+            <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="{Binding Owner.VoidedClipDisplayText}" VerticalAlignment="Center">
+              <TextBlock.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding Owner.IncrementVoidedClipCountCommand}"/>
+                  <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding Owner.DecrementVoidedClipCountCommand}"/>
+                </ContextMenu>
+              </TextBlock.ContextMenu>
+            </TextBlock>
             <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             <Path Data="M1,0 L0,1" IsVisible="{Binding IsNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
           </Grid>
@@ -379,7 +386,14 @@
                         </TextBox>
                       </Panel>
 
-                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
+                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="{Binding VoidedClipDisplayText}" VerticalAlignment="Center">
+                        <TextBlock.ContextMenu>
+                          <ContextMenu>
+                            <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding IncrementVoidedClipCountCommand}"/>
+                            <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding DecrementVoidedClipCountCommand}"/>
+                          </ContextMenu>
+                        </TextBlock.ContextMenu>
+                      </TextBlock>
                       <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamACrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamANoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
                     </Grid>
@@ -450,7 +464,14 @@
                         </TextBox>
                       </Panel>
 
-                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="ΑΚΥΡΟ CLIP" VerticalAlignment="Center"/>
+                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="{Binding VoidedClipDisplayText}" VerticalAlignment="Center">
+                        <TextBlock.ContextMenu>
+                          <ContextMenu>
+                            <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding IncrementVoidedClipCountCommand}"/>
+                            <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding DecrementVoidedClipCountCommand}"/>
+                          </ContextMenu>
+                        </TextBlock.ContextMenu>
+                      </TextBlock>
                       <Rectangle Fill="{StaticResource CrossStitchPatternBrush}" IsVisible="{Binding ShowCamBCrossed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                       <Path Data="M1,0 L0,1" IsVisible="{Binding IsCamBNoRoll}" Stretch="Fill" Stroke="{StaticResource FailRed}" StrokeThickness="2" VerticalAlignment="Center" Height="14"/>
                     </Grid>

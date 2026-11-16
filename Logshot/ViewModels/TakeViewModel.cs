@@ -127,6 +127,9 @@ public partial class TakeViewModel : ViewModelBase
     private string _voidCameraLabels = "[]";
 
     [ObservableProperty]
+    private int _voidedClipCount = 1;
+
+    [ObservableProperty]
     private DateTime _createdAt = DateTime.UtcNow;
 
     /// <summary>
@@ -270,6 +273,52 @@ public partial class TakeViewModel : ViewModelBase
         }
 
         return _parsedCameraData;
+    }
+
+    partial void OnVoidedClipCountChanged(int value)
+    {
+        if (value < 1)
+        {
+            VoidedClipCount = 1;
+            return;
+        }
+
+        OnPropertyChanged(nameof(CanDecrementVoidedClipCount));
+        OnPropertyChanged(nameof(VoidedClipDisplayText));
+        OnPropertyChanged(nameof(VoidedHeadingText));
+
+        if (_isSuppressingSave)
+            return;
+
+        var data = GetCameraDataCached();
+        data.VoidClipCount = value;
+        CameraData = _cameraDataManager.SerializeCameraData(data);
+    }
+
+    public bool CanDecrementVoidedClipCount => VoidedClipCount > 1;
+
+    public string VoidedClipDisplayText => VoidedClipCount > 1
+        ? $"ΑΚΥΡΟ CLIP x{VoidedClipCount}"
+        : "ΑΚΥΡΟ CLIP";
+
+    [RelayCommand]
+    public async Task IncrementVoidedClipCount()
+    {
+        if (HasVoidedCameras && VoidedClipCount < int.MaxValue)
+        {
+            VoidedClipCount++;
+            await SaveTakeCommand.ExecuteAsync(null);
+        }
+    }
+
+    [RelayCommand]
+    public async Task DecrementVoidedClipCount()
+    {
+        if (HasVoidedCameras && VoidedClipCount > 1)
+        {
+            VoidedClipCount--;
+            await SaveTakeCommand.ExecuteAsync(null);
+        }
     }
 
     partial void OnEpisodeChanged(string value)
@@ -481,6 +530,7 @@ public partial class TakeViewModel : ViewModelBase
             IsEndBoard = take.IsEndBoard;
             IsWildShot = take.IsWildShot;
             VoidCameraLabels = take.VoidCameraLabels;
+            VoidedClipCount = Math.Max(1, _cameraDataManager.ParseCameraData(take.CameraData).VoidClipCount);
             CreatedAt = take.CreatedAt;
         }
         finally
@@ -1114,6 +1164,9 @@ public partial class TakeViewModel : ViewModelBase
     {
         get
         {
+            if (VoidedClipCount > 1)
+                return VoidedClipDisplayText;
+
             int voidCount = 0;
             if (IsCamAVoided) voidCount++;
             if (IsCamBVoided) voidCount++;
