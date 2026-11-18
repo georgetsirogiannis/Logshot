@@ -266,12 +266,12 @@ public class PdfExportService : IPdfExportService
                         }
 
                         RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
-                            showRoll: take.ShowCamARoll, rollVal: take.CamARoll,
+                            cameraLabel: "CAM A", showRoll: take.ShowCamARoll, rollVal: take.CamARoll,
                             isNoRoll: take.IsCamANoRoll, isVoided: take.IsCamAVoided,
                             isRollChangeMarked: take.IsCamARollChangeMarked, rollNumber: take.CamARollNumber);
 
                         RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
-                            showRoll: take.ShowCamBRoll, rollVal: take.CamBRoll,
+                            cameraLabel: "CAM B", showRoll: take.ShowCamBRoll, rollVal: take.CamBRoll,
                             isNoRoll: take.IsCamBNoRoll, isVoided: take.IsCamBVoided,
                             isRollChangeMarked: take.IsCamBRollChangeMarked, rollNumber: take.CamBRollNumber);
 
@@ -279,7 +279,7 @@ public class PdfExportService : IPdfExportService
                         {
                             var extraCell = take.ExtraCameraRolls?.FirstOrDefault(c => c.Label == camLabel);
                             RenderCameraCell(table.Cell().Element(c => ApplyCellBorderStyle(c, take)), take,
-                                showRoll: extraCell?.ShowRoll ?? true,
+                                cameraLabel: camLabel, showRoll: extraCell?.ShowRoll ?? true,
                                 rollVal: extraCell?.Roll ?? "",
                                 isNoRoll: extraCell?.IsNoRoll ?? false,
                                 isVoided: extraCell?.IsVoided ?? false,
@@ -408,7 +408,7 @@ public class PdfExportService : IPdfExportService
         });
     }
 
-    private void RenderCameraCell(IContainer cell, TakeViewModel take, bool showRoll, string rollVal, bool isNoRoll, bool isVoided, bool isRollChangeMarked, string rollNumber)
+    private void RenderCameraCell(IContainer cell, TakeViewModel take, string cameraLabel, bool showRoll, string rollVal, bool isNoRoll, bool isVoided, bool isRollChangeMarked, string rollNumber)
     {
         if (take.HasVoidedCameras)
         {
@@ -419,7 +419,7 @@ public class PdfExportService : IPdfExportService
                     cell.PaddingHorizontal(1).Layers(layers =>
                     {
                         layers.PrimaryLayer().AlignBottom().PaddingBottom(1)
-                            .AlignCenter().Text(take.VoidedClipDisplayText).Bold().FontSize(7f).FontColor(Colors.Red.Medium);
+                            .AlignCenter().Text(take.GetVoidedClipDisplayText(cameraLabel)).Bold().FontSize(7f).FontColor(Colors.Red.Medium);
                         layers.Layer().AlignTop().PaddingTop(1)
                             .AlignCenter().Text(FormatText(rollNumber)).Bold().Underline().FontSize(7f);
                     });
@@ -427,7 +427,7 @@ public class PdfExportService : IPdfExportService
                 else
                 {
                     cell.Padding(1).AlignCenter().AlignMiddle()
-                        .Text(take.VoidedClipDisplayText).Bold().FontSize(7f).FontColor(Colors.Red.Medium);
+                        .Text(take.GetVoidedClipDisplayText(cameraLabel)).Bold().FontSize(7f).FontColor(Colors.Red.Medium);
                 }
             }
             else if (isRollChangeMarked && !string.IsNullOrWhiteSpace(rollNumber))

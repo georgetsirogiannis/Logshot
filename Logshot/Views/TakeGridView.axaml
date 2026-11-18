@@ -87,11 +87,11 @@
               </TextBox>
             </Panel>
 
-            <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="{Binding Owner.VoidedClipDisplayText}" VerticalAlignment="Center">
+            <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsVoided}" Text="{Binding VoidedClipDisplayText}" VerticalAlignment="Center">
               <TextBlock.ContextMenu>
                 <ContextMenu>
-                  <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding Owner.IncrementVoidedClipCountCommand}"/>
-                  <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding Owner.DecrementVoidedClipCountCommand}"/>
+                  <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding IncrementVoidedClipCountCommand}"/>
+                  <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding DecrementVoidedClipCountCommand}"/>
                 </ContextMenu>
               </TextBlock.ContextMenu>
             </TextBlock>
@@ -386,11 +386,11 @@
                         </TextBox>
                       </Panel>
 
-                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="{Binding VoidedClipDisplayText}" VerticalAlignment="Center">
+                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamAVoided}" Text="{Binding CamAVoidedClipDisplayText}" VerticalAlignment="Center">
                         <TextBlock.ContextMenu>
                           <ContextMenu>
-                            <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding IncrementVoidedClipCountCommand}"/>
-                            <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding DecrementVoidedClipCountCommand}"/>
+                            <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding IncrementVoidedClipCountCommand}" CommandParameter="CAM A"/>
+                            <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding DecrementVoidedClipCountCommand}" CommandParameter="CAM A"/>
                           </ContextMenu>
                         </TextBlock.ContextMenu>
                       </TextBlock>
@@ -464,11 +464,11 @@
                         </TextBox>
                       </Panel>
 
-                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="{Binding VoidedClipDisplayText}" VerticalAlignment="Center">
+                      <TextBlock FontSize="10" FontWeight="Bold" Foreground="{StaticResource FailRed}" HorizontalAlignment="Center" IsVisible="{Binding IsCamBVoided}" Text="{Binding CamBVoidedClipDisplayText}" VerticalAlignment="Center">
                         <TextBlock.ContextMenu>
                           <ContextMenu>
-                            <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding IncrementVoidedClipCountCommand}"/>
-                            <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding DecrementVoidedClipCountCommand}"/>
+                            <MenuItem Header="Add one consecutive ΑΚΥΡΟ CLIP" Command="{Binding IncrementVoidedClipCountCommand}" CommandParameter="CAM B"/>
+                            <MenuItem Header="Remove one consecutive ΑΚΥΡΟ CLIP" Command="{Binding DecrementVoidedClipCountCommand}" CommandParameter="CAM B"/>
                           </ContextMenu>
                         </TextBlock.ContextMenu>
                       </TextBlock>

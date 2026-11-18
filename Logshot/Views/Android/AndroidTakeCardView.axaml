@@ -394,26 +394,27 @@
                      HorizontalAlignment="Center" 
                      TextAlignment="Center"/>
 
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-              <Button Classes="quiet" Content="−" Command="{Binding DecrementVoidedClipCountCommand}" IsEnabled="{Binding CanDecrementVoidedClipCount}" MinWidth="44" MinHeight="44" FontSize="20"/>
-              <TextBlock Text="Consecutive clips:" VerticalAlignment="Center"/>
-              <TextBlock Text="{Binding VoidedClipCount}" VerticalAlignment="Center" FontSize="18" FontWeight="Bold"/>
-              <Button Classes="quiet" Content="+" Command="{Binding IncrementVoidedClipCountCommand}" MinWidth="44" MinHeight="44" FontSize="20"/>
-          </StackPanel>
                      
           <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
               <!-- CAM A -->
               <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                  <Panel VerticalAlignment="Center" Margin="0,0,6,0">
+                  <StackPanel VerticalAlignment="Center" Margin="0,0,6,0">
                       <TextBlock Text="CAM A" FontSize="15" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamAVoided}"/>
                       <TextBlock Text="CAM A" FontSize="15" FontWeight="Bold" Foreground="White" IsVisible="{Binding !IsCamAVoided}"/>
-                  </Panel>
+                      <TextBlock Text="{Binding CamAVoidedClipDisplayText}" FontSize="12" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamAVoided}"/>
+                  </StackPanel>
                   <Button Classes="quiet" Content="⋮" FontSize="18" FontWeight="Bold" Padding="8,4" MinHeight="40" Background="Transparent" VerticalAlignment="Center">
                       <Button.Flyout>
                           <Flyout Placement="BottomEdgeAlignedLeft">
                               <StackPanel Spacing="8" Width="200">
                                   <Button Content="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM A" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Foreground="{StaticResource FailRed}" Padding="10"/>
                                   <Button Content="No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM A" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10"/>
+                                  <Separator Background="{StaticResource BorderColor}"/>
+                                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" IsVisible="{Binding IsCamAVoided}">
+                                      <Button Classes="quiet" Content="−" Command="{Binding DecrementVoidedClipCountCommand}" CommandParameter="CAM A" IsEnabled="{Binding CanDecrementCamAVoidedClipCount}" MinWidth="44" MinHeight="44" FontSize="20"/>
+                                      <TextBlock Text="{Binding CamAVoidedClipCount}" VerticalAlignment="Center" FontSize="18" FontWeight="Bold"/>
+                                      <Button Classes="quiet" Content="+" Command="{Binding IncrementVoidedClipCountCommand}" CommandParameter="CAM A" MinWidth="44" MinHeight="44" FontSize="20"/>
+                                  </StackPanel>
                                   <Separator Background="{StaticResource BorderColor}"/>
                                   <TextBlock Text="Change Roll #:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
                                   <TextBox Text="{Binding CamARollNumber}" PlaceholderText="Enter roll..."/>
@@ -429,16 +430,23 @@
 
               <!-- CAM B -->
               <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                  <Panel VerticalAlignment="Center" Margin="0,0,6,0">
+                  <StackPanel VerticalAlignment="Center" Margin="0,0,6,0">
                       <TextBlock Text="CAM B" FontSize="15" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamBVoided}"/>
                       <TextBlock Text="CAM B" FontSize="15" FontWeight="Bold" Foreground="White" IsVisible="{Binding !IsCamBVoided}"/>
-                  </Panel>
+                      <TextBlock Text="{Binding CamBVoidedClipDisplayText}" FontSize="12" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsCamBVoided}"/>
+                  </StackPanel>
                   <Button Classes="quiet" Content="⋮" FontSize="18" FontWeight="Bold" Padding="8,4" MinHeight="40" Background="Transparent" VerticalAlignment="Center">
                       <Button.Flyout>
                           <Flyout Placement="BottomEdgeAlignedLeft">
                               <StackPanel Spacing="8" Width="200">
                                   <Button Content="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCameraCommand}" CommandParameter="CAM B" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Foreground="{StaticResource FailRed}" Padding="10"/>
                                   <Button Content="No Roll" Command="{Binding ToggleCameraNoRollCommand}" CommandParameter="CAM B" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10"/>
+                                  <Separator Background="{StaticResource BorderColor}"/>
+                                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" IsVisible="{Binding IsCamBVoided}">
+                                      <Button Classes="quiet" Content="−" Command="{Binding DecrementVoidedClipCountCommand}" CommandParameter="CAM B" IsEnabled="{Binding CanDecrementCamBVoidedClipCount}" MinWidth="44" MinHeight="44" FontSize="20"/>
+                                      <TextBlock Text="{Binding CamBVoidedClipCount}" VerticalAlignment="Center" FontSize="18" FontWeight="Bold"/>
+                                      <Button Classes="quiet" Content="+" Command="{Binding IncrementVoidedClipCountCommand}" CommandParameter="CAM B" MinWidth="44" MinHeight="44" FontSize="20"/>
+                                  </StackPanel>
                                   <Separator Background="{StaticResource BorderColor}"/>
                                   <TextBlock Text="Change Roll #:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
                                   <TextBox Text="{Binding CamBRollNumber}" PlaceholderText="Enter roll..."/>
@@ -462,16 +470,23 @@
                   <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:CameraRollCell">
                           <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                              <Panel VerticalAlignment="Center" Margin="0,0,6,0">
+                              <StackPanel VerticalAlignment="Center" Margin="0,0,6,0">
                                   <TextBlock Text="{Binding Label}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsVoided}"/>
                                   <TextBlock Text="{Binding Label}" FontSize="15" FontWeight="Bold" Foreground="White" IsVisible="{Binding !IsVoided}"/>
-                              </Panel>
+                                  <TextBlock Text="{Binding VoidedClipDisplayText}" FontSize="12" Foreground="{StaticResource FailRed}" IsVisible="{Binding IsVoided}"/>
+                              </StackPanel>
                   <Button Classes="quiet" Content="⋮" FontSize="18" FontWeight="Bold" Padding="8,4" MinHeight="40" Background="Transparent" VerticalAlignment="Center">
                                   <Button.Flyout>
                                       <Flyout Placement="BottomEdgeAlignedLeft">
                                           <StackPanel Spacing="8" Width="200">
                                               <Button Content="ΑΚΥΡΟ CLIP" Command="{Binding ToggleVoidCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Foreground="{StaticResource FailRed}" Padding="10"/>
                                               <Button Content="No Roll" Command="{Binding ToggleNoRollCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10"/>
+                                              <Separator Background="{StaticResource BorderColor}"/>
+                                              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" IsVisible="{Binding IsVoided}">
+                                                  <Button Classes="quiet" Content="−" Command="{Binding DecrementVoidedClipCountCommand}" IsEnabled="{Binding CanDecrementVoidedClipCount}" MinWidth="44" MinHeight="44" FontSize="20"/>
+                                                  <TextBlock Text="{Binding VoidedClipCount}" VerticalAlignment="Center" FontSize="18" FontWeight="Bold"/>
+                                                  <Button Classes="quiet" Content="+" Command="{Binding IncrementVoidedClipCountCommand}" MinWidth="44" MinHeight="44" FontSize="20"/>
+                                              </StackPanel>
                                               <Separator Background="{StaticResource BorderColor}"/>
                                               <TextBlock Text="Change Roll #:" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
                                               <TextBox Text="{Binding RollNumber}" PlaceholderText="Enter roll..."/>

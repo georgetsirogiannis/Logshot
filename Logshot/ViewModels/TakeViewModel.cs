@@ -127,9 +127,6 @@ public partial class TakeViewModel : ViewModelBase
     private string _voidCameraLabels = "[]";
 
     [ObservableProperty]
-    private int _voidedClipCount = 1;
-
-    [ObservableProperty]
     private DateTime _createdAt = DateTime.UtcNow;
 
     /// <summary>
@@ -275,48 +272,60 @@ public partial class TakeViewModel : ViewModelBase
         return _parsedCameraData;
     }
 
-    partial void OnVoidedClipCountChanged(int value)
+    public int CamAVoidedClipCount => GetVoidedClipCount("CAM A");
+    public int CamBVoidedClipCount => GetVoidedClipCount("CAM B");
+    public bool CanDecrementCamAVoidedClipCount => CanDecrementVoidedClipCount("CAM A");
+    public bool CanDecrementCamBVoidedClipCount => CanDecrementVoidedClipCount("CAM B");
+    public string CamAVoidedClipDisplayText => GetVoidedClipDisplayText("CAM A");
+    public string CamBVoidedClipDisplayText => GetVoidedClipDisplayText("CAM B");
+
+    public int GetVoidedClipCount(string cameraLabel)
     {
-        if (value < 1)
+        var data = GetCameraDataCached();
+        if (data.Cameras.TryGetValue(cameraLabel, out var state) && state.VoidClipCount is > 0)
+            return state.VoidClipCount.Value;
+
+        return Math.Max(1, data.VoidClipCount);
+    }
+
+    public bool CanDecrementVoidedClipCount(string cameraLabel) =>
+        IsCameraVoided(cameraLabel) && GetVoidedClipCount(cameraLabel) > 1;
+
+    public string GetVoidedClipDisplayText(string cameraLabel)
+    {
+        int count = GetVoidedClipCount(cameraLabel);
+        return count > 1 ? $"ΑΚΥΡΟ CLIP x{count}" : "ΑΚΥΡΟ CLIP";
+    }
+
+    private void SetVoidedClipCount(string cameraLabel, int count)
+    {
+        var data = GetCameraDataCached();
+        if (!data.Cameras.TryGetValue(cameraLabel, out var state))
         {
-            VoidedClipCount = 1;
-            return;
+            data = _cameraDataManager.AddCamera(data, cameraLabel);
+            state = data.Cameras[cameraLabel];
         }
 
-        OnPropertyChanged(nameof(CanDecrementVoidedClipCount));
-        OnPropertyChanged(nameof(VoidedClipDisplayText));
-        OnPropertyChanged(nameof(VoidedHeadingText));
-
-        if (_isSuppressingSave)
-            return;
-
-        var data = GetCameraDataCached();
-        data.VoidClipCount = value;
+        state.VoidClipCount = Math.Max(1, count);
         CameraData = _cameraDataManager.SerializeCameraData(data);
     }
 
-    public bool CanDecrementVoidedClipCount => VoidedClipCount > 1;
-
-    public string VoidedClipDisplayText => VoidedClipCount > 1
-        ? $"ΑΚΥΡΟ CLIP x{VoidedClipCount}"
-        : "ΑΚΥΡΟ CLIP";
-
     [RelayCommand]
-    public async Task IncrementVoidedClipCount()
+    public async Task IncrementVoidedClipCount(string cameraLabel)
     {
-        if (HasVoidedCameras && VoidedClipCount < int.MaxValue)
+        if (IsCameraVoided(cameraLabel) && GetVoidedClipCount(cameraLabel) < int.MaxValue)
         {
-            VoidedClipCount++;
+            SetVoidedClipCount(cameraLabel, GetVoidedClipCount(cameraLabel) + 1);
             await SaveTakeCommand.ExecuteAsync(null);
         }
     }
 
     [RelayCommand]
-    public async Task DecrementVoidedClipCount()
+    public async Task DecrementVoidedClipCount(string cameraLabel)
     {
-        if (HasVoidedCameras && VoidedClipCount > 1)
+        if (CanDecrementVoidedClipCount(cameraLabel))
         {
-            VoidedClipCount--;
+            SetVoidedClipCount(cameraLabel, GetVoidedClipCount(cameraLabel) - 1);
             await SaveTakeCommand.ExecuteAsync(null);
         }
     }
@@ -530,7 +539,6 @@ public partial class TakeViewModel : ViewModelBase
             IsEndBoard = take.IsEndBoard;
             IsWildShot = take.IsWildShot;
             VoidCameraLabels = take.VoidCameraLabels;
-            VoidedClipCount = Math.Max(1, _cameraDataManager.ParseCameraData(take.CameraData).VoidClipCount);
             CreatedAt = take.CreatedAt;
         }
         finally
@@ -815,10 +823,14 @@ public partial class TakeViewModel : ViewModelBase
                 kvp.Value.NoRoll = false;
             }
 
-            if (data.Cameras.TryGetValue(cameraLabel, out var state))
+            if (!data.Cameras.TryGetValue(cameraLabel, out var state))
             {
-                state.Notes = string.Empty;
+                data = _cameraDataManager.AddCamera(data, cameraLabel);
+                state = data.Cameras[cameraLabel];
             }
+
+            state.VoidClipCount ??= 1;
+            state.Notes = string.Empty;
 
             CameraData = _cameraDataManager.SerializeCameraData(data);
 
@@ -1095,6 +1107,12 @@ public partial class TakeViewModel : ViewModelBase
         OnPropertyChanged(nameof(CamBRoll));
         OnPropertyChanged(nameof(CamARollNumber));
         OnPropertyChanged(nameof(CamBRollNumber));
+        OnPropertyChanged(nameof(CamAVoidedClipCount));
+        OnPropertyChanged(nameof(CamBVoidedClipCount));
+        OnPropertyChanged(nameof(CanDecrementCamAVoidedClipCount));
+        OnPropertyChanged(nameof(CanDecrementCamBVoidedClipCount));
+        OnPropertyChanged(nameof(CamAVoidedClipDisplayText));
+        OnPropertyChanged(nameof(CamBVoidedClipDisplayText));
 
         OnPropertyChanged(nameof(IsCamANoRoll));
         OnPropertyChanged(nameof(IsCamBNoRoll));
@@ -1164,9 +1182,6 @@ public partial class TakeViewModel : ViewModelBase
     {
         get
         {
-            if (VoidedClipCount > 1)
-                return VoidedClipDisplayText;
-
             int voidCount = 0;
             if (IsCamAVoided) voidCount++;
             if (IsCamBVoided) voidCount++;
@@ -1225,6 +1240,9 @@ public partial class CameraRollCell : ObservableObject
     }
 
     public bool IsVoided => _owner.IsCameraVoided(Label);
+    public int VoidedClipCount => _owner.GetVoidedClipCount(Label);
+    public bool CanDecrementVoidedClipCount => _owner.CanDecrementVoidedClipCount(Label);
+    public string VoidedClipDisplayText => _owner.GetVoidedClipDisplayText(Label);
     public bool IsNoRoll => !_owner.HasVoidedCameras && (_owner.GetCameraFlagPublic(Label, s => s.NoRoll) || _owner.IsCameraStrikethrough(Label));
     public bool ShowCrossed => _owner.HasVoidedCameras && !IsVoided && !IsNoRoll;
 
@@ -1237,6 +1255,9 @@ public partial class CameraRollCell : ObservableObject
         OnPropertyChanged(nameof(Roll));
         OnPropertyChanged(nameof(RollNumber));
         OnPropertyChanged(nameof(IsVoided));
+        OnPropertyChanged(nameof(VoidedClipCount));
+        OnPropertyChanged(nameof(CanDecrementVoidedClipCount));
+        OnPropertyChanged(nameof(VoidedClipDisplayText));
         OnPropertyChanged(nameof(ShowCrossed));
         OnPropertyChanged(nameof(IsNoRoll));
         OnPropertyChanged(nameof(IsRollChangeMarked));
@@ -1246,6 +1267,12 @@ public partial class CameraRollCell : ObservableObject
 
     [RelayCommand]
     public async Task ToggleVoid() => await _owner.ToggleVoidCamera(Label);
+
+    [RelayCommand]
+    public async Task IncrementVoidedClipCount() => await _owner.IncrementVoidedClipCount(Label);
+
+    [RelayCommand]
+    public async Task DecrementVoidedClipCount() => await _owner.DecrementVoidedClipCount(Label);
 
     [RelayCommand]
     public async Task ToggleNoRoll() => await _owner.ToggleCameraNoRoll(Label);

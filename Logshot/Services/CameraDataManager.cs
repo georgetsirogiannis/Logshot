@@ -55,6 +55,9 @@ public class CameraDataManager
         /// </summary>
         [JsonPropertyName("rollNumber")]
         public string RollNumber { get; set; } = string.Empty;
+
+        [JsonPropertyName("voidClipCount")]
+        public int? VoidClipCount { get; set; }
     }
 
     /// <summary>
